@@ -2,94 +2,86 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-14-rust-result.html</loc>
-    <lastmod>2022-10-13T02:07:35.476Z</lastmod>
+    <lastmod>2022-10-13T02:55:47.438Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2022-08-12-arc-dgpu-linux.html</loc>
-    <lastmod>2022-10-13T02:07:36.072Z</lastmod>
+    <lastmod>2022-10-13T02:55:47.742Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-22-pyjuggle.html</loc>
-    <lastmod>2022-10-13T02:07:36.280Z</lastmod>
+    <lastmod>2022-10-13T02:55:47.946Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-23-tiemy.html</loc>
-    <lastmod>2022-10-13T02:07:36.452Z</lastmod>
+    <lastmod>2022-10-13T02:55:48.134Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-rl-intro.html</loc>
-    <lastmod>2022-10-13T02:07:36.636Z</lastmod>
+    <lastmod>2022-10-13T02:55:48.342Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-17-rust-turbofish.html</loc>
-    <lastmod>2022-10-13T02:07:36.816Z</lastmod>
+    <lastmod>2022-10-13T02:55:48.534Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-07-ahoy-rust.html</loc>
-    <lastmod>2022-10-13T02:07:36.976Z</lastmod>
+    <lastmod>2022-10-13T02:55:48.710Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-15-ml-forget.html</loc>
-    <lastmod>2022-10-13T02:07:37.204Z</lastmod>
+    <lastmod>2022-10-13T02:55:48.950Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-28-borg.html</loc>
-    <lastmod>2022-10-13T02:07:37.368Z</lastmod>
-  </url>
-  <url>
-    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/archive.html</loc>
-    <lastmod>2022-10-13T02:07:37.520Z</lastmod>
+    <lastmod>2022-10-13T02:55:49.130Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-09-cargo.html</loc>
-    <lastmod>2022-10-13T02:07:37.708Z</lastmod>
-  </url>
-  <url>
-    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/index.html</loc>
-    <lastmod>2022-10-13T02:07:37.864Z</lastmod>
+    <lastmod>2022-10-13T02:55:49.322Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-31-juggling.html</loc>
-    <lastmod>2022-10-13T02:07:38.040Z</lastmod>
+    <lastmod>2022-10-13T02:55:49.518Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-05-23-ray.html</loc>
-    <lastmod>2022-10-13T02:07:38.216Z</lastmod>
+    <lastmod>2022-10-13T02:55:49.730Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-01-26-crypto-checklist.html</loc>
-    <lastmod>2022-10-13T02:07:38.396Z</lastmod>
+    <lastmod>2022-10-13T02:55:49.926Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-03-22-rust-type.html</loc>
-    <lastmod>2022-10-13T02:07:38.568Z</lastmod>
+    <lastmod>2022-10-13T02:55:50.102Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-02-12-prf-and-macs.html</loc>
-    <lastmod>2022-10-13T02:07:38.764Z</lastmod>
+    <lastmod>2022-10-13T02:55:50.290Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2016-01-03-graduated.html</loc>
-    <lastmod>2022-10-13T02:07:38.924Z</lastmod>
+    <lastmod>2022-10-13T02:55:50.466Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-16-vars.html</loc>
-    <lastmod>2022-10-13T02:07:39.100Z</lastmod>
+    <lastmod>2022-10-13T02:55:50.658Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-14-learning-methods.html</loc>
-    <lastmod>2022-10-13T02:07:39.280Z</lastmod>
+    <lastmod>2022-10-13T02:55:50.854Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-learning-methods.html</loc>
-    <lastmod>2022-10-13T02:07:39.472Z</lastmod>
+    <lastmod>2022-10-13T02:55:51.046Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/blog.html</loc>
-    <lastmod>2022-10-13T02:07:39.760Z</lastmod>
+    <lastmod>2022-10-13T02:55:51.334Z</lastmod>
   </url>
   <url>
     <loc>https://quartopub.com/sites/unrahul/technical-ramblings/index.html</loc>
-    <lastmod>2022-10-13T02:07:39.916Z</lastmod>
+    <lastmod>2022-10-13T02:55:51.486Z</lastmod>
   </url>
 </urlset>

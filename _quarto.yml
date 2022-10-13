@@ -10,11 +10,12 @@ website:
         href: https://github.com/rahulunair
       - icon: twitter
         href: https://twitter.com/unrahu1
+
 format:
   html:
     theme: 
-      light: [litera, custom_align.scss]
-      dark: [superhero, custom_align.scss]
+      light: [journal] 
+      dark: [vapor]
 
 
 

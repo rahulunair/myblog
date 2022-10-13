@@ -1,13 +1,9 @@
 ---
 toc: true
 title: "Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU"
-author: "unrahul"
 date: "2022-10-12"
 categories: [intel,dgpu, graphics]
 ---
-
-
-# Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU
 
 These instructions are for Ubuntu 22.04 LTS-based Oses. I am using Pop!_OS 22.04 LTS derivative of Ubuntu 22.04.
 
@@ -25,7 +21,7 @@ root@runnikri-mobl Coding → apt install mainline
 ```
 As seen in the screenshot below, I am using Kernel 6.0.0:
 
-![image](https://user-images.githubusercontent.com/45503355/195398959-c28fe9f3-47c9-46cd-b1a0-5e26d8e6228a.png)
+![Mainline kernel installer](https://user-images.githubusercontent.com/45503355/195398959-c28fe9f3-47c9-46cd-b1a0-5e26d8e6228a.png)
 
 After installing the kernel, please restart the machine.
 
@@ -151,7 +147,7 @@ root@runnikri-mobl Coding → glxinfo -B | grep -i device
 root@runnikri-mobl Coding → glmark2
 ```
 
-![glmark2](assets/arc370m_bench.gif)
+![glmark2 running on Arc 370m dGPU](assets/arc370m_bench.gif)
 
 4. Now, let's install the intel compute drivers. [Goto](https://github.com/intel/compute-runtime/releases). Get the latest release and install using the deb packages for OpenCL, level zero, igc etc. 
 
@@ -257,7 +253,7 @@ root@runnikri-mobl Coding → cmake -DCMAKE_BUILD_TYPE=Release .. && make
 ./sysmon
 ```
 
-![image](https://user-images.githubusercontent.com/45503355/195416715-923dc33a-acbd-411e-a774-7a38c13e72f3.png)
+![system monitor output on my laptop](https://user-images.githubusercontent.com/45503355/195416715-923dc33a-acbd-411e-a774-7a38c13e72f3.png)
 
 As seen above both the igpu and dgpu performance can be monitored using the tool.
 

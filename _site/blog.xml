@@ -12,187 +12,242 @@
 <generator>quarto-1.1.251</generator>
 <lastBuildDate>Wed, 12 Oct 2022 07:00:00 GMT</lastBuildDate>
 <item>
-  <title>Technical Ramblings</title>
+  <title>Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU</title>
   <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/index.html</link>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2022-08-12-arc-dgpu-linux.html</link>
   <description><![CDATA[ 
 
 
 
 
-<p>Welcome to my ramblings and learnings about software.</p>
+<section id="configure-linux-to-utilize-intel-arc-a370m-xe-hpg-discrete-gpu" class="level1">
+<h1>Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU</h1>
+<p>These instructions are for Ubuntu 22.04 LTS-based Oses. I am using Pop!_OS 22.04 LTS derivative of Ubuntu 22.04.</p>
+<section id="configure-linux-kernel" class="level2">
+<h2 class="anchored" data-anchor-id="configure-linux-kernel">Configure Linux kernel</h2>
+<ol type="1">
+<li>Install the latest available Linux kernel. For example, I have installed <strong>kernel 6.0</strong></li>
+</ol>
+<p>Install a recent version of the kernel. The easiest way to install a different kernel is by using <a href="https://github.com/bkw777/mainline">Mainline</a>.</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → add-apt-repository ppa:cappelikan/ppa</span>
+<span id="cb1-2"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → apt update</span>
+<span id="cb1-3"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → apt install mainline</span></code></pre></div>
+<p>As seen in the screenshot below, I am using Kernel 6.0.0:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://quartopub.com/sites/unrahul/technical-ramblings/posts/https:/user-images.githubusercontent.com/45503355/195398959-c28fe9f3-47c9-46cd-b1a0-5e26d8e6228a.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">image</figcaption><p></p>
+</figure>
+</div>
+<p>After installing the kernel, please restart the machine.</p>
+<ol start="2" type="1">
+<li>As Arc dGPUs support are still <code>experimental</code> in the kernel, you will have to force the dGPU to be detected. This can be done using the kernel force_probe parameter <code>i915.force_probe=&lt;device_id&gt;</code> for the Intel i915 HD graphics driver. This will force probe the driver for new Intel graphics devices that are recognized by the kernel but not adequately supported. Hopefully, you wouldn’t have to do that with a newer version of the kernel. I am using a <a href="https://www.lenovo.com/us/en/p/laptops/yoga/yoga-2-in-1-series/yoga-7i-gen-7-(16-inch-intel)">Yoga 7i (16” Intel) with Intel Arc Graphics</a> which has the Intel® Arc™ A370M discrete Graphics card (dgpu) along with an integrated Intel® UHD Graphics. The device id for this dgpu is <code>5693</code>, and you can find the device id of the card either by looking at i915 logs using <code>sudo dmesg | grep -i i915</code> or from Intel’s gpu <a href="https://dgpu-docs.intel.com/devices/hardware-table.html">hardware table</a>.</li>
+</ol>
+<p>Pop!_OS 22.04 LTS uses systemd to manage kernel boot params, to force i915 driver to enable the dgpu use <code>kernelstub</code> tool:</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → kernelstub <span class="at" style="color: #657422;">-a</span> <span class="st" style="color: #20794D;">"i915.force_probe=5693"</span></span></code></pre></div>
+<p>After this restart the machine and check i915 logs using <code>dmesg</code> to see if the graphics card has been detected:</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → dmesg <span class="kw" style="color: #003B4F;">|</span> <span class="fu" style="color: #4758AB;">grep</span> <span class="at" style="color: #657422;">-i</span> i915</span></code></pre></div>
+<p>You should see an output like this:</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding →  dmesg <span class="kw" style="color: #003B4F;">|</span> <span class="fu" style="color: #4758AB;">grep</span> <span class="at" style="color: #657422;">-i</span> i915</span>
+<span id="cb4-2"><span class="bu" style="color: null;">[</span>    0.000000] Command line: <span class="er" style="color: #AD0000;">initrd=\EFI\Pop_OS-97fe6a26-7d8a-4120-89db-8f2130b644b7\initrd.img</span> <span class="va" style="color: #111111;">root</span><span class="op" style="color: #5E5E5E;">=</span>UUID=97fe6a26-7d8a-4120-89db-8f2130b644b7 <span class="ex" style="color: null;">ro</span> quiet loglevel=0 systemd.show_status=false splash i915.force_probe=5693</span>
+<span id="cb4-3"><span class="bu" style="color: null;">[</span>    0.047217] Kernel command <span class="er" style="color: #AD0000;">line:</span> <span class="va" style="color: #111111;">initrd</span><span class="op" style="color: #5E5E5E;">=</span><span class="dt" style="color: #AD0000;">\E</span>FI<span class="dt" style="color: #AD0000;">\P</span>op_OS-97fe6a26-7d8a-4120-89db-8f2130b644b7<span class="dt" style="color: #AD0000;">\i</span>nitrd.img <span class="va" style="color: #111111;">root</span><span class="op" style="color: #5E5E5E;">=</span>UUID=97fe6a26-7d8a-4120-89db-8f2130b644b7 <span class="ex" style="color: null;">ro</span> quiet loglevel=0 systemd.show_status=false splash i915.force_probe=5693</span>
+<span id="cb4-4"><span class="bu" style="color: null;">[</span>    1.775328] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> VT-d active for gfx access</span>
+<span id="cb4-5"><span class="bu" style="color: null;">[</span>    1.775383] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">vgaarb:</span> <span class="ex" style="color: null;">deactivate</span> vga console</span>
+<span id="cb4-6"><span class="bu" style="color: null;">[</span>    1.775416] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> Using Transparent Hugepages</span>
+<span id="cb4-7"><span class="bu" style="color: null;">[</span>    1.775979] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">vgaarb:</span> <span class="ex" style="color: null;">changed</span> VGA decodes: olddecodes=io+mem,decodes=none:owns=io+mem</span>
+<span id="cb4-8"><span class="bu" style="color: null;">[</span>    1.777234] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> Finished loading DMC firmware i915/adlp_dmc_ver2_16.bin <span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">v2.16</span><span class="kw" style="color: #003B4F;">)</span></span>
+<span id="cb4-9"><span class="bu" style="color: null;">[</span>    1.912397] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> GuC firmware i915/adlp_guc_70.1.1.bin version 70.1</span>
+<span id="cb4-10"><span class="bu" style="color: null;">[</span>    1.912399] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> HuC firmware i915/tgl_huc_7.9.3.bin version 7.9</span>
+<span id="cb4-11"><span class="bu" style="color: null;">[</span>    1.926153] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> HuC authenticated</span>
+<span id="cb4-12"><span class="bu" style="color: null;">[</span>    1.926448] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> GuC submission enabled</span>
+<span id="cb4-13"><span class="bu" style="color: null;">[</span>    1.926449] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> GuC SLPC enabled</span>
+<span id="cb4-14"><span class="bu" style="color: null;">[</span>    1.927353] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> GuC RC: enabled</span>
+<span id="cb4-15"><span class="bu" style="color: null;">[</span>    1.930736] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> Protected Xe Path <span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">PXP</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">protected</span> content support initialized</span>
+<span id="cb4-16"><span class="bu" style="color: null;">[</span>    3.769893] [drm] Initialized <span class="er" style="color: #AD0000;">i915</span> <span class="ex" style="color: null;">1.6.0</span> 20201103 for 0000:00:02.0 on minor 0</span>
+<span id="cb4-17"><span class="bu" style="color: null;">[</span>    3.775461] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">enabling</span> <span class="ex" style="color: null;">device</span> <span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">0000</span> <span class="at" style="color: #657422;">-</span><span class="op" style="color: #5E5E5E;">&gt;</span> 0002<span class="kw" style="color: #003B4F;">)</span></span>
+<span id="cb4-18"><span class="bu" style="color: null;">[</span>    3.775491] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> Incompatible option enable_guc=3 <span class="at" style="color: #657422;">-</span> HuC is not supported!</span>
+<span id="cb4-19"><span class="bu" style="color: null;">[</span>    3.776346] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> VT-d active for gfx access</span>
+<span id="cb4-20"><span class="bu" style="color: null;">[</span>    3.776472] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> Local memory IO size: 0x00000003fa000000</span>
+<span id="cb4-21"><span class="bu" style="color: null;">[</span>    3.776476] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> Local memory available: 0x00000003fa000000</span>
+<span id="cb4-22"><span class="bu" style="color: null;">[</span>    3.787361] fbcon: i915drmfb <span class="er" style="color: #AD0000;">(fb0)</span> <span class="ex" style="color: null;">is</span> primary device</span>
+<span id="cb4-23"><span class="bu" style="color: null;">[</span>    3.787366] i915 0000:00:02.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> fb0: i915drmfb frame buffer device</span>
+<span id="cb4-24"><span class="bu" style="color: null;">[</span>    3.796583] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> Finished loading DMC firmware i915/dg2_dmc_ver2_06.bin <span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">v2.6</span><span class="kw" style="color: #003B4F;">)</span></span>
+<span id="cb4-25"><span class="bu" style="color: null;">[</span>    5.326692] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> failed to retrieve link info, disabling eDP</span>
+<span id="cb4-26"><span class="bu" style="color: null;">[</span>    5.428126] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> GuC firmware i915/dg2_guc_70.1.2.bin version 70.1</span>
+<span id="cb4-27"><span class="bu" style="color: null;">[</span>    5.442889] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> GuC submission enabled</span>
+<span id="cb4-28"><span class="bu" style="color: null;">[</span>    5.442892] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> GuC SLPC enabled</span>
+<span id="cb4-29"><span class="bu" style="color: null;">[</span>    5.443378] i915 0000:03:00.0: <span class="er" style="color: #AD0000;">[drm</span><span class="ex" style="color: null;">]</span> GuC RC: enabled</span></code></pre></div>
+<p>The dg2_guc is loaded as seen in the above line: <strong>[ 5.428126] i915 0000:03:00.0: [drm] GuC firmware i915/dg2_guc_70.1.2.bin version 70.1</strong>. Both the igpu and dgpu is detected and also the firmware is loaded. If drm verification fails and <a href="https://01.org/linuxgraphics/downloads/firmware">GuC</a> is not loaded, install the latest linux firmware from this <a href="https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/">link</a>:</p>
+<p>You can install the latest firmware files by cloning the repo and moving it to <code>/lib/firmware</code> (<strong>warning</strong>: this is a brute-force approach):</p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding →  git clone https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/</span>
+<span id="cb5-2"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding →  cd linux-firmware <span class="kw" style="color: #003B4F;">&amp;&amp;</span> <span class="fu" style="color: #4758AB;">yes</span> <span class="kw" style="color: #003B4F;">|</span> <span class="fu" style="color: #4758AB;">cp</span> <span class="at" style="color: #657422;">-r</span> <span class="pp" style="color: #AD0000;">*</span> /lib/firmware</span></code></pre></div>
+<p>For me, the firmware that came with Pop!_OS 22.04 LTS worked, i didn’t have to install the latest ones.</p>
+</section>
+<section id="setup-open-source-mesa-3d-graphics-libraries-for-opengl-and-vulkan" class="level2">
+<h2 class="anchored" data-anchor-id="setup-open-source-mesa-3d-graphics-libraries-for-opengl-and-vulkan">Setup Open source Mesa 3d Graphics libraries for OpenGL and Vulkan</h2>
+<ol type="1">
+<li>Install drivers</li>
+</ol>
+<p>Now, if you want media and graphics support beyond compute, install bleeding edge Mesa libraries from <a href="https://launchpad.net/~oibaf/+archive/ubuntu/graphics-drivers">oiabf ppa</a> that provides open graphics drivers; you can do it by:</p>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → add-apt-repository ppa:oibaf/graphics-drivers</span>
+<span id="cb6-2"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → apt-update</span>
+<span id="cb6-3"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → apt-upgrade</span>
+<span id="cb6-4"></span>
+<span id="cb6-5"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → dpkg <span class="at" style="color: #657422;">-l</span> <span class="kw" style="color: #003B4F;">|</span> <span class="fu" style="color: #4758AB;">grep</span> <span class="at" style="color: #657422;">-i</span> mesa</span>
+<span id="cb6-6"><span class="ex" style="color: null;">ii</span>  libegl-mesa0:amd64                                                      22.3~git2210120600.ddc5c3~oibaf~j                                 amd64        free implementation of the EGL API <span class="at" style="color: #657422;">--</span> Mesa vendor library</span>
+<span id="cb6-7"><span class="ex" style="color: null;">ii</span>  libgl1-mesa-dri:amd64                                                   22.3~git2210120600.ddc5c3~oibaf~j                                 amd64        free implementation of the OpenGL API <span class="at" style="color: #657422;">--</span> DRI modules</span>
+<span id="cb6-8"><span class="ex" style="color: null;">ii</span>  libglapi-mesa:amd64                                                     22.3~git2210120600.ddc5c3~oibaf~j                                 amd64        free implementation of the GL API <span class="at" style="color: #657422;">--</span> shared library</span>
+<span id="cb6-9"><span class="ex" style="color: null;">ii</span>  libglu1-mesa:amd64                                                      9.0.2-1                                                           amd64        Mesa OpenGL utility library <span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">GLU</span><span class="kw" style="color: #003B4F;">)</span></span>
+<span id="cb6-10"><span class="ex" style="color: null;">ii</span>  lib</span>
+<span id="cb6-11"><span class="ex" style="color: null;">-mesa0:amd64</span>                                                      22.3~git2210120600.ddc5c3~oibaf~j                                 amd64        free implementation of the OpenGL API <span class="at" style="color: #657422;">--</span> GLX vendor library</span>
+<span id="cb6-12"><span class="ex" style="color: null;">ii</span>  mesa-utils                                                              8.4.0-1ubuntu1                                                    amd64        Miscellaneous Mesa utilities <span class="at" style="color: #657422;">--</span> symlinks</span>
+<span id="cb6-13"><span class="ex" style="color: null;">ii</span>  mesa-utils-bin:amd64                                                    8.4.0-1ubuntu1                                                    amd64        Miscellaneous Mesa utilities <span class="at" style="color: #657422;">--</span> native applications</span>
+<span id="cb6-14"><span class="ex" style="color: null;">ii</span>  mesa-va-drivers:amd64                                                   22.3~git2210120600.ddc5c3~oibaf~j                                 amd64        Mesa VA-API video acceleration drivers</span>
+<span id="cb6-15"><span class="ex" style="color: null;">ii</span>  mesa-vdpau-drivers:amd64                                                22.3~git2210120600.ddc5c3~oibaf~j                                 amd64        Mesa VDPAU video acceleration drivers</span>
+<span id="cb6-16"><span class="ex" style="color: null;">ii</span>  mesa-vulkan-drivers:amd64                                               22.3~git2210120600.ddc5c3~oibaf~j                                 amd64        Mesa Vulkan graphics drivers</span></code></pre></div>
+<p>Fair warning, be careful as these drivers are bleeding edge and, by design, may not be stable. After installing the Mesa drivers, you should be able to run glx and Vulkan benchmarks.</p>
+<ol start="2" type="1">
+<li>Check if opengl detects the dgpu using glxinfo</li>
+</ol>
+<p>Install glxinfo from apt repo mesa-utils</p>
+<p>To use the dGPU, set the env variable <code>DRI_PRIME=1</code>, <a href="https://wiki.archlinux.org/title/PRIME">PRIME</a> is a technology in Linux that uses open source graphics drivers to use <code>switchable graphics</code> and install glxinfo from apt repo mesa-utils.</p>
+<p>Here is the output of glxinfo without setting <code>DRI_PRIME</code> environment variable:</p>
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → glxinfo <span class="at" style="color: #657422;">-B</span> <span class="kw" style="color: #003B4F;">|</span> <span class="fu" style="color: #4758AB;">grep</span> <span class="at" style="color: #657422;">-i</span> device</span>
+<span id="cb7-2">    <span class="ex" style="color: null;">Device:</span> Mesa Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> <span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">ADL</span> GT2<span class="kw" style="color: #003B4F;">)</span> <span class="kw" style="color: #003B4F;">(</span><span class="ex" style="color: null;">0x46a6</span><span class="kw" style="color: #003B4F;">)</span></span></code></pre></div>
+<p>After setting the environment variable for PRIME:</p>
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → export DRI_PRIME=1</span>
+<span id="cb8-2"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → glxinfo <span class="at" style="color: #657422;">-B</span> <span class="kw" style="color: #003B4F;">|</span> <span class="fu" style="color: #4758AB;">grep</span> <span class="at" style="color: #657422;">-i</span> device</span>
+<span id="cb8-3">    <span class="ex" style="color: null;">Device:</span> Mesa Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Arc</span><span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">tm</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">A370M</span> Graphics <span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">DG2</span><span class="kw" style="color: #003B4F;">)</span> <span class="kw" style="color: #003B4F;">(</span><span class="ex" style="color: null;">0x5693</span><span class="kw" style="color: #003B4F;">)</span></span></code></pre></div>
+<p>As you can the dgpu is recognized by Mesa OpenGL. yay!</p>
+<ol start="3" type="1">
+<li>Let’s try to run a benchmark on the Arc gpu to see how it performs. I am using glmark2, which can be installed on Ubuntu-based OSes easily using:</li>
+</ol>
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → apt-get install glmark2</span></code></pre></div>
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → export DRI_PRIME=1</span>
+<span id="cb10-2"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → glxinfo <span class="at" style="color: #657422;">-B</span> <span class="kw" style="color: #003B4F;">|</span> <span class="fu" style="color: #4758AB;">grep</span> <span class="at" style="color: #657422;">-i</span> device</span>
+<span id="cb10-3">    <span class="ex" style="color: null;">Device:</span> Mesa Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Arc</span><span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">tm</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">A370M</span> Graphics <span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">DG2</span><span class="kw" style="color: #003B4F;">)</span> <span class="kw" style="color: #003B4F;">(</span><span class="ex" style="color: null;">0x5693</span><span class="kw" style="color: #003B4F;">)</span></span>
+<span id="cb10-4"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → glmark2</span></code></pre></div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://quartopub.com/sites/unrahul/technical-ramblings/posts/assets/arc370m_bench.gif" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">glmark2</figcaption><p></p>
+</figure>
+</div>
+<ol start="4" type="1">
+<li>Now, let’s install the intel compute drivers. <a href="https://github.com/intel/compute-runtime/releases">Goto</a>. Get the latest release and install using the deb packages for OpenCL, level zero, igc etc.</li>
+</ol>
+<p>As of this writing, the latest compute driver release version is <a href="https://github.com/intel/compute-runtime/releases/tag/22.39.24347">22.39.24347</a>:</p>
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → cd /tmp <span class="kw" style="color: #003B4F;">&amp;&amp;</span> <span class="fu" style="color: #4758AB;">mkdir</span> compute_drivers</span>
+<span id="cb11-2"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → cd compute_drivers</span>
+<span id="cb11-3"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.12149.1/intel-igc-core_1.0.12149.1_amd64.deb</span>
+<span id="cb11-4"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.12149.1/intel-igc-opencl_1.0.12149.1_amd64.deb</span>
+<span id="cb11-5"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-level-zero-gpu_1.3.24347_amd64.deb</span>
+<span id="cb11-6"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-opencl-icd_22.39.24347_amd64.deb</span>
+<span id="cb11-7"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/libigdgmm12_22.2.0_amd64.deb</span>
+<span id="cb11-8"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → dpkg <span class="at" style="color: #657422;">-i</span> <span class="pp" style="color: #AD0000;">*</span>.deb</span></code></pre></div>
+<p>Now that the compute drivers are installed let’s see if OpenCL can detect the dgpu. Install <code>clinfo</code> from apt and check using:</p>
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → clinfo <span class="kw" style="color: #003B4F;">|</span> <span class="fu" style="color: #4758AB;">grep</span> <span class="st" style="color: #20794D;">"0x5690"</span></span>
+<span id="cb12-2">  <span class="ex" style="color: null;">Device</span> Name                                     Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x5693]</span>
+<span id="cb12-3">    <span class="ex" style="color: null;">Device</span> Name                                   Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x5693]</span>
+<span id="cb12-4">    <span class="ex" style="color: null;">Device</span> Name                                   Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x5693]</span>
+<span id="cb12-5">    <span class="ex" style="color: null;">Device</span> Name                                   Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x5693]</span></code></pre></div>
+<p>We can see that the dgpu has been detected.</p>
+</section>
+<section id="install-oneapi-basekit-and-device-discovery-using-sycl" class="level2">
+<h2 class="anchored" data-anchor-id="install-oneapi-basekit-and-device-discovery-using-sycl">Install oneAPI basekit and device discovery using sycl</h2>
+<ol type="1">
+<li>Finally, install the oneapi basekit to use the dpcpp runtime. I used 2022.2.0 version of oneapi basekit.</li>
+</ol>
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><span class="ex" style="color: null;">04:37:56</span>  <span class="kw" style="color: #003B4F;">|</span><span class="ex" style="color: null;">base</span><span class="kw" style="color: #003B4F;">|</span><span class="ex" style="color: null;">rahul@pop-os</span> ~ → dpcpp <span class="at" style="color: #657422;">-v</span></span>
+<span id="cb13-2"><span class="ex" style="color: null;">Intel</span><span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">oneAPI</span> DPC++/C++ Compiler 2022.2.0 <span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">2022.2.0.20220730</span><span class="kw" style="color: #003B4F;">)</span></span>
+<span id="cb13-3"><span class="ex" style="color: null;">Target:</span> x86_64-unknown-linux-gnu</span>
+<span id="cb13-4"><span class="ex" style="color: null;">Thread</span> model: posix</span>
+<span id="cb13-5"><span class="ex" style="color: null;">InstalledDir:</span> /opt/intel/oneapi/compiler/2022.2.0/linux/bin-llvm</span>
+<span id="cb13-6"><span class="ex" style="color: null;">Found</span> candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/11</span>
+<span id="cb13-7"><span class="ex" style="color: null;">Selected</span> GCC installation: /usr/lib/gcc/x86_64-linux-gnu/11</span>
+<span id="cb13-8"><span class="ex" style="color: null;">Candidate</span> multilib: .<span class="kw" style="color: #003B4F;">;</span><span class="ex" style="color: null;">@m64</span></span>
+<span id="cb13-9"><span class="ex" style="color: null;">Selected</span> multilib: .<span class="kw" style="color: #003B4F;">;</span><span class="ex" style="color: null;">@m64</span></span></code></pre></div>
+<ol start="2" type="1">
+<li>Device discovery using sycl-ls see if sycl can detect the dgpu:</li>
+</ol>
+<p>Intel dgpus like the A370m are represented as SYCL devices. <code>sycl-ls</code> is a tool that is part of the oneAPI basekit that can show all the detected devices and all the SYCL backends support by the runtime. Once the oneapi basekit has been installed, source the environment using:</p>
+<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → source /opt/intel/oneapi/setvars.sh </span></code></pre></div>
+<p>Device discovery using syclto see if sycl can detect the dgpu:</p>
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → sycl-ls</span>
+<span id="cb15-2"><span class="ex" style="color: null;">[opencl:acc:0]</span> Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">FPGA</span> Emulation Platform for OpenCL<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">TM</span><span class="kw" style="color: #003B4F;">)</span><span class="ex" style="color: null;">,</span> Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">FPGA</span> Emulation Device 1.2 [2022.14.7.0.30_160000]</span>
+<span id="cb15-3"><span class="ex" style="color: null;">[opencl:cpu:1]</span> Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">OpenCL,</span> 12th Gen Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Core</span><span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">TM</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">i7-12700H</span> 3.0 [2022.14.7.0.30_160000]</span>
+<span id="cb15-4"><span class="ex" style="color: null;">[opencl:gpu:2]</span> Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">OpenCL</span> HD Graphics, Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x5693] 3.0 [22.40.024349]</span>
+<span id="cb15-5"><span class="ex" style="color: null;">[opencl:gpu:3]</span> Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">OpenCL</span> HD Graphics, Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x46a6] 3.0 [22.40.024349]</span>
+<span id="cb15-6"><span class="ex" style="color: null;">[ext_oneapi_level_zero:gpu:0]</span> Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Level-Zero,</span> Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x5693] 1.3 [1.3.24349]</span>
+<span id="cb15-7"><span class="ex" style="color: null;">[ext_oneapi_level_zero:gpu:1]</span> Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Level-Zero,</span> Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x46a6] 1.3 [1.3.24349]</span></code></pre></div>
+<p>To get a more verbose output, use, <code>sycl-ls --verbose</code>:</p>
+<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → sycl-ls <span class="at" style="color: #657422;">--verbose</span> <span class="kw" style="color: #003B4F;">|</span> <span class="fu" style="color: #4758AB;">grep</span> <span class="at" style="color: #657422;">-i</span> name</span>
+<span id="cb16-2">    <span class="ex" style="color: null;">Name</span>     : Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">FPGA</span> Emulation Platform for OpenCL<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">TM</span><span class="kw" style="color: #003B4F;">)</span></span>
+<span id="cb16-3">        <span class="ex" style="color: null;">Name</span>       : Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">FPGA</span> Emulation Device</span>
+<span id="cb16-4">    <span class="ex" style="color: null;">Name</span>     : Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">OpenCL</span></span>
+<span id="cb16-5">        <span class="ex" style="color: null;">Name</span>       : 12th Gen Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Core</span><span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">TM</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">i7-12700H</span></span>
+<span id="cb16-6">    <span class="ex" style="color: null;">Name</span>     : Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">OpenCL</span> HD Graphics</span>
+<span id="cb16-7">        <span class="ex" style="color: null;">Name</span>       : Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x5693]</span>
+<span id="cb16-8">    <span class="ex" style="color: null;">Name</span>     : Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">OpenCL</span> HD Graphics</span>
+<span id="cb16-9">        <span class="ex" style="color: null;">Name</span>       : Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x46a6]</span>
+<span id="cb16-10">    <span class="ex" style="color: null;">Name</span>     : Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Level-Zero</span></span>
+<span id="cb16-11">        <span class="ex" style="color: null;">Name</span>       : Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x5693]</span>
+<span id="cb16-12">        <span class="ex" style="color: null;">Name</span>       : Intel<span class="er" style="color: #AD0000;">(</span><span class="ex" style="color: null;">R</span><span class="kw" style="color: #003B4F;">)</span> <span class="ex" style="color: null;">Graphics</span> [0x46a6]</span>
+<span id="cb16-13">    <span class="ex" style="color: null;">Name</span>     : SYCL host platform</span>
+<span id="cb16-14">        <span class="ex" style="color: null;">Name</span>       : SYCL host device</span></code></pre></div>
+<p>As seen above 2 GPU devices are detected by the SYCL runtime and are supported using both OpenCL and Level-Zero drivers.</p>
+<p>We now have configured the machine with all the required software stack to fully utilize the discrete gpu available on the laptop. These instructions can be used to enable any Arc discrete GPUs like the A370m, A770m, A770, A750 etc on Linux.</p>
+</section>
+<section id="intels-system-monitoring-utility-to-monitor-the-dgpu" class="level2">
+<h2 class="anchored" data-anchor-id="intels-system-monitoring-utility-to-monitor-the-dgpu">Intel’s System Monitoring Utility to monitor the dgpu</h2>
+<ol type="1">
+<li>Install sysmon</li>
+</ol>
+<p><code>sysmon</code> is a tool similar to <code>top</code> for cpu, that is part of Intel’s <a href="https://github.com/intel/pti-gpu/tree/master/tools/sysmon">Platform Tools Interfaces for GPU</a>. <code>sysmon</code> helps in monitoring the Intel gpu parameters like frequency, memory, etc. The tool can be installed using:</p>
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → git clone https://github.com/intel/pti-gpu/</span>
+<span id="cb17-2"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → cd pti-gpu/tools/sysmon</span>
+<span id="cb17-3"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → mkdir build <span class="kw" style="color: #003B4F;">&amp;&amp;</span> <span class="bu" style="color: null;">cd</span> build</span>
+<span id="cb17-4"><span class="ex" style="color: null;">root@runnikri-mobl</span> Coding → cmake <span class="at" style="color: #657422;">-DCMAKE_BUILD_TYPE</span><span class="op" style="color: #5E5E5E;">=</span>Release .. <span class="kw" style="color: #003B4F;">&amp;&amp;</span> <span class="fu" style="color: #4758AB;">make</span></span></code></pre></div>
+<ol start="2" type="1">
+<li>After successfully building <code>sysmon</code> let’s check the dgpu frequency:</li>
+</ol>
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><span class="ex" style="color: null;">./sysmon</span></span></code></pre></div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://quartopub.com/sites/unrahul/technical-ramblings/posts/https:/user-images.githubusercontent.com/45503355/195416715-923dc33a-acbd-411e-a774-7a38c13e72f3.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">image</figcaption><p></p>
+</figure>
+</div>
+<p>As seen above both the igpu and dgpu performance can be monitored using the tool.</p>
+</section>
+<section id="pytorch-and-ipex-on-dgpu" class="level2">
+<h2 class="anchored" data-anchor-id="pytorch-and-ipex-on-dgpu">Pytorch and IPEX on dgpu</h2>
+<p>Checkout the <code>pytorch</code> <a href="https://github.com/rahulunair/intel_arc_dgpu_linux/tree/main/pytorch">directory</a> to know how to install PyTorch and IPEX with dGPU support.</p>
+</section>
+<section id="acknowledgements" class="level2">
+<h2 class="anchored" data-anchor-id="acknowledgements">Acknowledgements</h2>
+<p>I wouldn’t have been able to do this without the help of <a href="https://github.com/sanchitintel"><span class="citation" data-cites="sanchitintel">@sanchitintel</span></a> and <a href="https://github.com/gujinghui"><span class="citation" data-cites="gujingui">@gujingui</span></a>. Also, <a href="https://www.phoronix.com/review/intel-arc-graphics-linux">Phoronix</a> has been publishing updates on the best way to enable Intel Arc dGPU, detailing the version of the kernel, mesa drivers, etc. That was my start in setting up the software stack.</p>
+</section>
+<section id="something-not-working" class="level2">
+<h2 class="anchored" data-anchor-id="something-not-working">Something not working?</h2>
+<p>Please create an <a href="https://github.com/rahulunair/intel_arc_dgpu_linux/issues">issue</a> here to track any issues with these steps.</p>
+</section>
+<section id="citation" class="level2">
+<h2 class="anchored" data-anchor-id="citation">Citation</h2>
+<p>If you are using this information, please cite using the below link:</p>
+<p>Unnikrishnan Nair, R. (2022). dgpu_setup_pytorch (Version 1.0.0) [Computer software]. https://github.com/rahulunair/intel_arc_dgpu_linux</p>
 
 
+</section>
+</section>
 
  ]]></description>
-  <category>news</category>
-  <category>code</category>
-  <category>analysis</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/index.html</guid>
+  <category>intel</category>
+  <category>dgpu</category>
+  <category>graphics</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2022-08-12-arc-dgpu-linux.html</guid>
   <pubDate>Wed, 12 Oct 2022 07:00:00 GMT</pubDate>
-  <media:content url="https://quartopub.com/sites/unrahul/technical-ramblings/posts/images/dali1.jpg" medium="image" type="image/jpeg"/>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2016-01-03-graduated.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2016-01-03-graduated.html</link>
-  <description>{B4F502887207:/posts/2016-01-03-graduated.html}</description>
-  <category>life</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2016-01-03-graduated.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2017-01-26-crypto-checklist.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-01-26-crypto-checklist.html</link>
-  <description>{B4F502887207:/posts/2017-01-26-crypto-checklist.html}</description>
-  <category>crypto</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-01-26-crypto-checklist.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2017-02-12-prf-and-macs.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-02-12-prf-and-macs.html</link>
-  <description>{B4F502887207:/posts/2017-02-12-prf-and-macs.html}</description>
-  <category>crypto</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-02-12-prf-and-macs.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2017-03-28-borg.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-28-borg.html</link>
-  <description>{B4F502887207:/posts/2017-03-28-borg.html}</description>
-  <category>coding</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-28-borg.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2017-03-31-juggling.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-31-juggling.html</link>
-  <description>{B4F502887207:/posts/2017-03-31-juggling.html}</description>
-  <category>coding</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-31-juggling.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2020-03-07-ahoy-rust.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-07-ahoy-rust.html</link>
-  <description>{B4F502887207:/posts/2020-03-07-ahoy-rust.html}</description>
-  <category>coding</category>
-  <category>rust</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-07-ahoy-rust.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-  <media:content url="https://imgur.com/LZ6VxZR.png" medium="image" type="image/png"/>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2020-03-09-cargo.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-09-cargo.html</link>
-  <description>{B4F502887207:/posts/2020-03-09-cargo.html}</description>
-  <category>coding</category>
-  <category>rust</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-09-cargo.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2020-03-16-vars.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-16-vars.html</link>
-  <description>{B4F502887207:/posts/2020-03-16-vars.html}</description>
-  <category>coding</category>
-  <category>rust</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-16-vars.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2020-03-22-pyjuggle.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-22-pyjuggle.html</link>
-  <description>{B4F502887207:/posts/2020-03-22-pyjuggle.html}</description>
-  <category>coding</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-22-pyjuggle.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2020-03-23-tiemy.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-23-tiemy.html</link>
-  <description>{B4F502887207:/posts/2020-03-23-tiemy.html}</description>
-  <category>coding</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-23-tiemy.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2020-05-23-ray.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-05-23-ray.html</link>
-  <description>{B4F502887207:/posts/2020-05-23-ray.html}</description>
-  <category>coding</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-05-23-ray.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2020-07-09-learning-methods.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-learning-methods.html</link>
-  <description>{B4F502887207:/posts/2020-07-09-learning-methods.html}</description>
-  <category>prose</category>
-  <category>ml</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-learning-methods.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2020-07-09-rl-intro.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-rl-intro.html</link>
-  <description>{B4F502887207:/posts/2020-07-09-rl-intro.html}</description>
-  <category>prose</category>
-  <category>ml</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-rl-intro.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2020-07-14-learning-methods.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-14-learning-methods.html</link>
-  <description>{B4F502887207:/posts/2020-07-14-learning-methods.html}</description>
-  <category>prose</category>
-  <category>ml</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-14-learning-methods.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2020-07-15-ml-forget.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-15-ml-forget.html</link>
-  <description>{B4F502887207:/posts/2020-07-15-ml-forget.html}</description>
-  <category>ml</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-15-ml-forget.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2021-01-14-rust-result.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-14-rust-result.html</link>
-  <description>{B4F502887207:/posts/2021-01-14-rust-result.html}</description>
-  <category>coding</category>
-  <category>rust</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-14-rust-result.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-</item>
-<item>
-  <title>{B4F502887207:/posts/2021-01-17-rust-turbofish.html}</title>
-  <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-17-rust-turbofish.html</link>
-  <description>{B4F502887207:/posts/2021-01-17-rust-turbofish.html}</description>
-  <category>coding</category>
-  <category>rust</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-17-rust-turbofish.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
+  <media:content url="https://user-images.githubusercontent.com/45503355/195398959-c28fe9f3-47c9-46cd-b1a0-5e26d8e6228a.png" medium="image" type="image/png"/>
 </item>
 <item>
   <title>{B4F502887207:/posts/2021-03-22-rust-type.html}</title>
@@ -202,19 +257,169 @@
   <category>coding</category>
   <category>rust</category>
   <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-03-22-rust-type.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
+  <pubDate>Mon, 22 Mar 2021 07:00:00 GMT</pubDate>
 </item>
 <item>
-  <title>{B4F502887207:/posts/2022-08-12-arc-dgpu-linux.html}</title>
+  <title>{B4F502887207:/posts/2021-01-17-rust-turbofish.html}</title>
   <dc:creator>unrahul</dc:creator>
-  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2022-08-12-arc-dgpu-linux.html</link>
-  <description>{B4F502887207:/posts/2022-08-12-arc-dgpu-linux.html}</description>
-  <category>intel</category>
-  <category>dgpu</category>
-  <category>graphics</category>
-  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2022-08-12-arc-dgpu-linux.html</guid>
-  <pubDate>Thu, 13 Oct 2022 02:07:39 GMT</pubDate>
-  <media:content url="https://user-images.githubusercontent.com/45503355/195398959-c28fe9f3-47c9-46cd-b1a0-5e26d8e6228a.png" medium="image" type="image/png"/>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-17-rust-turbofish.html</link>
+  <description>{B4F502887207:/posts/2021-01-17-rust-turbofish.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-17-rust-turbofish.html</guid>
+  <pubDate>Sun, 17 Jan 2021 08:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2021-01-14-rust-result.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-14-rust-result.html</link>
+  <description>{B4F502887207:/posts/2021-01-14-rust-result.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-14-rust-result.html</guid>
+  <pubDate>Thu, 14 Jan 2021 08:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-07-15-ml-forget.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-15-ml-forget.html</link>
+  <description>{B4F502887207:/posts/2020-07-15-ml-forget.html}</description>
+  <category>ml</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-15-ml-forget.html</guid>
+  <pubDate>Wed, 15 Jul 2020 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-07-14-learning-methods.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-14-learning-methods.html</link>
+  <description>{B4F502887207:/posts/2020-07-14-learning-methods.html}</description>
+  <category>prose</category>
+  <category>ml</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-14-learning-methods.html</guid>
+  <pubDate>Tue, 14 Jul 2020 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-07-09-learning-methods.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-learning-methods.html</link>
+  <description>{B4F502887207:/posts/2020-07-09-learning-methods.html}</description>
+  <category>prose</category>
+  <category>ml</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-learning-methods.html</guid>
+  <pubDate>Thu, 09 Jul 2020 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-05-23-ray.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-05-23-ray.html</link>
+  <description>{B4F502887207:/posts/2020-05-23-ray.html}</description>
+  <category>coding</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-05-23-ray.html</guid>
+  <pubDate>Sat, 23 May 2020 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-03-23-tiemy.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-23-tiemy.html</link>
+  <description>{B4F502887207:/posts/2020-03-23-tiemy.html}</description>
+  <category>coding</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-23-tiemy.html</guid>
+  <pubDate>Mon, 23 Mar 2020 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-03-22-pyjuggle.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-22-pyjuggle.html</link>
+  <description>{B4F502887207:/posts/2020-03-22-pyjuggle.html}</description>
+  <category>coding</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-22-pyjuggle.html</guid>
+  <pubDate>Sun, 22 Mar 2020 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-03-16-vars.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-16-vars.html</link>
+  <description>{B4F502887207:/posts/2020-03-16-vars.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-16-vars.html</guid>
+  <pubDate>Mon, 16 Mar 2020 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-03-09-cargo.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-09-cargo.html</link>
+  <description>{B4F502887207:/posts/2020-03-09-cargo.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-09-cargo.html</guid>
+  <pubDate>Mon, 09 Mar 2020 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2017-03-31-juggling.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-31-juggling.html</link>
+  <description>{B4F502887207:/posts/2017-03-31-juggling.html}</description>
+  <category>coding</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-31-juggling.html</guid>
+  <pubDate>Fri, 31 Mar 2017 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2017-03-28-borg.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-28-borg.html</link>
+  <description>{B4F502887207:/posts/2017-03-28-borg.html}</description>
+  <category>coding</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-28-borg.html</guid>
+  <pubDate>Tue, 28 Mar 2017 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2017-02-12-prf-and-macs.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-02-12-prf-and-macs.html</link>
+  <description>{B4F502887207:/posts/2017-02-12-prf-and-macs.html}</description>
+  <category>crypto</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-02-12-prf-and-macs.html</guid>
+  <pubDate>Sun, 12 Feb 2017 08:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2017-01-26-crypto-checklist.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-01-26-crypto-checklist.html</link>
+  <description>{B4F502887207:/posts/2017-01-26-crypto-checklist.html}</description>
+  <category>crypto</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-01-26-crypto-checklist.html</guid>
+  <pubDate>Thu, 26 Jan 2017 08:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2016-01-03-graduated.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2016-01-03-graduated.html</link>
+  <description>{B4F502887207:/posts/2016-01-03-graduated.html}</description>
+  <category>life</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2016-01-03-graduated.html</guid>
+  <pubDate>Sun, 03 Jan 2016 08:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-03-07-ahoy-rust.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-07-ahoy-rust.html</link>
+  <description>{B4F502887207:/posts/2020-03-07-ahoy-rust.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-07-ahoy-rust.html</guid>
+  <pubDate>Thu, 13 Oct 2022 02:46:42 GMT</pubDate>
+  <media:content url="https://imgur.com/LZ6VxZR.png" medium="image" type="image/png"/>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-07-09-rl-intro.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-rl-intro.html</link>
+  <description>{B4F502887207:/posts/2020-07-09-rl-intro.html}</description>
+  <category>prose</category>
+  <category>ml</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-rl-intro.html</guid>
+  <pubDate>Thu, 13 Oct 2022 02:46:42 GMT</pubDate>
 </item>
 </channel>
 </rss>

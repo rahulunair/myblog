@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="unrahul">
-<meta name="description" content="Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU">
+<meta name="dcterms.date" content="2022-10-12">
 
-<title>Technical ramblings – arc-dgpu-linux</title>
+<title>Technical ramblings - Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -168,7 +168,39 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">intel</div>
+                <div class="quarto-category">dgpu</div>
+                <div class="quarto-category">graphics</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>unrahul </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">October 12, 2022</p>
+      </div>
+    </div>
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
@@ -176,9 +208,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#configure-linux-to-utilize-intel-arc-a370m-xe-hpg-discrete-gpu" id="toc-configure-linux-to-utilize-intel-arc-a370m-xe-hpg-discrete-gpu" class="nav-link active" data-scroll-target="#configure-linux-to-utilize-intel-arc-a370m-xe-hpg-discrete-gpu">Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU</a>
-  <ul class="collapse">
-  <li><a href="#configure-linux-kernel" id="toc-configure-linux-kernel" class="nav-link" data-scroll-target="#configure-linux-kernel">Configure Linux kernel</a></li>
+  <li><a href="#configure-linux-kernel" id="toc-configure-linux-kernel" class="nav-link active" data-scroll-target="#configure-linux-kernel">Configure Linux kernel</a></li>
   <li><a href="#setup-open-source-mesa-3d-graphics-libraries-for-opengl-and-vulkan" id="toc-setup-open-source-mesa-3d-graphics-libraries-for-opengl-and-vulkan" class="nav-link" data-scroll-target="#setup-open-source-mesa-3d-graphics-libraries-for-opengl-and-vulkan">Setup Open source Mesa 3d Graphics libraries for OpenGL and Vulkan</a></li>
   <li><a href="#install-oneapi-basekit-and-device-discovery-using-sycl" id="toc-install-oneapi-basekit-and-device-discovery-using-sycl" class="nav-link" data-scroll-target="#install-oneapi-basekit-and-device-discovery-using-sycl">Install oneAPI basekit and device discovery using sycl</a></li>
   <li><a href="#intels-system-monitoring-utility-to-monitor-the-dgpu" id="toc-intels-system-monitoring-utility-to-monitor-the-dgpu" class="nav-link" data-scroll-target="#intels-system-monitoring-utility-to-monitor-the-dgpu">Intel’s System Monitoring Utility to monitor the dgpu</a></li>
@@ -186,7 +216,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#acknowledgements" id="toc-acknowledgements" class="nav-link" data-scroll-target="#acknowledgements">Acknowledgements</a></li>
   <li><a href="#something-not-working" id="toc-something-not-working" class="nav-link" data-scroll-target="#something-not-working">Something not working?</a></li>
   <li><a href="#citation" id="toc-citation" class="nav-link" data-scroll-target="#citation">Citation</a></li>
-  </ul></li>
   </ul>
 </nav>
     </div>
@@ -195,8 +224,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<section id="configure-linux-to-utilize-intel-arc-a370m-xe-hpg-discrete-gpu" class="level1">
-<h1>Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU</h1>
+
 <p>These instructions are for Ubuntu 22.04 LTS-based Oses. I am using Pop!_OS 22.04 LTS derivative of Ubuntu 22.04.</p>
 <section id="configure-linux-kernel" class="level2">
 <h2 class="anchored" data-anchor-id="configure-linux-kernel">Configure Linux kernel</h2>
@@ -211,7 +239,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="https://user-images.githubusercontent.com/45503355/195398959-c28fe9f3-47c9-46cd-b1a0-5e26d8e6228a.png" class="img-fluid figure-img"></p>
-<p></p><figcaption class="figure-caption">image</figcaption><p></p>
+<p></p><figcaption class="figure-caption">Mainline kernel installer</figcaption><p></p>
 </figure>
 </div>
 <p>After installing the kernel, please restart the machine.</p>
@@ -305,7 +333,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="assets/arc370m_bench.gif" class="img-fluid figure-img"></p>
-<p></p><figcaption class="figure-caption">glmark2</figcaption><p></p>
+<p></p><figcaption class="figure-caption">glmark2 running on Arc 370m dGPU</figcaption><p></p>
 </figure>
 </div>
 <ol start="4" type="1">
@@ -390,7 +418,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="https://user-images.githubusercontent.com/45503355/195416715-923dc33a-acbd-411e-a774-7a38c13e72f3.png" class="img-fluid figure-img"></p>
-<p></p><figcaption class="figure-caption">image</figcaption><p></p>
+<p></p><figcaption class="figure-caption">system monitor output on my laptop</figcaption><p></p>
 </figure>
 </div>
 <p>As seen above both the igpu and dgpu performance can be monitored using the tool.</p>
@@ -413,7 +441,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Unnikrishnan Nair, R. (2022). dgpu_setup_pytorch (Version 1.0.0) [Computer software]. https://github.com/rahulunair/intel_arc_dgpu_linux</p>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
