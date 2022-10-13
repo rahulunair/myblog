@@ -12,8 +12,9 @@ website:
         href: https://twitter.com/unrahu1
 format:
   html:
-    theme: simplex
-    css: styles.css
+    theme: 
+      light: [litera, jollydata.scss]
+      dark: [superhero, jollydata.scss]
 
 
 

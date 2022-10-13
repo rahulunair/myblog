@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.251">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="unrahul">
+<meta name="description" content="Learning methods in RL">
+
+<title>Technical ramblings – learning-methods</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Technical ramblings</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../blog.html">blog.html</a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rahulunair"><i class="bi bi-github" role="img">
+</i> 
+ </a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/unrahu1"><i class="bi bi-twitter" role="img">
+</i> 
+ </a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#temporal-difference-or-td-learning" id="toc-temporal-difference-or-td-learning" class="nav-link active" data-scroll-target="#temporal-difference-or-td-learning">Temporal Difference or TD Learning</a></li>
+  <li><a href="#q-learning" id="toc-q-learning" class="nav-link" data-scroll-target="#q-learning">Q learning</a></li>
+  <li><a href="#sarsa-learning" id="toc-sarsa-learning" class="nav-link" data-scroll-target="#sarsa-learning">SARSA learning</a></li>
+  <li><a href="#actor-critic-algorithms" id="toc-actor-critic-algorithms" class="nav-link" data-scroll-target="#actor-critic-algorithms">Actor Critic Algorithms</a></li>
+  <li><a href="#the-end" id="toc-the-end" class="nav-link" data-scroll-target="#the-end">The end</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+<p>Model free learning can be done using variations of temporal difference learning or Monte Carlo methods.</p>
+<section id="temporal-difference-or-td-learning" class="level2">
+<h2 class="anchored" data-anchor-id="temporal-difference-or-td-learning">Temporal Difference or TD Learning</h2>
+<p>From each step learn something that would make enable us to improve the estimated value for the next step. Consider this, three scenarios, in which the third scenario depends on the second and or the first. If that is the case, then knowing the states in the scenario can help us in better predicting the states in scenario three. We can improve the prediction in the third scenario if there is any change in states for either of the other scenarios, rather than waiting for the third one to finish and then realizing our prediction was close or way off. Consider, you are going somewhere and you expect to go through 2 cities. You estimate that you would reach the destination in 3 hours, as you know or estimate that you will need 1 hour each to cover the 2 other cities. Now, if it’s your lucky day and traffic is low in the first city, thus you could pass through it in 30 minutes instead of 60. Thus, you can estimate that you will reach the final destination 30 minutes early. While passing through the second city, you have car trouble and it takes an hour to fix it and start again. Thus, you now predict you would reach 30 minutes past the estimated time at your destination (Provided, you don’t face any further uncertainties). This continuous improvement of estimate is the main principle behind temporal difference or TD learning. We can say, TD learning is an on-line learning (as we don’t need to wait for the entire episode to finish before updating our estimates). It bootstraps on the estimated value of other states to estimate value of the state in concern.</p>
+<p><strong>Types</strong> : TD(0) and TD(lambda)</p>
+</section>
+<section id="q-learning" class="level2">
+<h2 class="anchored" data-anchor-id="q-learning">Q learning</h2>
+<p>It is a variation of TD(0) learning, where we incrementally estimate the Q value for a state based on immediate rewards and the Q value for the next state. The variation is that, to estimate the Q value for the next state, we add the immediate reward with the Q value for the next state that maximizes the value (Q value for the state for the action that gives the maximum value). Also, unlike TD(0) learning, Q learning is an off-policy learning algorithm. Thus the estimated Q value at instance k is, the Q value at k for the state and action at time t plus the difference between estimated Q value using the immediate reward and discounted Q value for the next state for the action that gives the maximum value and the Q value of the current state. This delta between estimated Q value for the next state and Q value for the current state is weighted by a factor called the learning rate, which is between [0, 1]. The weighting factor or learning rate alpha can be decreased based on each iteration or as in many scenarios, use a small fixed value. The rate basically determines by how much we update the Q value. Now, if that sounds complex, trust me, it’s not, I am just not that good at explaining I guess. Just search for the algorithm on line and you will get it instantly.</p>
+<p>How is it done?</p>
+<p>Well, basically, the agent at time, t, in state, s, does an action, a, and moves to the next state and thus receives a reward, r. Now at time, t+1, the agent knows that it is in state, s, and knows the reward it obtained from the previous state. It uses this information along with the Q value for the optimum action for this state to get a better estimate of the Q value of the state, s. For this update to work, we need to have some starting point of Q values, in practice this is assumed to be zero or set randomly and at each iteration, k, the Q value is updated a little bit based on the learning rate to be a little closer to reality. In time, after many iterations of learning, the Q values for each states will reflect the real values that can be obtained. It has been proved (don’t ask me how, I haven’t checked out the proof) that if we do this iterative update an infinite time, we will eventually get the right Q values, irrespective on the initial Q values, the actions we took in each state etc.</p>
+</section>
+<section id="sarsa-learning" class="level2">
+<h2 class="anchored" data-anchor-id="sarsa-learning">SARSA learning</h2>
+<p>First of all, what a creative naming, it must have taken them a long time to come up with this name. So, why is it called SARSA?, It’s because, the learning algorithm uses the present state, S, the action taken, A, the reward obtained, R, the next state, S<code>, and the action taken, A</code>, in this next state, while following a policy. SARSA stands for State-Action-Reward-State-Action!. While in traditional Q value function, the objective was to estimate the optimum policy doing exploration of a random policy, in SARSA, we start with a policy and tries to estimate the Q value of starting at a state, doing an action in state and following a policy, that is not changed in the course of learning. Thus it is an on-policy learning algorithm, as we don’t change the policy that has been chosen for a particular iteration. The idea is that if we are able to try all the states and all the possible actions infinitely many times, then this will eventually converge to the optimum policy itself. For a particular iteration, it computationally less demanding that Q learning, but overall, it may need more time to converge. This learning is used when the state transition probabilities might not be fixed, there can be changes in the probabilities of switching from one state to the other. The only change in the algorithm compared to Q learning is, it doesn’t take the action that maximizes the utility when calculating the <code>next state</code> value, but obeys by the policy and takes the stipulated action. Here, too if you don’t understand it, please check the algorithm once on line and it will be clear.</p>
+</section>
+<section id="actor-critic-algorithms" class="level2">
+<h2 class="anchored" data-anchor-id="actor-critic-algorithms">Actor Critic Algorithms</h2>
+<p>This class of learning algorithms has two parts, the Actor, which is a policy function and the Critic, which is a value function that is used to obtain the value for a state transition following an action. After an action has been selected, the Critic estimates the value for the state and calculates value for the state (immediate reward plus value for the next state). This is used to evaluate the action taken, which is the difference between the calculated value (using Bellman equation) and the estimated value. This difference or delta is used to improve the probability for the action in that state. The improvement factor delta is weighted by a learning rate, beta. A variation of this algorithm called the A3C algorithm is one of the fastest RL algorithms out there.</p>
+</section>
+<section id="the-end" class="level2">
+<h2 class="anchored" data-anchor-id="the-end">The end</h2>
+<p>Awesome, thus in a two step process, we are able to identify <code>an optimum</code> policy based on nothing but a Q value table for each state action pairs. Kind of cool right!</p>
+<figure align="center" class="figure">
+<img src="https://www.oldbookillustrations.com/wp-content/uploads/2020/02/de-groof-falling.jpg" alt="Fall of the Flying Man, London." height="300" width="400" class="figure-img">
+<figcaption class="figure-caption">
+Fall of the Flying Man, London.
+</figcaption>
+</figure>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="rahulunair/myblog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

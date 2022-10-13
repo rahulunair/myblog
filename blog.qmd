@@ -4,10 +4,10 @@ listing:
   sort: "date desc"
   type: default
   categories: true
-  sort-ui: true
+  sort-ui: false
   filter-ui: true
   fields: [date, title, reading-time, description, categories]
   feed: true
 page-layout: full
-title-block-banner: false
+title-block-banner: true
 ---

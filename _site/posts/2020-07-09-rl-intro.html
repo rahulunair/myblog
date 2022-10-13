@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.251">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="unrahul">
+<meta name="description" content="Reinforment Learning for the unintiated">
+
+<title>Technical ramblings – rl-intro</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Technical ramblings</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../blog.html">blog.html</a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rahulunair"><i class="bi bi-github" role="img">
+</i> 
+ </a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/unrahu1"><i class="bi bi-twitter" role="img">
+</i> 
+ </a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#reinforcement-learning-rl" id="toc-reinforcement-learning-rl" class="nav-link active" data-scroll-target="#reinforcement-learning-rl">Reinforcement Learning (RL)</a>
+  <ul class="collapse">
+  <li><a href="#what-is-it" id="toc-what-is-it" class="nav-link" data-scroll-target="#what-is-it">What is it?</a></li>
+  </ul></li>
+  <li><a href="#some-terms-that-people-drop-when-talking-about-rl" id="toc-some-terms-that-people-drop-when-talking-about-rl" class="nav-link" data-scroll-target="#some-terms-that-people-drop-when-talking-about-rl">Some terms that people drop when talking about RL</a>
+  <ul class="collapse">
+  <li><a href="#mdp-models-and-the-rest" id="toc-mdp-models-and-the-rest" class="nav-link" data-scroll-target="#mdp-models-and-the-rest">MDP, Models and the rest:</a></li>
+  </ul></li>
+  <li><a href="#the-end" id="toc-the-end" class="nav-link" data-scroll-target="#the-end">The end</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+<section id="reinforcement-learning-rl" class="level2">
+<h2 class="anchored" data-anchor-id="reinforcement-learning-rl">Reinforcement Learning (RL)</h2>
+<section id="what-is-it" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-it">What is it?</h3>
+<p>Learning by doing, where the quality of learning is determined by how much reward one can get at the end of an episode.</p>
+</section>
+</section>
+<section id="some-terms-that-people-drop-when-talking-about-rl" class="level2">
+<h2 class="anchored" data-anchor-id="some-terms-that-people-drop-when-talking-about-rl">Some terms that people drop when talking about RL</h2>
+<section id="mdp-models-and-the-rest" class="level3">
+<h3 class="anchored" data-anchor-id="mdp-models-and-the-rest">MDP, Models and the rest:</h3>
+<section id="markov-decision-process-or-mdp" class="level4">
+<h4 class="anchored" data-anchor-id="markov-decision-process-or-mdp">Markov Decision Process or MDP</h4>
+<p>MDP - A function that is a tuple of (S, A, R, T) , where S - State, A - Action, R - Reward for that A in S, T - Transition probability to go to a next state when action A is taken in state S.</p>
+</section>
+<section id="policy-pis-x-a---0-1" class="level4">
+<h4 class="anchored" data-anchor-id="policy-pis-x-a---0-1">Policy pi:S x A -&gt; [0, 1]</h4>
+<p>That is, for every state there is a mapping from state to action which has a probability. Sum of all possible action probabilities in a state is 1.</p>
+</section>
+<section id="types" class="level4">
+<h4 class="anchored" data-anchor-id="types">Types</h4>
+<p><em>Model free</em> - We don’t know the transition probabilities or rewards before hand. <em>Model based</em> - Transition and rewards are know, thus just follow the path using value iteration to get the optimum policy.</p>
+</section>
+<section id="goal" class="level4">
+<h4 class="anchored" data-anchor-id="goal">Goal</h4>
+<p>To gather rewards.</p>
+</section>
+<section id="optimality" class="level4">
+<h4 class="anchored" data-anchor-id="optimality">Optimality</h4>
+<p>What is the goal?</p>
+<p>Simple, maximize the reward.</p>
+<p>Three models of optimality (criteria).</p>
+<ul>
+<li>Finite horizon - Expectation of reward from time = 0 to horizon.</li>
+<li>Discounted, infinite horizon - Expectation of discounted rewards from time = 0 to infinity.</li>
+<li>Average reward - Expectation of rewards from time t to horizon when limit of horizon tends to infinity.</li>
+</ul>
+<blockquote class="blockquote">
+<p>Note: Expectation is the average of results when some operation/task is repeated many times, while average is the average of something that is done once.</p>
+</blockquote>
+</section>
+<section id="how-the-goal-is-achieved" class="level4">
+<h4 class="anchored" data-anchor-id="how-the-goal-is-achieved">How the goal is achieved?</h4>
+<p>This depends on what the optimality condition is, is it convergence, speed of convergence etc.</p>
+</section>
+<section id="value-functions" class="level4">
+<h4 class="anchored" data-anchor-id="value-functions">Value functions</h4>
+<p>Links optimal criteria to policies.</p>
+</section>
+<section id="two-types-of-functions" class="level4">
+<h4 class="anchored" data-anchor-id="two-types-of-functions">Two types of functions</h4>
+<p><strong>State value function</strong> : The value of a state <code>s</code> under policy <code>pi</code>.</p>
+<p>This function helps us to know that is the value of being in a state <code>s</code> and then from there following the policy <code>pi</code>.</p>
+<p><strong>State, Action function</strong> : The value of state <code>s</code> in which we take the action <code>a</code>.</p>
+<p>This is similar to the state value function, and this one is called the Q value function, it the value of a state <code>s</code> in which we take a specific action <code>a</code> and then afterwards follow a policy <code>pi</code>. The cool thing about these functions are recursive in nature, that is, the solution or value of a state <code>s</code> can be known if we know that is the solution or value of the state <code>s+1</code> is. This is called the Bellman Equation. Bellman Equation - The Expected return value of a state can be defined in terms of immediate reward for that state and value of possible next states, weighted by their transition probabilities.</p>
+</section>
+<section id="achieving-the-best-policy." class="level4">
+<h4 class="anchored" data-anchor-id="achieving-the-best-policy.">Achieving the best policy.</h4>
+<section id="optimal-value-functions" class="level5">
+<h5 class="anchored" data-anchor-id="optimal-value-functions">Optimal Value functions</h5>
+<p>The value of taking the best or the optimal policy for a state is equal to the return we get by taking the best action for that state. Once we know the optimal value for a state, we can just greedily take the best action for the state and follow through the optimal value function, taking the best action in each state. This thus becomes our optimal policy. This is called the greedy policy, as we are inclined to take the best action available thus far to maximize the expected returns. This is all cool, only problem here is that we need to know the Transition probabilities of going from one state to another. This can be a problem in a model free environment, as we don’t have a clue what is the probability of going from one state to another before exhausting all possible transitions. Thus comes the optimal state, value functions to the rescue.</p>
+</section>
+<section id="optimal-state-value-functions" class="level5">
+<h5 class="anchored" data-anchor-id="optimal-state-value-functions">Optimal (State, Value) functions</h5>
+<p>These functions, known as Q functions, makes weighted summation over different alternatives. Let’s think about it, for finding the optimal value for an MDP, we need to know which action is the best and how often the best action is chosen. What if we don’t know that, instead we just weigh different actions taken from the state and assigns a number value to each state for all possible actions. If we have a table like this, we could take the actions for each state that gives us the best <code>value</code> for that state and move on to the next state, following this same process again. In the end, we would get the optimum value for the state from where we started. If we had kept a tab on the actions we took from the starting state, then we have the list of actions that enabled us to get the best possible value, which is the optimal action.</p>
+<p>Relationships between the Q value, Value and Policy is a follows:</p>
+<ul>
+<li>Optimum Value is equal to Q values for each state when the action that gives maximum value for a state is taken.</li>
+<li>Optimum policy is nothing but the action that resulted in getting the optimum values in the first place.</li>
+</ul>
+</section>
+</section>
+</section>
+</section>
+<section id="the-end" class="level2">
+<h2 class="anchored" data-anchor-id="the-end">The end</h2>
+<p>Awesome, thus in a two step process, we are able to identify <code>an optimum</code> policy based on nothing but a Q value table for each state action pairs. Kind of cool right!</p>
+<figure align="center" class="figure">
+<img src="https://www.oldbookillustrations.com/wp-content/uploads/2020/02/de-groof-falling.jpg" alt="Fall of the Flying Man, London." height="300" width="400" class="figure-img">
+<figcaption class="figure-caption">
+Fall of the Flying Man, London.
+</figcaption>
+</figure>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="rahulunair/myblog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

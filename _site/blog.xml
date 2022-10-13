@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>Technical ramblings</title>
+<link>https://quartopub.com/sites/unrahul/technical-ramblings/blog.html</link>
+<atom:link href="https://quartopub.com/sites/unrahul/technical-ramblings/blog.xml" rel="self" type="application/rss+xml"/>
+<description></description>
+<generator>quarto-1.1.251</generator>
+<lastBuildDate>Wed, 12 Oct 2022 07:00:00 GMT</lastBuildDate>
+<item>
+  <title>Technical Ramblings</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>Welcome to my ramblings and learnings about software.</p>
+
+
+
+ ]]></description>
+  <category>news</category>
+  <category>code</category>
+  <category>analysis</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/index.html</guid>
+  <pubDate>Wed, 12 Oct 2022 07:00:00 GMT</pubDate>
+  <media:content url="https://quartopub.com/sites/unrahul/technical-ramblings/posts/images/dali1.jpg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2016-01-03-graduated.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2016-01-03-graduated.html</link>
+  <description>{B4F502887207:/posts/2016-01-03-graduated.html}</description>
+  <category>life</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2016-01-03-graduated.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2017-01-26-crypto-checklist.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-01-26-crypto-checklist.html</link>
+  <description>{B4F502887207:/posts/2017-01-26-crypto-checklist.html}</description>
+  <category>crypto</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-01-26-crypto-checklist.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2017-02-12-prf-and-macs.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-02-12-prf-and-macs.html</link>
+  <description>{B4F502887207:/posts/2017-02-12-prf-and-macs.html}</description>
+  <category>crypto</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-02-12-prf-and-macs.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2017-03-28-borg.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-28-borg.html</link>
+  <description>{B4F502887207:/posts/2017-03-28-borg.html}</description>
+  <category>coding</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-28-borg.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2017-03-31-juggling.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-31-juggling.html</link>
+  <description>{B4F502887207:/posts/2017-03-31-juggling.html}</description>
+  <category>coding</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-31-juggling.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-03-07-ahoy-rust.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-07-ahoy-rust.html</link>
+  <description>{B4F502887207:/posts/2020-03-07-ahoy-rust.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-07-ahoy-rust.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+  <media:content url="https://imgur.com/LZ6VxZR.png" medium="image" type="image/png"/>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-03-09-cargo.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-09-cargo.html</link>
+  <description>{B4F502887207:/posts/2020-03-09-cargo.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-09-cargo.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-03-16-vars.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-16-vars.html</link>
+  <description>{B4F502887207:/posts/2020-03-16-vars.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-16-vars.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-03-22-pyjuggle.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-22-pyjuggle.html</link>
+  <description>{B4F502887207:/posts/2020-03-22-pyjuggle.html}</description>
+  <category>coding</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-22-pyjuggle.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-03-23-tiemy.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-23-tiemy.html</link>
+  <description>{B4F502887207:/posts/2020-03-23-tiemy.html}</description>
+  <category>coding</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-23-tiemy.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-05-23-ray.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-05-23-ray.html</link>
+  <description>{B4F502887207:/posts/2020-05-23-ray.html}</description>
+  <category>coding</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-05-23-ray.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-07-09-learning-methods.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-learning-methods.html</link>
+  <description>{B4F502887207:/posts/2020-07-09-learning-methods.html}</description>
+  <category>prose</category>
+  <category>ml</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-learning-methods.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-07-09-rl-intro.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-rl-intro.html</link>
+  <description>{B4F502887207:/posts/2020-07-09-rl-intro.html}</description>
+  <category>prose</category>
+  <category>ml</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-rl-intro.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-07-14-learning-methods.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-14-learning-methods.html</link>
+  <description>{B4F502887207:/posts/2020-07-14-learning-methods.html}</description>
+  <category>prose</category>
+  <category>ml</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-14-learning-methods.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2020-07-15-ml-forget.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-15-ml-forget.html</link>
+  <description>{B4F502887207:/posts/2020-07-15-ml-forget.html}</description>
+  <category>ml</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-15-ml-forget.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2021-01-14-rust-result.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-14-rust-result.html</link>
+  <description>{B4F502887207:/posts/2021-01-14-rust-result.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-14-rust-result.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2021-01-17-rust-turbofish.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-17-rust-turbofish.html</link>
+  <description>{B4F502887207:/posts/2021-01-17-rust-turbofish.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-17-rust-turbofish.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2021-03-22-rust-type.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-03-22-rust-type.html</link>
+  <description>{B4F502887207:/posts/2021-03-22-rust-type.html}</description>
+  <category>coding</category>
+  <category>rust</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-03-22-rust-type.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+</item>
+<item>
+  <title>{B4F502887207:/posts/2022-08-12-arc-dgpu-linux.html}</title>
+  <dc:creator>unrahul</dc:creator>
+  <link>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2022-08-12-arc-dgpu-linux.html</link>
+  <description>{B4F502887207:/posts/2022-08-12-arc-dgpu-linux.html}</description>
+  <category>intel</category>
+  <category>dgpu</category>
+  <category>graphics</category>
+  <guid>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2022-08-12-arc-dgpu-linux.html</guid>
+  <pubDate>Thu, 13 Oct 2022 01:49:32 GMT</pubDate>
+  <media:content url="https://user-images.githubusercontent.com/45503355/195398959-c28fe9f3-47c9-46cd-b1a0-5e26d8e6228a.png" medium="image" type="image/png"/>
+</item>
+</channel>
+</rss>

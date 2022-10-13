@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.251">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="unrahul">
+<meta name="description" content="A checklist to have when thinking of implementing crypto">
+
+<title>Technical ramblings – crypto-checklist</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Technical ramblings</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../blog.html">blog.html</a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rahulunair"><i class="bi bi-github" role="img">
+</i> 
+ </a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/unrahu1"><i class="bi bi-twitter" role="img">
+</i> 
+ </a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#an-opinonated-checklist-on-crypto" id="toc-an-opinonated-checklist-on-crypto" class="nav-link active" data-scroll-target="#an-opinonated-checklist-on-crypto">An opinonated checklist on crypto</a>
+  <ul class="collapse">
+  <li><a href="#types" id="toc-types" class="nav-link" data-scroll-target="#types">Types</a></li>
+  <li><a href="#keys" id="toc-keys" class="nav-link" data-scroll-target="#keys">keys</a></li>
+  <li><a href="#key-storage" id="toc-key-storage" class="nav-link" data-scroll-target="#key-storage">Key Storage</a></li>
+  <li><a href="#how-to-protect-one-self" id="toc-how-to-protect-one-self" class="nav-link" data-scroll-target="#how-to-protect-one-self">How to protect one self</a></li>
+  <li><a href="#transmission-of-data" id="toc-transmission-of-data" class="nav-link" data-scroll-target="#transmission-of-data">Transmission of data</a></li>
+  <li><a href="#session-tokens" id="toc-session-tokens" class="nav-link" data-scroll-target="#session-tokens">Session Tokens</a></li>
+  <li><a href="#dont-do-this" id="toc-dont-do-this" class="nav-link" data-scroll-target="#dont-do-this">Don’t do this</a></li>
+  <li><a href="#the-end" id="toc-the-end" class="nav-link" data-scroll-target="#the-end">The end</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+<section id="an-opinonated-checklist-on-crypto" class="level1">
+<h1>An opinonated checklist on crypto</h1>
+<p>{% include alert.html text=“Please don’t roll your own crypto, just.. don’t do it.” %}</p>
+<p>Ohkay, so you are not heeding the warning ha, let’s see how we can minimize the damage then..</p>
+<p>This is sort of a checklist of things to verify in crypto implementations on first glance. Most of these are guidelines from Owasp <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> and a few from other sources. Whenever I study a crypto implementaton these are things I first check some of these guidelines. They are obvious, even mundane and some may be different depending upon the circumstances.</p>
+<p>For example, guidelines for hash lengths, key lengths etc. will depend on how and where the crypto is implemented and cannot be considered as a hard and fast rules.</p>
+<section id="types" class="level2">
+<h2 class="anchored" data-anchor-id="types">Types</h2>
+<ul>
+<li><strong>Application level</strong> - Closest to source, most desired, ensure usage of established algorithms suchs a openSSL, libreSSL, and use approved APIs, may need more memory/processing bandwidth.</li>
+<li><strong>Protocol level</strong> - The next level where the protocol ensures encryption, eg: HTTPS using SSL, when mutual authentication is required, care should be taken as there are two session keys for each side (client –&gt; server and server –&gt; client)</li>
+<li><strong>Network level</strong> - The next level, protects both protocol and application level with no need for any level of encryption at that level. Typicall example is IPSec VPN, can be used to create a secure tunnel to connect to a network etc.</li>
+</ul>
+</section>
+<section id="keys" class="level2">
+<h2 class="anchored" data-anchor-id="keys">keys</h2>
+<ul>
+<li>Symmetric keys should be at least 256 bit in length, possibly 512 for critical applications</li>
+<li>Hash length - 128 is okay for most applications, 256 is the way to go if a method authentication is being used</li>
+<li>Asymmetric keys 1024 bit is okay for normal applications, 1536 or 2048 for critical applications, for the paraniod 4036</li>
+</ul>
+</section>
+<section id="key-storage" class="level2">
+<h2 class="anchored" data-anchor-id="key-storage">Key Storage</h2>
+<ul>
+<li>Check who all have access to the keys</li>
+<li>Check if the keys can be exported/imported without a password</li>
+<li>Check if keys are stored in code - this can be bad in two ways, one the key can be exploited by anyone having access to source code. Second, if key rotation is needed or if keys become pulbic it would be difficult to change the key.</li>
+</ul>
+</section>
+<section id="how-to-protect-one-self" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-protect-one-self">How to protect one self</h2>
+<ul>
+<li>Make sure the access is the least level of required access and not further</li>
+<li>Make sure keys are not exportable (marked as non exportable) when signing requests are generated.</li>
+<li>Once imported to keystore, destroy the file (certificate) that was imported, stored in the file system</li>
+<li>Log any change to keys</li>
+<li>Use secure passphrases for keys stored</li>
+<li>Stop storing keys in code files/binaries</li>
+<li>Give minimum access to applications that use keys to do something</li>
+<li>Always ask for a passphrase when user interaction is available</li>
+</ul>
+</section>
+<section id="transmission-of-data" class="level2">
+<h2 class="anchored" data-anchor-id="transmission-of-data">Transmission of data</h2>
+<ul>
+<li>Assess the levels of trust we can have/we need to have on data transmitted</li>
+<li>Always encrypt sensitive data before transmission</li>
+<li>Encrypt as close to source as possible</li>
+<li>All paths should be covered with same level of encryption</li>
+<li>Identify if any temporary files/garbage collected data is written when encrypting/decrypting if so see who all has access to it</li>
+<li>Pick an adequate level of encryption - Algorithm and key strength according to accessment done of levels of trust</li>
+</ul>
+</section>
+<section id="session-tokens" class="level2">
+<h2 class="anchored" data-anchor-id="session-tokens">Session Tokens</h2>
+<ul>
+<li>Ensure session tokens are truly random eg use <code>/dev/urandom</code> to create UUIDs etc</li>
+<li>Never use static UUID where security is needed</li>
+<li>Do not use sequential values to maintain session as this can be easily spoofed</li>
+<li>Check from where keys are generated for session maintainance (Are they coming from random source?)</li>
+</ul>
+</section>
+<section id="dont-do-this" class="level2">
+<h2 class="anchored" data-anchor-id="dont-do-this">Don’t do this</h2>
+<ul>
+<li><strong>Message authentication using md5</strong> - Md5 mac when used to authenticate message using a shared secret is vulnerable to length extension attacks.</li>
+</ul>
+<p>These attack works as follows:</p>
+<pre><code>Consider there is a shared secret a user and server is having
+User authenticates data sent using the scheme:
+
+"DATA"+md5(shared_secret+"DATA")</code></pre>
+<p>This was a common form of MAC a few years back.</p>
+<p>It has been found that it is trivial to create a valid MAC (Message Authentication Code) based on md5 by simply extending the hash. For example,</p>
+<pre><code>"DATA"+"CRAFTED_DATA"+md5(shared_secret+"DATA"+"CRAFTED_DATA")</code></pre>
+<p>Will be accepted by the server as successfully authenticated in some cases, as we can see, the attacker do not need to know the <code>shared_secret</code> but merely can extend the hash. <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+<p>{% include alert.html text=“Thus do not use md5 as a mac” %}</p>
+<ul>
+<li><strong>Using equality operator with HMAC for message Authentication</strong> - Vulnerable to timing attacks, this is because it takes slightly longer to match correct characters, than for wrong characters when equality operator is used to compare.</li>
+</ul>
+<p>An attacker can simply bruteforce the hmac with something like:</p>
+<pre><code>Consider the hmac is bxyz5
+
+The attacker can then send a string aaaaa to zzzzz first, when the average response time is considered the attack with
+string baaaa would take a slightly longer time that a---- , thus the attacker now possess the first character of the mac,
+this can be repeated to get the entire hmac, thus this simple mistake of using equality operator for comparison can lead 
+to a vulnerability if the attacker is motivated enough.</code></pre>
+<p>To prevent timing attacks do not use equality operator but XOR each byte as:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>a XOR a <span class="op">=</span> <span class="dv">0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Sum up for all the bytes and if the result is 0 then, the hmac is identical and we have verified the authenticity of the message.</p>
+<p>In python use something like:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>hmac.hexcompare(a, b)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>To reduce the chance of timing attacks, this function can only be used if both a and b are ASCII coded.</p>
+</section>
+<section id="the-end" class="level2">
+<h2 class="anchored" data-anchor-id="the-end">The end</h2>
+<p>Here are some more refereneces to get you started, good luck!</p>
+<ol type="1">
+<li><a href="https://web.archive.org/web/20170206210656/http://www.happybearsoftware.com/you-are-dangerously-bad-at-cryptography.html">Bad crypto practices</a></li>
+<li><a href="http://www.daemonology.net/blog/2009-06-11-cryptographic-right-answers.html">Cryptographic right answers</a></li>
+<li><a href="https://github.com/veorq/cryptocoding">Crypto coding rules</a></li>
+<li><a href="https://blog.pinboard.in/2013/04/the_matasano_crypto_challenges/">Matasano crypto challenges</a></li>
+<li><a href="https://paragonie.com/blog/2015/05/using-encryption-and-authentication-correctly">Confidentiality is not authentication</a></li>
+</ol>
+
+
+</section>
+</section>
+
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>https://bit.ly/2W0dZum<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>https://bit.ly/2W0dZum<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="rahulunair/myblog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

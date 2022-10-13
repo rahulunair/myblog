@@ -1,0 +1,125 @@
+---
+toc: true
+description: A minimal introduction to Rust.
+categories: [coding, rust]
+---
+# Flashcard Rust: Variables
+
+In this post, let's look at how variables are considered in Rust.
+
+## Immutable by default
+
+By default all variables in Rust are `immutable`, what that means is, once we assign a value to a variable, we cannot reassign another value. The keyword `let` is used to create variables and bind values to them in Rust.
+
+```rust
+fn main() {
+  let name = "unrahul";
+  println!("name is {}", name);
+```
+Output of the above program is:
+
+```python
+name is unrahul
+```
+
+There you go, what we have done is; we have created a string literal `name` in Rust of type `&str`. Now, if we try to reassign the same variable `name` in the same scope as `main`: 
+
+```rust
+fn main() {
+    let name = "unrahul";    // created a variable `name` and assigned a value to it
+    println!("name is {}", name);
+    name = "rahul";    // trying to assign a new value to the variable `name`  
+    println!("new name is {}", name);
+}
+```
+
+The compiler will throw an error:
+
+```python
+error[E0384]: cannot assign twice to immutable variable `name`
+ --> src/main.rs:4:5
+  |
+2 |     let name = "unrahul";
+  |         ----
+  |         |
+  |         first assignment to `name`
+  |         help: make this binding mutable: `mut name`
+3 |     println!("name is {}", name);
+4 |     name = "rahul";
+  |     ^^^^^^^^^^^^^^ cannot assign twice to immutable variable
+
+error: aborting due to previous error
+For more information about this error, try `rustc --explain E0384`.
+error: could not compile `playground`.
+```
+
+{% include info.html text="try rustc --explain E0384 to see what the error is all about" %}
+
+This is freakin' cool, now that variables cannot be reassigned, in a program, we do not have to worry if the types are going to change
+or if the state of a variable will change unintentionally.
+
+## Can a variable ever be a mutable?
+
+In some situtations, we want variables to be reassigned like in a loop, or ehmm if we want to change our name to a new one.., for those situations, in Rust we can do:
+
+```rust
+fn main() {
+    let mut name = "unrahul";    // just change the varible to a `mutable` variable
+    println!("name is {}", name);
+    name = "rahul";
+    println!("new name is {}", name);
+}
+```
+
+An the output is:
+
+```python
+name is unrahul
+new name is rahul
+```
+
+## Shadowing
+
+Shadowing in simple terms mean, a variable already declared can be redeclared with in a inner block with the same name. 
+
+For example, we can do this in Rust:
+
+```rust
+fn main() {
+    let name = "unrahul";
+    println!("name is {}", name);
+    {
+    	let name = "rahul";    // here the variable is in inner scope (see the braces?), and this is shadowing the external declartion of `name`
+    	println!("new name is {}", name);
+    }
+}
+```
+
+Compiling and running this, we get:
+
+```python
+name is unrahul
+new name is rahul
+```
+Okay, I lied a bit, **shadows** need not be in inner or seperate block, this below is perfectly valid:
+
+```rust
+fn main() {
+    let name = "unrahul";
+    println!("name is {}", name);
+    let name = "rahul";    // This is also considered as shadowing
+    println!("new name is {}", name);
+}
+```
+
+And the output of this is:
+
+```python
+name is unrahul
+new name is rahul
+```
+
+## The end
+
+Now that we have seen `immutable` and `mutable` variables, and also `shadowing`, may be primitive types next?..
+

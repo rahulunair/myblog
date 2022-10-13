@@ -1,0 +1,13 @@
+/*-- scss:defaults --*/
+
+// import google fonts
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime&family=Fira+Code&family=Roboto+Mono:wght@300;400&family=Sora:wght@300;400;500;600;700;800&display=swap');
+
+// use Sora font if available
+$font-family-sans-serif:  "Sora", sans-serif !default;
+
+/*-- scss:rules --*/
+.figure-caption {
+  font-size: 0.8rem;
+}
+// further CSS rules for specific HTML tags go here

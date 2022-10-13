@@ -1,0 +1,52 @@
+---
+toc: true
+description: Learning methods in RL
+categories: [prose, ml]
+---
+
+Model free learning can be done using variations of temporal difference learning or Monte Carlo methods.
+
+## Temporal Difference or TD Learning
+
+From each step learn something that would enable us to improve the estimated value for the next step. Consider this, three scenarios, in which the third scenario depends on the second and or the first. If that is the case, then knowing the states in the scenario can help us in better predicting the states in scenario three. We can improve the prediction in the third scenario if there is any change in states for either of the other scenarios, rather than waiting for the third one to finish and then realizing our prediction was close or way off.
+
+Consider, you are going somewhere and you expect to go through 2 cities. You estimate that you would reach the destination in 3 hours, as you know or estimate that you will need 1 hour each to cover the 2 other cities. Now, if it's your lucky day and traffic is low in the first city, you could pass through it in 30 minutes instead of 60. Thus, you can estimate that you will reach the final destination 30 minutes early. While passing through the second city, you have car trouble and it takes an hour to fix it and start again. Thus, you now predict you would reach 30 minutes past the estimated time at your destination (Provided, you don't face any further uncertainties). This continuous improvement of estimate is the main principle behind temporal difference or TD learning.
+
+We can say, TD learning is an on-line learning (as we don't need to wait for the entire episode to finish before updating our estimates). It bootstraps on the estimated value of other states to estimate value of the state in concern.
+
+**Types** : TD(0) and TD(lambda)
+
+## Q learning
+
+It is a variation of TD(0) learning, where we incrementally estimate the Q value for a state based on immediate rewards and the Q value for the next state. The variation is that, to estimate the Q value for the next state, we add the immediate reward with the Q value for the next state that maximizes the value (Q value for the state for the action that gives the maximum value). Also, unlike TD(0) learning, Q learning is an off-policy learning algorithm. Thus the estimated Q value at instance k is, the Q value at k for the state and action at time t plus the difference between estimated Q value using the immediate reward and discounted Q value for the next state for the action that gives the maximum value and the Q value of the current state. This delta between estimated Q value for the next state and Q value for the current state is weighted by a factor called the learning rate, which is between [0, 1]. The weighting factor or learning rate alpha can be decreased based on each iteration or as in many scenarios, use a small fixed value. The rate basically determines by how much we update the Q value. Now, if that sounds complex, trust me, it's not, I am just not that good at explaining I guess. Just search for the algorithm online and you will get it instantly.
+
+How is it done?
+
+Well, basically, the agent at time, t, in state, s, does an action, a, and moves to the next state and thus receives a reward, r. Now at time, t+1, the agent knows that it is in state, s, and knows the reward it obtained from the previous state. It uses this information along with the Q value for the optimum action for this state to get a better estimate of the Q value of the state, s. For this update to work, we need to have some starting point of Q values, in practice this is assumed to be zero or set randomly and at each iteration, k, the Q value is updated a little bit based on the learning rate to be a little closer to reality. In time, after many iterations of learning, the Q values for each states will reflect the real values that can be obtained. It has been proved (don't ask me how, I haven't checked out the proof) that if we do this iterative update an infinite time, we will eventually get the right Q values, irrespective on the initial Q values, the actions we took in each state etc.
+
+## SARSA learning
+
+First of all, what a creative naming, it must have taken them a long time to come up with this name. So, why is it called SARSA?, It's because, the learning algorithm uses the present state, S, the action taken, A, the reward obtained, R, the next state, S`, and the action taken, A`, in this next
+state, while following a policy. SARSA stands for State-Action-Reward-State-Action!.
+While in traditional Q value function, the objective was to estimate the optimum policy doing exploration of a random policy, in SARSA, we start with a policy and tries to estimate the Q value of starting at a state, doing an action in state and following a policy, that is not changed in the course of learning. Thus it is an on-policy learning algorithm, as we don't change the policy that has been chosen for a particular iteration. The idea is that if we are able to try all the states and all the possible actions infinitely many times, then this will eventually converge to the optimum policy itself.
+For a particular iteration, it is computationally less demanding that Q learning, but overall, it may need more time to converge. This learning is used when the state transition probabilities might not be fixed, there can be changes in the probabilities of switching from one state to the other. The only change in the algorithm compared to Q learning is, it doesn't take the action that maximizes the utility when calculating the `next state` value, but obeys by the policy and takes the stipulated action. Here, too if you don't understand it, please check the algorithm once on line and it will be clear.
+ 
+
+## Actor Critic Algorithms
+
+This class of learning algorithms has two parts, the Actor, which is a policy function and the Critic, which is a value function that is used to obtain the value for a state transition following an action. After an action has been selected, the Critic estimates the value for the state and calculates value for the state (immediate reward plus value for the next state). This is used to evaluate the action taken, which is the difference between the calculated value (using Bellman equation) and the estimated value. This difference or delta is used to improve the probability for the action in that state. The improvement factor delta is weighted by a learning rate, beta. A variation of this algorithm called the A3C algorithm is one of the fastest RL algorithms out there.
+
+
+## The end
+
+Awesome, thus in a two step process, we are able to identify `an optimum` policy based on nothing but a Q value table for each state action pairs. Kind of cool right!
+
+<figure align="center">
+<img src="https://www.oldbookillustrations.com/wp-content/high-res/n-d-after-1915/fun-study-768.jpg" alt="Fun and study well combined." height="300" width="400"/>
+<figcaption>Fun and study well combined.</figcaption>
+</figure>
+
+
+
+
+

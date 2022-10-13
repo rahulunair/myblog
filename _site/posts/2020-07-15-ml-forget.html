@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.251">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="unrahul">
+<meta name="description" content="Catastrophic forgetting in Neural Nets">
+
+<title>Technical ramblings – ml-forget</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Technical ramblings</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../blog.html">blog.html</a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rahulunair"><i class="bi bi-github" role="img">
+</i> 
+ </a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/unrahu1"><i class="bi bi-twitter" role="img">
+</i> 
+ </a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#simple-methods-to-try-first" id="toc-simple-methods-to-try-first" class="nav-link active" data-scroll-target="#simple-methods-to-try-first">Simple methods to try first:</a></li>
+  <li><a href="#ideas-to-further-investigate" id="toc-ideas-to-further-investigate" class="nav-link" data-scroll-target="#ideas-to-further-investigate">Ideas to further investigate:</a></li>
+  <li><a href="#regularization-dropout-and-activation-functions" id="toc-regularization-dropout-and-activation-functions" class="nav-link" data-scroll-target="#regularization-dropout-and-activation-functions">Regularization, dropout and activation functions</a></li>
+  <li><a href="#weight-freezingslow-updating" id="toc-weight-freezingslow-updating" class="nav-link" data-scroll-target="#weight-freezingslow-updating">Weight freezing/slow updating</a></li>
+  <li><a href="#ensemble-methods" id="toc-ensemble-methods" class="nav-link" data-scroll-target="#ensemble-methods">Ensemble methods</a></li>
+  <li><a href="#memory-methods-rehearsal" id="toc-memory-methods-rehearsal" class="nav-link" data-scroll-target="#memory-methods-rehearsal">Memory Methods – Rehearsal</a></li>
+  <li><a href="#life-long-reinforcement-learning" id="toc-life-long-reinforcement-learning" class="nav-link" data-scroll-target="#life-long-reinforcement-learning">Life Long Reinforcement Learning</a></li>
+  <li><a href="#life-long-rl-through-multiple-environments" id="toc-life-long-rl-through-multiple-environments" class="nav-link" data-scroll-target="#life-long-rl-through-multiple-environments">Life Long RL through multiple environments</a></li>
+  <li><a href="#policy-gradient---ella" id="toc-policy-gradient---ella" class="nav-link" data-scroll-target="#policy-gradient---ella">Policy Gradient - ELLA</a></li>
+  <li><a href="#hierarchical-deep-reinforcement-lifelong-learning-network-h-drln" id="toc-hierarchical-deep-reinforcement-lifelong-learning-network-h-drln" class="nav-link" data-scroll-target="#hierarchical-deep-reinforcement-lifelong-learning-network-h-drln">Hierarchical Deep Reinforcement Lifelong Learning Network (H-DRLN)</a></li>
+  <li><a href="#terms" id="toc-terms" class="nav-link" data-scroll-target="#terms">Terms</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  <li><a href="#the-end" id="toc-the-end" class="nav-link" data-scroll-target="#the-end">The end</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+<p>In relation to learning new tasks, the phenomenon of a model forgetting how to perform a previously learned task when trained on a new task is called catastrophic forgetting (CF). Catastrophic forgetting can be at fault in online training of similar tasks as well. Ideally for a deep enough network to learn all tasks it has to be presented with all the training data at once. This is often not quite possible because of reasons like memory constraints, security, non-sustainable solution and serious limitations in the online learning environment. This is especially important in reinforcement learning because catastrophic inference is most visible in sequential online tasks. RL methods we use by definition is a sequential online learning algorithm. Here online means the agent has to adapt to the environment in real time.</p>
+<section id="simple-methods-to-try-first" class="level2">
+<h2 class="anchored" data-anchor-id="simple-methods-to-try-first">Simple methods to try first:</h2>
+<ul>
+<li>Regularize with dropout and maxout</li>
+<li>Store weights for each environment</li>
+<li>Take average of these weights and initialize when learning a new environment</li>
+<li>Add adaptive learning rate for weights, slow learning rate for weights for common skills for each environment and fast learning rate for new environments</li>
+</ul>
+</section>
+<section id="ideas-to-further-investigate" class="level2">
+<h2 class="anchored" data-anchor-id="ideas-to-further-investigate">Ideas to further investigate:</h2>
+<ul>
+<li>PathNet - For learning similar tasks</li>
+<li>Elastic Weight Consolidation - Good for dissimilar tasks</li>
+<li>H-DRLN - Hierarchal Deep Life Long RL – - A framework based that combines DQN and lifelong learning techniques</li>
+</ul>
+<p>Before we dive in, lets see why does a neural network ever have ‘Catastrphic Forgetting’ problem?</p>
+<p>Catastrophic Forgetting is not only limited to neural nets; if that was the case, we could have easily replaced it some other learning algorithm. Researchers who studied this problem were of the opinion that the underlying cause is the generalization that a neural net does. The ability of a neural net to distribute and share representation of the relationship between input and an output label helps it to generalize, which is one of the most important properties of a neural net. Thus, each time a new data point (x, y) comes up to be trained, the neural net tries to distribute and share the representation by adjusting the weights of the neural net. This leads to the neural net forgetting earlier representations.</p>
+<p>What are some of the possible solutions?</p>
+<p>Many methods that detailed below can be explained off as a particular type of regularization. The techniques given below can be considered as a bag of tricks that could be used to limit catastrophic forgetting. As mentioned above, most of these solutions can be explained as a type of regularization and freezing of learned structures. To remember everything is to not change any of the weights or the activation traces of a task. Some methods directly tackle this by freezing weights, others by freezing activation traces of the entire network from input to output.</p>
+</section>
+<section id="regularization-dropout-and-activation-functions" class="level2">
+<h2 class="anchored" data-anchor-id="regularization-dropout-and-activation-functions">Regularization, dropout and activation functions</h2>
+<ul>
+<li>Regularization</li>
+<li>Joint Many-Task model - Successive regularization at each epoch</li>
+<li>Dropout with Maxout</li>
+</ul>
+<p><strong>Regularization</strong> is traditionally used to prevent overfitting; this can be done in many ways. A standard way to do this is to add a norm component to the loss function that is proportional to the square of the weights of a neural network (L2 norm). L2 regularization has the effect of the network preferring to learn smaller weights; as more significant the weight, larger would be the loss value. How this prevents forgetting can be attributed to the fact that, when the weights are small (regularized), small input values will not affect the loss function drastically. This, in turn means, the gradient of the loss would be a smaller value, thus when the weights which are adjusted based on this gradient value will not change much.</p>
+<p><strong>Dropout</strong> is used as a regularizing technique. Here how it regularizes can be explained by considering dropout as training a set of neural networks (each time dropping out a set of hidden units), then averaging the result of an ensemble of nets at the end [dropout]. This makes the model robust to losses by not assuming that a set of neurons (thus information) will always be present. Thus, when a new task is learned, the combined effect of a robust and regularized network can to some degree minimize forgetting.</p>
+<p>Dropout has been empirically proven to help in adapting to new task while remembering old tasks. It has been suggested to use <strong>maxout</strong> as the activation function when using dropout as a technique to minimize forgetting.</p>
+</section>
+<section id="weight-freezingslow-updating" class="level2">
+<h2 class="anchored" data-anchor-id="weight-freezingslow-updating">Weight freezing/slow updating</h2>
+<ul>
+<li>Using fast weights to de-blur old memories - Hinton</li>
+<li>Elastic Weight Consolidation - Deepmind</li>
+</ul>
+<p>Here the idea is to not frequently update parameters of a Neural Net when learning new tasks. The larger the activation weights between two nodes for a task, the less chance that these weights should be affected. Hinton worked on this problem in the 80s and designed a network with weights of different rate of plasticity [Fast weights]. A similar approach was chosen by Kirkpatrick and the Deepmind team with the Elastic Weight Consolidation (EWC) technique. Here a constraint is added to the loss function that controls which weights can be updated and which cannot. When a new task is being learned, strong activation paths are not updated, and weights that didn’t contribute much to a previous task is updated first.</p>
+<p>The insight that led to EWC is that, in a deep neural network, there can be many different configurations of weights that will give us a similar rate of error for a task. The goal with EWC is to find a set of weights from the parameter space that has low error rate for both the new task and the old one. In this approach the authors consider gradient descent in a Bayesian perspective. Whereas stochastic gradient descent tries to estimate a single parameter (weight), they tried to estimate a parameter for the entire distribution of data (Bayesian estimate), now this is not tractable, so what they do is that they use a trick called Laplace approximation and they call their approach EWC. By learning a distribution of parameters for each task, they were able to sample a set of parameters (weights) that worked for both tasks. [EWC].</p>
+</section>
+<section id="ensemble-methods" class="level2">
+<h2 class="anchored" data-anchor-id="ensemble-methods">Ensemble methods</h2>
+<p>Progressive Neural Networks - Perfect memory PathNet - Deepmind</p>
+<p>Ensemble methods attempt to train multiple networks and combine them to get the result, essentially training separate classifiers for each new task.</p>
+<p>Progressive neural networks progressively extend its structure in proportion to new tasks. It starts with an initial neural net and to learn a new task; new lateral connections are formed in parallel to the initial one. This helps in few ways, first when a new task has to be learned the previous network weights are frozen thus eliminating catastrophic forgetting and as lateral connections between each layer are formed the new network shares knowledge from the previous network. The only disadvantage with a progressive network is with the growth of new tasks, the network weights also grow.</p>
+<p>PathNet is a network of networks. It has a fixed set of networks in which each layer has a collection of parallel mini neural network modules. Optimal paths are discovered using a genetic algorithm or reinforcement learning from the fixed size neural network for each task. After training and identification of a path, they are frozen. Thus the network does not forget. The cool thing about PathNet is that the base network is fixed and it does not grow further than the initial architecture. It is possible for the learned representations to be reused as well. PathNet is considered the best model for this type of learning.</p>
+</section>
+<section id="memory-methods-rehearsal" class="level2">
+<h2 class="anchored" data-anchor-id="memory-methods-rehearsal">Memory Methods – Rehearsal</h2>
+<ul>
+<li>Episodic Memory Approach</li>
+<li>Episodic Generative Approach</li>
+<li>Dual memory models</li>
+<li>Gradient Episodic Memory</li>
+</ul>
+<p>These involve both static memory and generative memory methods. Static memory methods involve using a big experience replay type of memory to store previous session data, and during training of each new task, data from memory is randomly sampled and mixed with the new training data. The generative model can be a type of auto-encoder or a generative adversarial network (GAN), where the statistics of the data is stored and replayed while training for new tasks.</p>
+<p>Dual memory models use a system of short-term memory (STM) modules and a long-term memory (LTM) module. Both of the memories have a combination of a generator and a learner. The STM which is a collection of task-specific networks, also, has a hash-table that keeps a tab on how many tasks the agent has learned and indexes each of the task-specific networks. The LTM uses a collection of the raw data sample from all the previous tasks to train its generative memory. The STM is used for fast training, and LTM is used to reinforce the STM.</p>
+<p>In Gradient Episodic Memory, when learning in a new environment, weight update depends on a meeting a metric. Here for each task, a sample of the states (X-y) are stored in memory. For each update, the gradient is compared with the gradient of all the previous tasks, if the gradient of the current update does not contribute to the overall gradients of all the previous tasks, then an approximation that does contribute is chosen as the update. This reduces drastic changes to weights when learning new tasks, hence prevents catastrophic forgetting.</p>
+<p>Now let me give some details on approaches specific to reinforcement learning.</p>
+</section>
+<section id="life-long-reinforcement-learning" class="level2">
+<h2 class="anchored" data-anchor-id="life-long-reinforcement-learning">Life Long Reinforcement Learning</h2>
+<p>A lifelong reinforcement learning agent should have 2 main abilities: Efficiently retain knowledge base of learned policy in an environment (highly regularized sparse data structure). Efficient transfer - Should have the ability to transfer knowledge from the previous environment to the new one.</p>
+<p>In life-long reinforcement learning, instead of learning each task, the objective is for the agent to distill learning from different environments, use shared knowledge and learn environment specific information as well. In the following section task and environment mean the same thing.</p>
+</section>
+<section id="life-long-rl-through-multiple-environments" class="level2">
+<h2 class="anchored" data-anchor-id="life-long-rl-through-multiple-environments">Life Long RL through multiple environments</h2>
+<p>These learning methods are based on introducing bias into learning. Here, bias refers to knowledge about the environment. So a lifelong learning agent is initialized with something called the initial bias which is the weights of the previous environment and then updated with learning bias for the new environment. Now, this is in some ways similar to what our DQN agent is doing where we initialize the net with the weights trained from the initial simulator and then use this to bootstrap for the real environment. This can be extended, and initial bias could be the average of weights for all the previous environments. Also, adaptive learning rates are used for weights. The weights are updated in proportion to the amount by which they varied for the previous environments. If they did not vary by a threshold value, the learning rate for those weights are set to be very low, and if the weights beyond a threshold, then that means that these weights are environment dependent, thus the learning rate for these weights for the new environment is set to a higher one.</p>
+<p>Most of the recent lifelong learning schemes used in RL is based on an algorithm known as ELLA (Efficient Lifelong Learning Algorithm). The principle behind ELLA is that we assume each task is sequentially submitted to the agent, and each learnable parameter is considered as a linear combination of a latent basis component (a component common to all tasks) and a task-specific component. Thus, the objective would be to minimize predictive loss over all tasks while encouraging significance of the latent shared component. This is done by introducing a sort of inductive bias (inductive of shared task information) to the loss function.</p>
+</section>
+<section id="policy-gradient---ella" class="level2">
+<h2 class="anchored" data-anchor-id="policy-gradient---ella">Policy Gradient - ELLA</h2>
+<p>The goal of policy gradient using efficient lifelong learning algorithm is to find optimum policies parameterized by a set of weights for each environment. We use the same approach as in general ELLA where the parameters (weights) for each task is considered to be a linear combination of parameters of the common latent model between the tasks and task-specific weights. Here the latent structure is stored in memory for future learning, and the PG algorithm in each of its iteration uses this knowledge base to update both latent weights and task-specific weights.</p>
+</section>
+<section id="hierarchical-deep-reinforcement-lifelong-learning-network-h-drln" class="level2">
+<h2 class="anchored" data-anchor-id="hierarchical-deep-reinforcement-lifelong-learning-network-h-drln">Hierarchical Deep Reinforcement Lifelong Learning Network (H-DRLN)</h2>
+<p>To solve complex tasks, rather than just knowing what action to take in a state, an agent has to learn skills; these would include things like picking up an object, moving from a point to another point, etc. Reinforcement learning was extended using the options framework to do exactly this. [options framework]. To use reusable skills in a lifelong manner, an algorithm should be able to learn a skill (Eg: how to move left or right); enable an agent to determine which of these skills should be used/reused and cache reusable skills.</p>
+<p>H-DRLN has something called a Deep Skill Network which stores independent DQNs that have special skills stored, for example, there could be 2 DQNs as in our case one for passive control and another for active control. Along with the Deep Skill Network, the agent has a generic output layer that outputs either simple actions or skills from the Deep Skill Network depending upon the state sampled. This agent can be considered as a DQN with actions being temporally extended to solve tasks. For training the agent, a modification is made to the experience reply, and a new memory called Skill Experience Reply (S-ER) is used.</p>
+<p>With this, we come to the end of the survey on Catastrophic Forgetting and lifelong learning approaches. A few other methods like explicit sparse coding, policy distillation, and curriculum learning have not been mentioned here as many of the techniques discussed could be considered as variations of these algorithms.</p>
+</section>
+<section id="terms" class="level2">
+<h2 class="anchored" data-anchor-id="terms">Terms</h2>
+<p>Plasticity - The propensity of a weight to be affected by a change. A weight with high plasticity can be modified easily than a weight with lower plasticity. Auto-encoder - A type of neural networks used to learn representation of data, mainly for dimensionality reduction GAN - GAN or Generative Adversarial Networks uses a competing pair of networks to learn the representation of data and can be used to generate data points from the learned distribution.</p>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<p>[Dropout] : https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf [Empirical study] : https://arxiv.org/pdf/1312.6211.pdf [Fast weights]: https://www.cs.bham.ac.uk/~jxb/PUBS/COGSCI05.pdf [EWC]: https://arxiv.org/pdf/1612.00796.pdf [Lifelong ML]: https://www.cs.uic.edu/~liub/lifelong-machine-learning-draft.pdf [Options framework]: http://www-anw.cs.umass.edu/~barto/courses/cs687/Sutton-Precup-Singh-AIJ99.pdf [Multi task learning PG]: http://proceedings.mlr.press/v32/ammar14.pdf [Gradient Episodic Memory]: https://arxiv.org/pdf/1706.08840.pdf [PathNet]: https://arxiv.org/pdf/1701.08734.pdf [Deep Generative Memory]: https://arxiv.org/pdf/1710.10368.pdf [Progressive Neural Net]: 1606.04671 Progressive Neural Networks</p>
+</section>
+<section id="the-end" class="level2">
+<h2 class="anchored" data-anchor-id="the-end">The end</h2>
+<p>Thats all for now folks on Catastrophic Forgetting in Learning systems using connectionist methods.</p>
+<figure align="center" class="figure">
+<img src="https://www.oldbookillustrations.com/wp-content/uploads/2020/02/de-groof-falling.jpg" alt="Fall of the Flying Man, London." height="300" width="400" class="figure-img">
+<figcaption class="figure-caption">
+Fall of the Flying Man, London.
+</figcaption>
+</figure>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="rahulunair/myblog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
