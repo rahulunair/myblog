@@ -1,0 +1,9 @@
+---
+title: "Technical Ramblings"
+author: "unrahul"
+date: "2022-10-12"
+categories: [news, code, analysis]
+image: "./images/dali.jpg"
+---
+
+This is a post with executable code.
