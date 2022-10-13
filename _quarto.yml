@@ -13,8 +13,8 @@ website:
 format:
   html:
     theme: 
-      light: [litera, jollydata.scss]
-      dark: [superhero, jollydata.scss]
+      light: [litera, custom_align.scss]
+      dark: [superhero, custom_align.scss]
 
 
 
