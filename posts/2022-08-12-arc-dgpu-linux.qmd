@@ -1,6 +1,6 @@
 ---
 toc: true
-title: "Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU"
+title: "Configure Intel Arc A370M Xe-HPG discrete GPU on Linux"
 date: "2022-10-12"
 categories: [intel,dgpu, graphics]
 ---
@@ -256,10 +256,6 @@ root@runnikri-mobl Coding → cmake -DCMAKE_BUILD_TYPE=Release .. && make
 ![system monitor output on my laptop](https://user-images.githubusercontent.com/45503355/195416715-923dc33a-acbd-411e-a774-7a38c13e72f3.png)
 
 As seen above both the igpu and dgpu performance can be monitored using the tool.
-
-## Pytorch and IPEX on dgpu
-
-Checkout the `pytorch` [directory](https://github.com/rahulunair/intel_arc_dgpu_linux/tree/main/pytorch) to know how to install PyTorch and IPEX with dGPU support.
 
 ## Acknowledgements
 

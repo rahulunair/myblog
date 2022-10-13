@@ -1,1 +1,1 @@
-Sitemap: https://quartopub.com/sites/unrahul/technical-ramblings/sitemap.xml
+Sitemap: https://dashing-malabi-d62add.netlify.app/sitemap.xml

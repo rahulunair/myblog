@@ -5,7 +5,8 @@ website:
   title: "Technical ramblings"
   navbar:
     right:
-      - blog.qmd
+      - text: About
+        href: about.qmd
       - icon: github
         href: https://github.com/rahulunair
       - icon: twitter
