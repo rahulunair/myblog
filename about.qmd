@@ -13,4 +13,10 @@ about:
 
 ---
 
-Hi!, Welcome to my blog; here, you can read and comment on my ramblings and learnings on tech and not-so-tech topics. Suppose you are curious as to what the image seen here is. In that case, it is an AI-generated one, specifically using stable diffusion when I used the text “dali designing a cyberpunk version of a dream he had about a futuristic microprocessor”.
+Hi!, I am unrahul, welcome to my blog; here, you can read and comment on my ramblings and learnings on tech and not-so-tech topics. 
+
+
+If you are curious as to what the image seen here in the left is, it is a stable diffusion generated one when I used the prompt:
+
+“dali designing a cyberpunk version of a dream
+ he had about a futuristic microprocessor”.
