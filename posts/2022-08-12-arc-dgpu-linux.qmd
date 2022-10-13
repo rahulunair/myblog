@@ -15,9 +15,9 @@ These instructions are for Ubuntu 22.04 LTS-based Oses. I am using Pop!_OS 22.04
 Install a recent version of the kernel. The easiest way to install a different kernel is by using [Mainline](https://github.com/bkw777/mainline).
 
 ```bash
-root@runnikri-mobl Coding → add-apt-repository ppa:cappelikan/ppa
-root@runnikri-mobl Coding → apt update
-root@runnikri-mobl Coding → apt install mainline
+Coding → add-apt-repository ppa:cappelikan/ppa
+Coding → apt update
+Coding → apt install mainline
 ```
 As seen in the screenshot below, I am using Kernel 6.0.0:
 
@@ -30,19 +30,19 @@ After installing the kernel, please restart the machine.
 Pop!_OS 22.04 LTS uses systemd to manage kernel boot params, to force i915 driver to enable the dgpu use `kernelstub` tool:
 
 ```bash
-root@runnikri-mobl Coding → kernelstub -a "i915.force_probe=5693"
+Coding → kernelstub -a "i915.force_probe=5693"
 ```
 
 After this restart the machine and check i915 logs using `dmesg` to see if the graphics card has been detected:
 
 ```bash
-root@runnikri-mobl Coding → dmesg | grep -i i915
+Coding → dmesg | grep -i i915
 ```
 
 You should see an output like this:
 
 ```bash
-root@runnikri-mobl Coding →  dmesg | grep -i i915
+Coding →  dmesg | grep -i i915
 [    0.000000] Command line: initrd=\EFI\Pop_OS-97fe6a26-7d8a-4120-89db-8f2130b644b7\initrd.img root=UUID=97fe6a26-7d8a-4120-89db-8f2130b644b7 ro quiet loglevel=0 systemd.show_status=false splash i915.force_probe=5693
 [    0.047217] Kernel command line: initrd=\EFI\Pop_OS-97fe6a26-7d8a-4120-89db-8f2130b644b7\initrd.img root=UUID=97fe6a26-7d8a-4120-89db-8f2130b644b7 ro quiet loglevel=0 systemd.show_status=false splash i915.force_probe=5693
 [    1.775328] i915 0000:00:02.0: [drm] VT-d active for gfx access
@@ -78,8 +78,8 @@ The dg2_guc is loaded as seen in the above line: **[    5.428126] i915 0000:03:0
 You can install the latest firmware files by cloning the repo and moving it to `/lib/firmware` (**warning**: this is a brute-force approach):
 
 ```bash
-root@runnikri-mobl Coding →  git clone https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/
-root@runnikri-mobl Coding →  cd linux-firmware && yes | cp -r * /lib/firmware
+Coding →  git clone https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/
+Coding →  cd linux-firmware && yes | cp -r * /lib/firmware
 ```
 
 For me, the firmware that came with Pop!_OS 22.04 LTS worked, i didn't have to install the latest ones.
@@ -91,11 +91,11 @@ For me, the firmware that came with Pop!_OS 22.04 LTS worked, i didn't have to i
 Now, if you want media and graphics support beyond compute, install bleeding edge Mesa libraries from [oiabf ppa](https://launchpad.net/~oibaf/+archive/ubuntu/graphics-drivers) that provides open graphics drivers; you can do it by:
 
 ```bash
-root@runnikri-mobl Coding → add-apt-repository ppa:oibaf/graphics-drivers
-root@runnikri-mobl Coding → apt-update
-root@runnikri-mobl Coding → apt-upgrade
+Coding → add-apt-repository ppa:oibaf/graphics-drivers
+Coding → apt-update
+Coding → apt-upgrade
 
-root@runnikri-mobl Coding → dpkg -l | grep -i mesa
+Coding → dpkg -l | grep -i mesa
 ii  libegl-mesa0:amd64                                                      22.3~git2210120600.ddc5c3~oibaf~j                                 amd64        free implementation of the EGL API -- Mesa vendor library
 ii  libgl1-mesa-dri:amd64                                                   22.3~git2210120600.ddc5c3~oibaf~j                                 amd64        free implementation of the OpenGL API -- DRI modules
 ii  libglapi-mesa:amd64                                                     22.3~git2210120600.ddc5c3~oibaf~j                                 amd64        free implementation of the GL API -- shared library
@@ -120,15 +120,15 @@ To use the dGPU, set the env variable `DRI_PRIME=1`, [PRIME](https://wiki.archli
 Here is the output of glxinfo without setting `DRI_PRIME` environment variable:
 
 ```bash
-root@runnikri-mobl Coding → glxinfo -B | grep -i device
+Coding → glxinfo -B | grep -i device
     Device: Mesa Intel(R) Graphics (ADL GT2) (0x46a6)
 ```
 
 After setting the environment variable for PRIME:
 
 ```bash
-root@runnikri-mobl Coding → export DRI_PRIME=1
-root@runnikri-mobl Coding → glxinfo -B | grep -i device
+Coding → export DRI_PRIME=1
+Coding → glxinfo -B | grep -i device
     Device: Mesa Intel(R) Arc(tm) A370M Graphics (DG2) (0x5693)
 ```
 
@@ -137,14 +137,14 @@ As you can the dgpu is recognized by Mesa OpenGL. yay!
 3. Let's try to run a benchmark on the Arc gpu to see how it performs. I am using glmark2, which can be installed on Ubuntu-based OSes easily using:
 
 ```bash
-root@runnikri-mobl Coding → apt-get install glmark2
+Coding → apt-get install glmark2
 ```
 
 ```bash
-root@runnikri-mobl Coding → export DRI_PRIME=1
-root@runnikri-mobl Coding → glxinfo -B | grep -i device
+Coding → export DRI_PRIME=1
+Coding → glxinfo -B | grep -i device
     Device: Mesa Intel(R) Arc(tm) A370M Graphics (DG2) (0x5693)
-root@runnikri-mobl Coding → glmark2
+Coding → glmark2
 ```
 
 ![glmark2 running on Arc 370m dGPU](assets/arc370m_bench.gif)
@@ -154,21 +154,21 @@ root@runnikri-mobl Coding → glmark2
 As of this writing, the latest compute driver release version is [22.39.24347](https://github.com/intel/compute-runtime/releases/tag/22.39.24347):
 
 ```bash
-root@runnikri-mobl Coding → cd /tmp && mkdir compute_drivers
-root@runnikri-mobl Coding → cd compute_drivers
-root@runnikri-mobl Coding → wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.12149.1/intel-igc-core_1.0.12149.1_amd64.deb
-root@runnikri-mobl Coding → wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.12149.1/intel-igc-opencl_1.0.12149.1_amd64.deb
-root@runnikri-mobl Coding → wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-level-zero-gpu_1.3.24347_amd64.deb
-root@runnikri-mobl Coding → wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-opencl-icd_22.39.24347_amd64.deb
-root@runnikri-mobl Coding → wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/libigdgmm12_22.2.0_amd64.deb
-root@runnikri-mobl Coding → dpkg -i *.deb
+Coding → cd /tmp && mkdir compute_drivers
+Coding → cd compute_drivers
+Coding → wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.12149.1/intel-igc-core_1.0.12149.1_amd64.deb
+Coding → wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.12149.1/intel-igc-opencl_1.0.12149.1_amd64.deb
+Coding → wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-level-zero-gpu_1.3.24347_amd64.deb
+Coding → wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-opencl-icd_22.39.24347_amd64.deb
+Coding → wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/libigdgmm12_22.2.0_amd64.deb
+Coding → dpkg -i *.deb
 ```
 
 
 Now that the compute drivers are installed let's see if OpenCL can detect the dgpu. Install `clinfo` from apt and check using:
 
 ```bash
-root@runnikri-mobl Coding → clinfo | grep "0x5690"
+Coding → clinfo | grep "0x5690"
   Device Name                                     Intel(R) Graphics [0x5693]
     Device Name                                   Intel(R) Graphics [0x5693]
     Device Name                                   Intel(R) Graphics [0x5693]
@@ -181,8 +181,16 @@ We can see that the dgpu has been detected.
 
 1. Finally, install the oneapi basekit to use the dpcpp runtime. I used 2022.2.0 version of oneapi basekit.
 
+Please refer to [oneAPI installation guide](https://www.intel.com/content/www/us/en/develop/documentation/installation-guide-for-intel-oneapi-toolkits-linux/top/installation/install-using-package-managers/apt.html#apt) to install using the `apt` package manager.
+
+Source the oneAPI environment using:
+
 ```bash
-04:37:56  |base|rahul@pop-os ~ → dpcpp -v
+→ source /opt/intel/oneapi/setvars.sh
+```
+
+```bash
+~ → dpcpp -v
 Intel(R) oneAPI DPC++/C++ Compiler 2022.2.0 (2022.2.0.20220730)
 Target: x86_64-unknown-linux-gnu
 Thread model: posix
@@ -197,12 +205,12 @@ Selected multilib: .;@m64
 Intel dgpus like the A370m are represented as SYCL devices. `sycl-ls` is a tool that is part of the oneAPI basekit that can show all the detected devices and all the SYCL backends support by the runtime. Once the  oneapi basekit has been installed, source the environment using:
 
 ```bash
-root@runnikri-mobl Coding → source /opt/intel/oneapi/setvars.sh 
+Coding → source /opt/intel/oneapi/setvars.sh 
 ```
 Device discovery using syclto see if sycl can detect the dgpu:
 
 ```bash
-root@runnikri-mobl Coding → sycl-ls
+Coding → sycl-ls
 [opencl:acc:0] Intel(R) FPGA Emulation Platform for OpenCL(TM), Intel(R) FPGA Emulation Device 1.2 [2022.14.7.0.30_160000]
 [opencl:cpu:1] Intel(R) OpenCL, 12th Gen Intel(R) Core(TM) i7-12700H 3.0 [2022.14.7.0.30_160000]
 [opencl:gpu:2] Intel(R) OpenCL HD Graphics, Intel(R) Graphics [0x5693] 3.0 [22.40.024349]
@@ -214,7 +222,7 @@ root@runnikri-mobl Coding → sycl-ls
 To get a more verbose output, use, `sycl-ls --verbose`:
 
 ```bash
-root@runnikri-mobl Coding → sycl-ls --verbose | grep -i name
+Coding → sycl-ls --verbose | grep -i name
     Name     : Intel(R) FPGA Emulation Platform for OpenCL(TM)
         Name       : Intel(R) FPGA Emulation Device
     Name     : Intel(R) OpenCL
@@ -241,10 +249,10 @@ We now have configured the machine with all the required software stack to fully
 `sysmon` is a tool similar to `top` for cpu, that is part of Intel's [Platform Tools Interfaces for GPU](https://github.com/intel/pti-gpu/tree/master/tools/sysmon). `sysmon` helps in monitoring the Intel gpu parameters like frequency, memory, etc. The tool can be installed using:
 
 ```bash
-root@runnikri-mobl Coding → git clone https://github.com/intel/pti-gpu/
-root@runnikri-mobl Coding → cd pti-gpu/tools/sysmon
-root@runnikri-mobl Coding → mkdir build && cd build
-root@runnikri-mobl Coding → cmake -DCMAKE_BUILD_TYPE=Release .. && make
+Coding → git clone https://github.com/intel/pti-gpu/
+Coding → cd pti-gpu/tools/sysmon
+Coding → mkdir build && cd build
+Coding → cmake -DCMAKE_BUILD_TYPE=Release .. && make
 ```
 
 2. After successfully building `sysmon` let's check the dgpu frequency:

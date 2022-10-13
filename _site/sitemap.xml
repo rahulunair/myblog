@@ -1,87 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2021-01-14-rust-result.html</loc>
-    <lastmod>2022-10-13T03:21:30.147Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/index.html</loc>
+    <lastmod>2022-10-13T03:37:01.847Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2022-08-12-arc-dgpu-linux.html</loc>
-    <lastmod>2022-10-13T03:21:30.483Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-14-rust-result.html</loc>
+    <lastmod>2022-10-13T03:37:02.111Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2020-03-22-pyjuggle.html</loc>
-    <lastmod>2022-10-13T03:21:30.695Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2022-08-12-arc-dgpu-linux.html</loc>
+    <lastmod>2022-10-13T03:37:02.371Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2020-03-23-tiemy.html</loc>
-    <lastmod>2022-10-13T03:21:30.875Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-22-pyjuggle.html</loc>
+    <lastmod>2022-10-13T03:37:02.563Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2020-07-09-rl-intro.html</loc>
-    <lastmod>2022-10-13T03:21:31.071Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-23-tiemy.html</loc>
+    <lastmod>2022-10-13T03:37:02.743Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2021-01-17-rust-turbofish.html</loc>
-    <lastmod>2022-10-13T03:21:31.263Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-rl-intro.html</loc>
+    <lastmod>2022-10-13T03:37:02.923Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2020-03-07-ahoy-rust.html</loc>
-    <lastmod>2022-10-13T03:21:31.447Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-01-17-rust-turbofish.html</loc>
+    <lastmod>2022-10-13T03:37:03.099Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2020-07-15-ml-forget.html</loc>
-    <lastmod>2022-10-13T03:21:31.695Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-07-ahoy-rust.html</loc>
+    <lastmod>2022-10-13T03:37:03.259Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2017-03-28-borg.html</loc>
-    <lastmod>2022-10-13T03:21:31.863Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-15-ml-forget.html</loc>
+    <lastmod>2022-10-13T03:37:03.491Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2020-03-09-cargo.html</loc>
-    <lastmod>2022-10-13T03:21:32.063Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-28-borg.html</loc>
+    <lastmod>2022-10-13T03:37:03.655Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2017-03-31-juggling.html</loc>
-    <lastmod>2022-10-13T03:21:32.243Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-09-cargo.html</loc>
+    <lastmod>2022-10-13T03:37:03.843Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2020-05-23-ray.html</loc>
-    <lastmod>2022-10-13T03:21:32.431Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-03-31-juggling.html</loc>
+    <lastmod>2022-10-13T03:37:04.019Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2017-01-26-crypto-checklist.html</loc>
-    <lastmod>2022-10-13T03:21:32.619Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-05-23-ray.html</loc>
+    <lastmod>2022-10-13T03:37:04.191Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2021-03-22-rust-type.html</loc>
-    <lastmod>2022-10-13T03:21:32.791Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-01-26-crypto-checklist.html</loc>
+    <lastmod>2022-10-13T03:37:04.395Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2017-02-12-prf-and-macs.html</loc>
-    <lastmod>2022-10-13T03:21:32.987Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2021-03-22-rust-type.html</loc>
+    <lastmod>2022-10-13T03:37:04.567Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2016-01-03-graduated.html</loc>
-    <lastmod>2022-10-13T03:21:33.151Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2017-02-12-prf-and-macs.html</loc>
+    <lastmod>2022-10-13T03:37:04.743Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2020-03-16-vars.html</loc>
-    <lastmod>2022-10-13T03:21:33.331Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2016-01-03-graduated.html</loc>
+    <lastmod>2022-10-13T03:37:04.899Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2020-07-14-learning-methods.html</loc>
-    <lastmod>2022-10-13T03:21:33.523Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-03-16-vars.html</loc>
+    <lastmod>2022-10-13T03:37:05.091Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/posts/2020-07-09-learning-methods.html</loc>
-    <lastmod>2022-10-13T03:21:33.727Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-14-learning-methods.html</loc>
+    <lastmod>2022-10-13T03:37:05.275Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/blog.html</loc>
-    <lastmod>2022-10-13T03:21:34.015Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/posts/2020-07-09-learning-methods.html</loc>
+    <lastmod>2022-10-13T03:37:05.459Z</lastmod>
   </url>
   <url>
-    <loc>https://dashing-malabi-d62add.netlify.app/index.html</loc>
-    <lastmod>2022-10-13T03:21:34.167Z</lastmod>
+    <loc>https://quartopub.com/sites/unrahul/technical-ramblings/about.html</loc>
+    <lastmod>2022-10-13T03:37:05.611Z</lastmod>
   </url>
 </urlset>

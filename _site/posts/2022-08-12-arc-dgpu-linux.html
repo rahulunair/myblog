@@ -9,7 +9,7 @@
 <meta name="author" content="unrahul">
 <meta name="dcterms.date" content="2022-10-12">
 
-<title>Technical ramblings - Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU</title>
+<title>Technical ramblings - Configure Intel Arc A370M Xe-HPG discrete GPU on Linux</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -146,7 +146,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../blog.html">blog.html</a>
+    <a class="nav-link" href="../about.html">About</a>
   </li>  
   <li class="nav-item compact">
     <a class="nav-link" href="https://github.com/rahulunair"><i class="bi bi-github" role="img">
@@ -171,7 +171,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU</h1>
+      <h1 class="title">Configure Intel Arc A370M Xe-HPG discrete GPU on Linux</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">intel</div>
                 <div class="quarto-category">dgpu</div>
@@ -212,7 +212,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#setup-open-source-mesa-3d-graphics-libraries-for-opengl-and-vulkan" id="toc-setup-open-source-mesa-3d-graphics-libraries-for-opengl-and-vulkan" class="nav-link" data-scroll-target="#setup-open-source-mesa-3d-graphics-libraries-for-opengl-and-vulkan">Setup Open source Mesa 3d Graphics libraries for OpenGL and Vulkan</a></li>
   <li><a href="#install-oneapi-basekit-and-device-discovery-using-sycl" id="toc-install-oneapi-basekit-and-device-discovery-using-sycl" class="nav-link" data-scroll-target="#install-oneapi-basekit-and-device-discovery-using-sycl">Install oneAPI basekit and device discovery using sycl</a></li>
   <li><a href="#intels-system-monitoring-utility-to-monitor-the-dgpu" id="toc-intels-system-monitoring-utility-to-monitor-the-dgpu" class="nav-link" data-scroll-target="#intels-system-monitoring-utility-to-monitor-the-dgpu">Intel’s System Monitoring Utility to monitor the dgpu</a></li>
-  <li><a href="#pytorch-and-ipex-on-dgpu" id="toc-pytorch-and-ipex-on-dgpu" class="nav-link" data-scroll-target="#pytorch-and-ipex-on-dgpu">Pytorch and IPEX on dgpu</a></li>
   <li><a href="#acknowledgements" id="toc-acknowledgements" class="nav-link" data-scroll-target="#acknowledgements">Acknowledgements</a></li>
   <li><a href="#something-not-working" id="toc-something-not-working" class="nav-link" data-scroll-target="#something-not-working">Something not working?</a></li>
   <li><a href="#citation" id="toc-citation" class="nav-link" data-scroll-target="#citation">Citation</a></li>
@@ -422,10 +421,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </figure>
 </div>
 <p>As seen above both the igpu and dgpu performance can be monitored using the tool.</p>
-</section>
-<section id="pytorch-and-ipex-on-dgpu" class="level2">
-<h2 class="anchored" data-anchor-id="pytorch-and-ipex-on-dgpu">Pytorch and IPEX on dgpu</h2>
-<p>Checkout the <code>pytorch</code> <a href="https://github.com/rahulunair/intel_arc_dgpu_linux/tree/main/pytorch">directory</a> to know how to install PyTorch and IPEX with dGPU support.</p>
 </section>
 <section id="acknowledgements" class="level2">
 <h2 class="anchored" data-anchor-id="acknowledgements">Acknowledgements</h2>
