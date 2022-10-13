@@ -2,6 +2,7 @@
 toc: true
 description: Reinforment Learning for the unintiated
 categories: [prose, ml]
+date: "2020-07-09"
 ---
 
 ## Reinforcement Learning (RL)
