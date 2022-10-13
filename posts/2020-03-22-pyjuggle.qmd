@@ -2,6 +2,8 @@
 toc: true
 description: when to use threads and processes.
 categories: [coding]
+author: unrahul
+date: "2020-03-22"
 ---
 
 # Python concurrency lessons

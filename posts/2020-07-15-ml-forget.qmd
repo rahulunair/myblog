@@ -2,6 +2,8 @@
 toc: true
 description: Catastrophic forgetting in Neural Nets
 categories: [ml]
+date: 2020-07-15
+author: unrahul
 ---
 
 In relation to learning new tasks, the phenomenon of a model forgetting how to perform a previously learned task when trained on a new task is called catastrophic forgetting (CF). Catastrophic forgetting can be at fault in online training of similar tasks as well. Ideally for a deep enough network to learn all tasks it has to be presented with all the training data at once. This is often not quite possible because of reasons like memory constraints, security, non-sustainable solution and serious limitations in the online learning environment. This is especially important in reinforcement learning because catastrophic inference is most visible in sequential online tasks. RL methods we use by definition is a sequential online learning algorithm. Here online means the agent has to adapt to the environment in real time.

@@ -2,6 +2,8 @@
 toc: true
 description: A simple timing decorator for python
 categories: [coding]
+date: "2020-03-23"
+author: unrahul
 ---
 
 # Timing python functions

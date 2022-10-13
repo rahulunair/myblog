@@ -2,6 +2,8 @@
 toc: true
 description: A simple intro to concurrency in Go
 categories: [coding]
+author: unrahul
+date: "2017-03-31"
 ---
 # Monkeys, Juggling and some Golang
 

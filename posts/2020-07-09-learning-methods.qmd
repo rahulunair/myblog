@@ -2,6 +2,8 @@
 toc: true
 description: Learning methods in RL
 categories: [prose, ml]
+date: "2020-07-09"
+author: unrahul
 ---
 
 Model free learning can be done using variations of temporal difference learning or Monte Carlo methods.

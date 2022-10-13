@@ -2,6 +2,8 @@
 toc: false
 description: A minimal introduction to Rust.
 categories: [coding, rust]
+author: unrahul
+date: "2021-01-14"
 ---
 # Flashcard Rust: Result Type in Rust and how to handle it
 

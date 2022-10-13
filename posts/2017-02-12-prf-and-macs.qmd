@@ -2,10 +2,10 @@
 toc: true
 description: Pseudo random functions and message authentication.
 categories: [crypto]
+date: "2017-02-12"
+author: unrahul
 ---
 # Message Authentication and PRFs
-
-{% include info.html text="Alice wants to talk to Bob" %}
 
 <p align="center">
 <img src="https://imgur.com/ZiOuEd1.png"/>

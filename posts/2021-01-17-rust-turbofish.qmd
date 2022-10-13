@@ -2,6 +2,8 @@
 toc: false
 description: A minimal introduction to Rust.
 categories: [coding, rust]
+author: unrahul
+date: "2021-01-17"
 ---
 # Flashcard Rust: Colon colon angle bracket or turbofish!
 

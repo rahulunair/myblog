@@ -2,6 +2,8 @@
 toc: true
 description: yup, that's done!.
 categories: [life]
+date: "2016-01-03"
+author: unrahul
 ---
 # Graduated
 

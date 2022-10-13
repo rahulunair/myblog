@@ -2,6 +2,8 @@
 toc: false
 description: A minimal introduction to Rust.
 categories: [coding, rust]
+date: "2021-03-22"
+author: unrahul
 ---
 # Flashcard Rust: What type is this variable again?!
 

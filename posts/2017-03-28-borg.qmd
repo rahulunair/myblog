@@ -2,6 +2,8 @@
 toc: true
 description: An interesting design pattern - Borg
 categories: [coding]
+date: "2017-03-28"
+author: unrahul
 ---
 # Borg
 

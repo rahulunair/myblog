@@ -2,6 +2,8 @@
 toc: true
 description: A minimal introduction to Rust.
 categories: [coding, rust]
+author: unrahul
+date: "2020-03-09"
 ---
 # Flashcard Rust: Cargo
 

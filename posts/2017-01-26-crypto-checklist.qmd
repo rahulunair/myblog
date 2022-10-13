@@ -2,10 +2,11 @@
 toc: true
 description: A checklist to have when thinking of implementing crypto
 categories: [crypto]
+date: "2017-01-26"
 ---
 # An opinonated checklist on crypto
 
-{% include alert.html text="Please don't roll your own crypto, just.. don't do it." %}
+Please dont roll your own crypto!!
 
 Ohkay, so you are not heeding the warning ha, let's see how we can minimize the damage then..
 

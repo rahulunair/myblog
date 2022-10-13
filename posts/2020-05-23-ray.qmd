@@ -2,6 +2,8 @@
 toc: true
 description: Multiprocessing using ray.
 categories: [coding]
+date: "2020-05-23"
+author: unrahul
 ---
 
 The [ray](https://ray.io/) library for distributed computing has been
