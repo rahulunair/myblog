@@ -1,8 +1,11 @@
 ---
 toc: true
-description: Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU
+title: "Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU"
+author: "unrahul"
+date: "2022-10-12"
 categories: [intel,dgpu, graphics]
 ---
+
 
 # Configure Linux to utilize Intel Arc A370M Xe-HPG discrete GPU
 
