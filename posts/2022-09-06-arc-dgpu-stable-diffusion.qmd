@@ -141,5 +141,5 @@ As you can see the first time you run the model, it takes about 60 seconds, subs
 
 ## Repo
 
-You can find the full code and other related materials [here](https://github.com/rahulunair/myblog).
+You can find the full code and other related materials [here](https://github.com/rahulunair/stable_diffusion_arc).
 
