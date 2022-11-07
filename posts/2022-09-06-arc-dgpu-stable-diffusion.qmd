@@ -1,4 +1,9 @@
-## Stable Diffusion inference on Intel Arc GPUs
+---
+toc: true
+title: "Stable Diffusion inference on Intel Arc GPUs"
+date: "2022-11-06"
+categories: [intel, dgpu, graphics, arc, pytorch, tensorflow]
+---
 
 [Now](https://blog.rahul.onl/posts/2022-08-12-arc-dgpu-linux.html) that we have our
 Arc discrete GPU setup on Linux, let's try to run Stable Diffusion model using it.
