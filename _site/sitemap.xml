@@ -1,87 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://blog.rahul.onl/index.html</loc>
-    <lastmod>2022-10-13T03:53:41.146Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/index.html</loc>
+    <lastmod>2023-12-06T00:28:30.047Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2021-01-14-rust-result.html</loc>
-    <lastmod>2022-10-13T03:53:41.406Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2020-03-16-vars.html</loc>
+    <lastmod>2023-12-06T00:28:28.504Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2022-08-12-arc-dgpu-linux.html</loc>
-    <lastmod>2022-10-13T03:53:41.666Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2016-01-03-graduated.html</loc>
+    <lastmod>2023-12-06T00:28:27.760Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2020-03-22-pyjuggle.html</loc>
-    <lastmod>2022-10-13T03:53:41.866Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2020-05-23-ray.html</loc>
+    <lastmod>2023-12-06T00:28:27.017Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2020-03-23-tiemy.html</loc>
-    <lastmod>2022-10-13T03:53:42.042Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2017-03-28-borg.html</loc>
+    <lastmod>2023-12-06T00:28:25.963Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2020-07-09-rl-intro.html</loc>
-    <lastmod>2022-10-13T03:53:42.226Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2020-07-14-learning-methods.html</loc>
+    <lastmod>2023-12-06T00:28:25.264Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2021-01-17-rust-turbofish.html</loc>
-    <lastmod>2022-10-13T03:53:42.418Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2020-03-23-tiemy.html</loc>
+    <lastmod>2023-12-06T00:28:24.350Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2020-03-07-ahoy-rust.html</loc>
-    <lastmod>2022-10-13T03:53:42.606Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2017-01-26-crypto-checklist.html</loc>
+    <lastmod>2023-12-06T00:28:23.489Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2020-07-15-ml-forget.html</loc>
-    <lastmod>2022-10-13T03:53:42.882Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2023-12-05-qlora-finetuning-intel-gpu.html</loc>
+    <lastmod>2023-12-06T00:28:22.573Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2017-03-28-borg.html</loc>
-    <lastmod>2022-10-13T03:53:43.058Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2020-03-07-ahoy-rust.html</loc>
+    <lastmod>2023-12-06T00:28:21.627Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2020-03-09-cargo.html</loc>
-    <lastmod>2022-10-13T03:53:43.250Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2017-02-12-prf-and-macs.html</loc>
+    <lastmod>2023-12-06T00:28:20.684Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2017-03-31-juggling.html</loc>
-    <lastmod>2022-10-13T03:53:43.442Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2020-03-22-pyjuggle.html</loc>
+    <lastmod>2023-12-06T00:28:19.726Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2020-05-23-ray.html</loc>
-    <lastmod>2022-10-13T03:53:43.618Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2020-03-09-cargo.html</loc>
+    <lastmod>2023-12-06T00:28:20.269Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2017-01-26-crypto-checklist.html</loc>
-    <lastmod>2022-10-13T03:53:43.814Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2022-08-12-arc-dgpu-linux.html</loc>
+    <lastmod>2023-12-06T00:28:21.267Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2021-03-22-rust-type.html</loc>
-    <lastmod>2022-10-13T03:53:43.990Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2021-01-14-rust-result.html</loc>
+    <lastmod>2023-12-06T00:28:22.065Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2017-02-12-prf-and-macs.html</loc>
-    <lastmod>2022-10-13T03:53:44.174Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2017-03-31-juggling.html</loc>
+    <lastmod>2023-12-06T00:28:23.001Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2016-01-03-graduated.html</loc>
-    <lastmod>2022-10-13T03:53:44.326Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2020-07-09-learning-methods.html</loc>
+    <lastmod>2023-12-06T00:28:23.938Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2020-03-16-vars.html</loc>
-    <lastmod>2022-10-13T03:53:44.502Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2020-07-09-rl-intro.html</loc>
+    <lastmod>2023-12-06T00:28:24.793Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2020-07-14-learning-methods.html</loc>
-    <lastmod>2022-10-13T03:53:44.698Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2021-03-22-rust-type.html</loc>
+    <lastmod>2023-12-06T00:28:25.635Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/posts/2020-07-09-learning-methods.html</loc>
-    <lastmod>2022-10-13T03:53:44.902Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2020-07-15-ml-forget.html</loc>
+    <lastmod>2023-12-06T00:28:26.651Z</lastmod>
   </url>
   <url>
-    <loc>https://blog.rahul.onl/about.html</loc>
-    <lastmod>2022-10-13T03:53:45.050Z</lastmod>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2022-09-06-arc-dgpu-stable-diffusion.html</loc>
+    <lastmod>2023-12-06T00:28:27.446Z</lastmod>
+  </url>
+  <url>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/posts/2021-01-17-rust-turbofish.html</loc>
+    <lastmod>2023-12-06T00:28:28.145Z</lastmod>
+  </url>
+  <url>
+    <loc>https://unrahul.quarto.pub/technical-ramblings/about.html</loc>
+    <lastmod>2023-12-06T00:28:28.821Z</lastmod>
   </url>
 </urlset>

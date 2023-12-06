@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.1.251">
+<meta name="generator" content="quarto-1.3.450">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -19,9 +19,10 @@ div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
   width: 0.8em;
-  margin: 0 0.8em 0.2em -1.6em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -48,43 +49,13 @@ pre.numberSource code > span > a:first-child::before
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
     padding: 0 4px; width: 4em;
-    color: #aaaaaa;
   }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
 div.sourceCode
   {   }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: #7d9029; } /* Attribute */
-code span.bn { color: #40a070; } /* BaseN */
-code span.bu { color: #008000; } /* BuiltIn */
-code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code span.ch { color: #4070a0; } /* Char */
-code span.cn { color: #880000; } /* Constant */
-code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code span.dt { color: #902000; } /* DataType */
-code span.dv { color: #40a070; } /* DecVal */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #40a070; } /* Float */
-code span.fu { color: #06287e; } /* Function */
-code span.im { color: #008000; font-weight: bold; } /* Import */
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code span.op { color: #666666; } /* Operator */
-code span.ot { color: #007020; } /* Other */
-code span.pp { color: #bc7a00; } /* Preprocessor */
-code span.sc { color: #4070a0; } /* SpecialChar */
-code span.ss { color: #bb6688; } /* SpecialString */
-code span.st { color: #4070a0; } /* String */
-code span.va { color: #19177c; } /* Variable */
-code span.vs { color: #4070a0; } /* VerbatimString */
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
 
@@ -122,7 +93,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
 }</script>
 
@@ -140,29 +112,30 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <span class="navbar-title">Technical ramblings</span>
     </a>
   </div>
+            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../about.html">About</a>
+    <a class="nav-link" href="../about.html" rel="" target="">
+ <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/rahulunair"><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/rahulunair" rel="" target=""><i class="bi bi-github" role="img">
 </i> 
- </a>
+ <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com/unrahu1"><i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://twitter.com/unrahu1" rel="" target=""><i class="bi bi-twitter" role="img">
 </i> 
- </a>
+ <span class="menu-text"></span></a>
   </li>  
 </ul>
-              <div class="quarto-toggle-container">
-                  <a href="" class="quarto-color-scheme-toggle nav-link" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
-              </div>
-              <div id="quarto-search" class="" title="Search"></div>
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
           </div> <!-- /navcollapse -->
       </div> <!-- /container-fluid -->
     </nav>
@@ -196,6 +169,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
         <p class="date">October 12, 2022</p>
       </div>
     </div>
+    
       
     </div>
     
@@ -238,7 +212,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="https://user-images.githubusercontent.com/45503355/195398959-c28fe9f3-47c9-46cd-b1a0-5e26d8e6228a.png" class="img-fluid figure-img"></p>
-<p></p><figcaption class="figure-caption">Mainline kernel installer</figcaption><p></p>
+<figcaption class="figure-caption">Mainline kernel installer</figcaption>
 </figure>
 </div>
 <p>After installing the kernel, please restart the machine.</p>
@@ -265,7 +239,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span>    1.926449] i915 0000:00:02.0: <span class="er">[drm</span><span class="ex">]</span> GuC SLPC enabled</span>
 <span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span>    1.927353] i915 0000:00:02.0: <span class="er">[drm</span><span class="ex">]</span> GuC RC: enabled</span>
 <span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span>    1.930736] i915 0000:00:02.0: <span class="er">[drm</span><span class="ex">]</span> Protected Xe Path <span class="er">(</span><span class="ex">PXP</span><span class="kw">)</span> <span class="ex">protected</span> content support initialized</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span>    3.769893] [drm] Initialized <span class="er">i915</span> <span class="ex">1.6.0</span> 20201103 for 0000:00:02.0 on minor 0</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span>    3.769893] <span class="pp">[</span><span class="ss">drm</span><span class="pp">]</span> Initialized <span class="er">i915</span> <span class="ex">1.6.0</span> 20201103 for 0000:00:02.0 on minor 0</span>
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span>    3.775461] i915 0000:03:00.0: <span class="er">enabling</span> <span class="ex">device</span> <span class="er">(</span><span class="ex">0000</span> <span class="at">-</span><span class="op">&gt;</span> 0002<span class="kw">)</span></span>
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span>    3.775491] i915 0000:03:00.0: <span class="er">[drm</span><span class="ex">]</span> Incompatible option enable_guc=3 <span class="at">-</span> HuC is not supported!</span>
 <span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span>    3.776346] i915 0000:03:00.0: <span class="er">[drm</span><span class="ex">]</span> VT-d active for gfx access</span>
@@ -332,7 +306,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="assets/arc370m_bench.gif" class="img-fluid figure-img"></p>
-<p></p><figcaption class="figure-caption">glmark2 running on Arc 370m dGPU</figcaption><p></p>
+<figcaption class="figure-caption">glmark2 running on Arc 370m dGPU</figcaption>
 </figure>
 </div>
 <ol start="4" type="1">
@@ -349,10 +323,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="ex">Coding</span> → dpkg <span class="at">-i</span> <span class="pp">*</span>.deb</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Now that the compute drivers are installed let’s see if OpenCL can detect the dgpu. Install <code>clinfo</code> from apt and check using:</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Coding</span> → clinfo <span class="kw">|</span> <span class="fu">grep</span> <span class="st">"0x5690"</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Device</span> Name                                     Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x5693]</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Device</span> Name                                   Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x5693]</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Device</span> Name                                   Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x5693]</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Device</span> Name                                   Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x5693]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Device</span> Name                                     Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x5693</span><span class="pp">]</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Device</span> Name                                   Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x5693</span><span class="pp">]</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Device</span> Name                                   Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x5693</span><span class="pp">]</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Device</span> Name                                   Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x5693</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>We can see that the dgpu has been detected.</p>
 </section>
 <section id="install-oneapi-basekit-and-device-discovery-using-sycl" class="level2">
@@ -379,12 +353,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Coding</span> → source /opt/intel/oneapi/setvars.sh </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Device discovery using syclto see if sycl can detect the dgpu:</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Coding</span> → sycl-ls</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">[opencl:acc:0]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">FPGA</span> Emulation Platform for OpenCL<span class="er">(</span><span class="ex">TM</span><span class="kw">)</span><span class="ex">,</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">FPGA</span> Emulation Device 1.2 [2022.14.7.0.30_160000]</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">[opencl:cpu:1]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">OpenCL,</span> 12th Gen Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Core</span><span class="er">(</span><span class="ex">TM</span><span class="kw">)</span> <span class="ex">i7-12700H</span> 3.0 [2022.14.7.0.30_160000]</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="ex">[opencl:gpu:2]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">OpenCL</span> HD Graphics, Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x5693] 3.0 [22.40.024349]</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ex">[opencl:gpu:3]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">OpenCL</span> HD Graphics, Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x46a6] 3.0 [22.40.024349]</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">[ext_oneapi_level_zero:gpu:0]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Level-Zero,</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x5693] 1.3 [1.3.24349]</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="ex">[ext_oneapi_level_zero:gpu:1]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Level-Zero,</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x46a6] 1.3 [1.3.24349]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">[opencl:acc:0]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">FPGA</span> Emulation Platform for OpenCL<span class="er">(</span><span class="ex">TM</span><span class="kw">)</span><span class="ex">,</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">FPGA</span> Emulation Device 1.2 <span class="pp">[</span><span class="ss">2022.14.7.0.30_160000</span><span class="pp">]</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">[opencl:cpu:1]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">OpenCL,</span> 12th Gen Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Core</span><span class="er">(</span><span class="ex">TM</span><span class="kw">)</span> <span class="ex">i7-12700H</span> 3.0 <span class="pp">[</span><span class="ss">2022.14.7.0.30_160000</span><span class="pp">]</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="ex">[opencl:gpu:2]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">OpenCL</span> HD Graphics, Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x5693</span><span class="pp">]</span> 3.0 <span class="pp">[</span><span class="ss">22.40.024349</span><span class="pp">]</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ex">[opencl:gpu:3]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">OpenCL</span> HD Graphics, Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x46a6</span><span class="pp">]</span> 3.0 <span class="pp">[</span><span class="ss">22.40.024349</span><span class="pp">]</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">[ext_oneapi_level_zero:gpu:0]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Level-Zero,</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x5693</span><span class="pp">]</span> 1.3 <span class="pp">[</span><span class="ss">1.3.24349</span><span class="pp">]</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="ex">[ext_oneapi_level_zero:gpu:1]</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Level-Zero,</span> Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x46a6</span><span class="pp">]</span> 1.3 <span class="pp">[</span><span class="ss">1.3.24349</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>To get a more verbose output, use, <code>sycl-ls --verbose</code>:</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Coding</span> → sycl-ls <span class="at">--verbose</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> name</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Name</span>     : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">FPGA</span> Emulation Platform for OpenCL<span class="er">(</span><span class="ex">TM</span><span class="kw">)</span></span>
@@ -392,12 +366,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Name</span>     : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">OpenCL</span></span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Name</span>       : 12th Gen Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Core</span><span class="er">(</span><span class="ex">TM</span><span class="kw">)</span> <span class="ex">i7-12700H</span></span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Name</span>     : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">OpenCL</span> HD Graphics</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Name</span>       : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x5693]</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Name</span>       : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x5693</span><span class="pp">]</span></span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Name</span>     : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">OpenCL</span> HD Graphics</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Name</span>       : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x46a6]</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Name</span>       : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x46a6</span><span class="pp">]</span></span>
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Name</span>     : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Level-Zero</span></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Name</span>       : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x5693]</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Name</span>       : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> [0x46a6]</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Name</span>       : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x5693</span><span class="pp">]</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Name</span>       : Intel<span class="er">(</span><span class="ex">R</span><span class="kw">)</span> <span class="ex">Graphics</span> <span class="pp">[</span><span class="ss">0x46a6</span><span class="pp">]</span></span>
 <span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Name</span>     : SYCL host platform</span>
 <span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Name</span>       : SYCL host device</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>As seen above 2 GPU devices are detected by the SYCL runtime and are supported using both OpenCL and Level-Zero drivers.</p>
@@ -420,7 +394,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="https://user-images.githubusercontent.com/45503355/195416715-923dc33a-acbd-411e-a774-7a38c13e72f3.png" class="img-fluid figure-img"></p>
-<p></p><figcaption class="figure-caption">system monitor output on my laptop</figcaption><p></p>
+<figcaption class="figure-caption">system monitor output on my laptop</figcaption>
 </figure>
 </div>
 <p>As seen above both the igpu and dgpu performance can be monitored using the tool.</p>
@@ -574,7 +548,9 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   // Switch to dark mode if need be
   if (hasAlternateSentinel()) {
     toggleColorMode(true);
-  } 
+  } else {
+    toggleColorMode(false);
+  }
   const icon = "";
   const anchorJS = new window.AnchorJS();
   anchorJS.options = {
@@ -582,9 +558,23 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     icon: icon
   };
   anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
   const clipboard = new window.ClipboardJS('.code-copy-button', {
-    target: function(trigger) {
-      return trigger.previousElementSibling;
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
     }
   });
   clipboard.on('success', function(e) {
@@ -596,7 +586,24 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     button.classList.add('code-copy-button-checked');
     var currentTitle = button.getAttribute("title");
     button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
     setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
       button.setAttribute("title", currentTitle);
       button.classList.remove('code-copy-button-checked');
     }, 1000);
@@ -632,24 +639,128 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       return note.innerHTML;
     });
   }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
   var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
   for (var i=0; i<bibliorefs.length; i++) {
     const ref = bibliorefs[i];
-    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
-    tippyHover(ref, function() {
-      var popup = window.document.createElement('div');
-      cites.forEach(function(cite) {
-        var citeDiv = window.document.createElement('div');
-        citeDiv.classList.add('hanging-indent');
-        citeDiv.classList.add('csl-entry');
-        var biblioDiv = window.document.getElementById('ref-' + cite);
-        if (biblioDiv) {
-          citeDiv.innerHTML = biblioDiv.innerHTML;
-        }
-        popup.appendChild(citeDiv);
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
       });
-      return popup.innerHTML;
-    });
+    }
   }
 });
 </script>

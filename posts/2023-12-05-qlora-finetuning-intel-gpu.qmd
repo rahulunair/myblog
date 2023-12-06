@@ -1,0 +1,185 @@
+---
+toc: true
+title: "Text-to-SQL Generation Using LLMs Fine-Tuned with QLoRA on Intel GPUs"
+date: "2023-12-05"
+categories: [intel, dgpu, PVC1100, arc, PyTorch, bigdl-llm]
+---
+
+The landscape of AI and natural language processing has dramatically shifted with the advent of Large Language models (LLMs). This shift is characterized by advancements like Low-Rank Adaptation (LoRA) and its more advanced iteration, Quantized LoRA (QLoRA), which have transformed the fine-tuning process from a compute-intensive task into an efficient, scalable procedure.
+
+<figure align="center">
+  <img src="./images/launghing_llama.jpg" width="800" alt="laughing llama">
+   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">Generated with Stable Diffusion XL using the prompt: "A cute laughing llama with big eye lashes, sitting on a beach with sunglasses reading in gibili style."</figcaption>
+ </figure>
+
+## The Advent of LoRA: A Paradigm Shift in LLM Fine-Tuning
+
+LoRA represents a significant advancement in the fine-tuning of LLMs. By introducing trainable adapter modules between the layers of a large pre-trained model, LoRA focuses on refining a smaller subset of model parameters. These adapters are low-rank matrices, significantly reducing the computational burden and preserving the valuable pre-trained knowledge embedded within LLMs. The key aspects of LoRA include:
+
+- **Low-Rank matrix structure:** Shaped as (r x d), where 'r' is a small rank hyperparameter and 'd' is the hidden dimension size. This structure ensures fewer trainable parameters.
+- **Factorization:** The adapter matrix is factorized into two smaller matrices, enhancing the model's function adaptability with fewer parameters.
+- **Scalability and adaptability:** LoRA balances the model's learning capacity and generalizability by scaling adapters with a parameter α and incorporating dropout for regularization.
+
+
+<figure align="center">
+  <img src="./images/lora_library.png" width="800" alt="lora adapter library">
+   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">Left: Integration of LoRA adapters into the model. Right: Deployment of LoRA adapters with a foundation model as a task-specific model library
+  </figcaption>
+</figure>
+
+## Quantized LoRA (QLoRA): Efficient Fine-Tuning on Intel Hardware
+
+QLoRA advances LoRA by introducing weight quantization, further reducing memory usage. This approach enables the fine-tuning of large models, such as the 70B-parameter Llama 2, on a single GPU , like Intel® Data Center GPU Max Series 1100 with 48 GB VRAM, which was considered impossible previously. QLoRA's main features include:
+
+- Memory efficiency: Through weight quantization, QLoRA substantially reduces the model's memory footprint, crucial for handling large LLMs.
+- On-the-fly dequantization: It temporarily dequantizes the quantized weights for computations, focusing only on adapter gradients during training.
+
+### Fine-Tuning with QLoRA on Intel Hardware
+
+The fine-tuning process starts with setting up the environment and installing the necessary packages, including [bigdl-llm](https://bigdl.readthedocs.io/en/latest/#bigdl-llm-low-bit-llm-library) for model loading, parameter-efficient fine-tuning (PEFT) for LoRA adapters, [Intel® Extension for PyTorch*](https://intel.github.io/intel-extension-for-pytorch/xpu/latest/) for training using Intel discrete GPUs, Hugging face Transformers for fine-tuning, and datasets for loading the dataset. We will walk through the high-level process of fine-tuning an LLM to improve its capabilities. As an example, we will generate SQL queries from natural language input, focusing on general QLoRA fine-tuning. For detailed explanations, check out the full notebook that takes you from setting up the required Python* packages, loading the model, fine-tuning, and inferencing the fine-tuned LLM to generate SQL from text, on Intel® Developer Cloud and also [here](https://github.com/rahulunair/genAI/blob/main/LLM_finetuning.ipynb).
+
+
+### Model Loading and Configuration for Fine-Tuning
+
+The foundation model is loaded in a 4-bit format using bigdl-llm, significantly reducing memory usage. This step enables fine-tuning large models like Llama 2 70 for example,
+
+```python
+from bigdl.llm.transformers import AutoModelForCausalLM 
+
+# Loading the model in a 4-bit format for efficient memory usage 
+model = AutoModelForCausalLM.from_pretrained( 
+    "model_id",  # Replace with your model ID 
+    load_in_low_bit="nf4", 
+    optimize_model=False, 
+    torch_dtype=torch.float16, 
+    modules_to_not_convert=["lm_head"], 
+) 
+```
+
+### Learning Rate and Stability in Training
+
+Selecting an optimal learning rate is critical in QLoRA fine-tuning to balance training stability and convergence speed. This decision is vital for effective fine-tuning outcomes as a higher learning rate can lead to instabilities with the training loss abnormally drop zero after few steps.
+
+```python
+from transformers import TrainingArguments 
+
+# Configuration for training 
+training_args = TrainingArguments( 
+    learning_rate=2e-5,  # Optimal starting point; adjust as needed 
+    per_device_train_batch_size=4, 
+    max_steps=200, 
+    # Additional parameters... 
+) 
+```
+
+During the fine-tuning process, there is a notable rapid decrease in the loss after just a few steps, which then gradually levels off, reaching a value near 0.6 at approximately 300 steps as seen in the graph below:
+
+<figure align="center">
+  <img src="./images/loss_chart.jpg" width="800" alt="loss chart">
+   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">Training and Validation loss during fine-tuning a CodeLlama-7b model on the b-mc2/sql-create-context dataset.</figcaption>
+</figure>
+
+
+## Text-to-SQL Conversion: Prompt Engineering
+
+With the fine-tuned model, we can convert natural language queries into SQL commands, a vital capability in data analytics and business intelligence. To fine-tune the model, we must carefully convert the data into a structured prompt like below to form an instruction dataset with Input, Context and Response fields:
+
+```python
+# Function to generate structured prompts for Text-to-SQL tasks 
+def generate_prompt_sql(input_question, context, output=""):
+    return f"""You are a powerful text-to-SQL model. Your job is to answer questions about a database. You are given a question and context regarding one or more tables. 
+You must output the SQL query that answers the question.
+### Input:
+{input_question}
+### Context:
+{context}
+### Response:
+{output}"""
+```
+
+## Diverse Model Options
+
+The notebook supports an array of models, each offering unique capabilities for different fine-tuning objectives:
+
+- [NousResearch/Nous-Hermes-Llama-2–7b](https://huggingface.co/NousResearch/Nous-Hermes-llama-2-7b)
+- [NousResearch/Llama-2–7b-chat-hf](https://huggingface.co/NousResearch/Llama-2-7b-chat-hf)
+- [NousResearch/Llama-2–13b-hf](https://huggingface.co/NousResearch/Llama-2-13b-hf)
+- [NousResearch/CodeLlama-7b-hf](https://huggingface.co/NousResearch/CodeLlama-7b-hf)
+- [Phind/Phind-CodeLlama-34B-v2](https://huggingface.co/Phind/Phind-CodeLlama-34B-v2)
+- [openlm-research/open_llama_3b_v2](https://huggingface.co/openlm-research/open_llama_3b_v2)
+- [openlm-research/open_llama_13b](https://huggingface.co/openlm-research/open_llama_13b)
+- [HuggingFaceH4/zephyr-7b-beta](https://huggingface.co/HuggingFaceH4/zephyr-7b-beta)
+
+
+## Model Inference with QLoRA: A Comparative Approach
+
+The true test of any fine-tuning process lies in its inference capabilities. In the case of the implementation, the inference stage not only demonstrates the model’s proficiency in task-specific applications but also allows for a comparative analysis between the base and the fine-tuned models. This comparison sheds light on the effectiveness of the LoRA adapters in enhancing the model’s performance for specific tasks.
+
+
+### Model Loading for Inference
+
+For inference, the model is loaded in a low-bit format, typically 4-bit, using the bigdl-llm library. This approach drastically reduces the memory footprint, making it suitable to run multiple LLMs with high parameter count on a single resource-optimized device such as the Intel® Data Center Max GPU 1100. The following code snippet illustrates the model loading process for inference:
+
+```python
+from bigdl.llm.transformers import AutoModelForCausalLM 
+
+# Loading the model for inference 
+model_for_inference = AutoModelForCausalLM.from_pretrained( 
+    "finetuned_model_path",  # Path to the fine-tuned model
+    load_in_4bit=True,  # 4 bit loading
+    optimize_model=True,
+    use_cache=True,
+    torch_dtype=torch.float16, 
+    modules_to_not_convert=["lm_head"], 
+)
+```
+### Running Inference: Comparing Base vs Fine-Tuned Model
+
+Once the model is loaded, we can perform inference to generate SQL queries from natural language inputs. This process can be conducted on both the base model and the fine-tuned model, allowing you to directly compare the outcomes and assess the improvements brought about by fine-tuning with QLoRA:
+
+
+```python
+# Generating a SQL query from a text prompt 
+text_prompt = generate_sql_prompt(…)
+# Base Model Inference 
+base_model_sql = base_model.generate(text_prompt) 
+print("Base Model SQL:", base_model_sql) 
+# Fine-Tuned Model Inference 
+finetuned_model_sql = finetuned_model.generate(text_prompt) 
+print("Fine-Tuned Model SQL:", finetuned_model_sql)
+```
+
+Following a 15-minute session training itself, the fine-tuned model demonstrates enhanced proficiency in generating SQL queries that reflect the given questions more accurately than the base model. With additional training steps, we can anticipate further improvements in the model’s response accuracy:
+
+Finetuned Model:
+
+<figure align="center">
+  <img src="./images/finetuned.png" width="800" alt="finetuned llm">
+   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">Fine-tuned model SQL generation for a given question and context.</figcaption>
+</figure>
+
+Base Model:
+
+<figure align="center">
+  <img src="./images/base_model.png" width="800" alt="base llm">
+   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">Base model SQL generation for a given question and context.</figcaption>
+</figure>
+
+### LoRA Adapters: A Library of Task-Specific Enhancements
+
+One of the most compelling aspects of LoRA is its ability to act as a library of task-specific enhancements. These adapters can be fine-tuned for distinct tasks and then saved. Depending on the requirement, a specific adapter can be loaded and used with the base model, effectively switching the model’s capabilities to suit different tasks. This adaptability makes LoRA a highly versatile tool in the realm of LLM fine-tuning.
+
+### Check out the notebook on Intel Developer Cloud
+
+I invite AI practitioners and developers to explore the full notebook on the Intel Developer Cloud, where you can experiment with and explore the capabilities of fine-tuning LLMs using QLoRA on Intel hardware with Intel AI software optimizations. Once you log into Intel Developer Cloud, go to the “Training Catalog”. Under “Gen AI Essentials” in the catalog, you can find the LLM fine-tuning notebook and other notebooks.
+
+<figure align="center">
+  <img src="./images/idc_page.webp" width="800" alt="idc genai">
+   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">LLM Fine-tuning and other notebooks in Gen AI Essentials under the Training Catalog on IDC.</figcaption>
+</figure>
+
+
+## Repo
+
+You can find the full code and other related notebooks [here](https://github.com/rahulunair/genAI).
+

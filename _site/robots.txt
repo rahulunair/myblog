@@ -1,1 +1,1 @@
-Sitemap: https://blog.rahul.onl/sitemap.xml
+Sitemap: https://unrahul.quarto.pub/technical-ramblings/sitemap.xml
