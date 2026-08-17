@@ -1,6 +1,6 @@
 ---
 title: "Qwen3.8-27B on Intel Arc Pro: two cards, near four-card speed"
-subtitle: "An 18.2 GiB four-bit build that decodes at 37.8 tok/s on two B65 cards, within 9% of the official FP8 checkpoint on four."
+subtitle: "An 18.2 GiB four-bit build that decodes at 37.8 tok/s on two B65 cards, against 41.4 for the official FP8 checkpoint on four."
 date: "2026-08-16"
 description: "A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 37.8 tok/s on two B65 cards, 52.1 on four, and what the measurements said along the way."
 categories: [intel, arc, arc-pro, xe2, xpu, sglang, llm-inference, quantization, agentic-coding]
@@ -8,9 +8,9 @@ image: qwen38-27b/card.png
 image-alt: "Four measured W4A16 paths on two Intel Arc Pro B65 cards, rising from 6.2 to 35.1 tokens per second."
 ---
 
-Qwen3.8-27B decodes at **37.8 tokens per second on two Intel Arc Pro B65 cards**,
-which lands within 9% of what the official FP8 checkpoint does on **four**. Give
-the same four-bit build all four cards and it reaches **52.1 tok/s**. Halving the
+Qwen3.8-27B decodes at **37.8 tokens per second on two Intel Arc Pro B65 cards**.
+The official FP8 checkpoint on **four** cards manages 41.4. Give the same
+four-bit build all four cards and it reaches **52.1 tok/s**. Halving the
 hardware is the result I care about most here, and it came out of a decision
 about quantization.
 
@@ -184,9 +184,9 @@ prefill should therefore scale differently even before software enters the
 picture.
 
 A roofline gives you a boundary. Mostly I use it as a warning system: it tells me
-when a proposed optimization cannot possibly repay its
-complexity, when a measurement looks suspiciously good, and when writing another
-kernel is unlikely to be worth the time.
+when a proposed optimization cannot possibly repay its complexity, when a
+measurement looks suspiciously good, and when writing another kernel is unlikely
+to be worth the time.
 
 ## Check upstream first, then add the missing bits
 
@@ -269,7 +269,7 @@ path.
 ## Four bits is not really four bits
 
 My checkpoint inventory measured the three large projections in every DeltaNet
-layer, input QKV, input Z, and output, at roughly 10.36 GiB in BF16. That is
+layer (input QKV, input Z, and output) at roughly 10.36 GiB in BF16. That is
 about 47% of the community checkpoint's decode traffic. I nearly left them alone.
 Then I looked at the official FP8 release and found scale tensors for those same
 projections, with only the small surrounding tensors excluded. Useful prior: the
@@ -309,16 +309,17 @@ fewer bytes bought about nine percent more tokens per second, so the byte model
 found the opportunity, but those newly quantized projection shapes were clearly
 behaving unlike ordinary dense four-bit GEMMs.*
 
-That gap is still open. The merged DeltaNet projection at TP2 has a shape unlike
-the dense FFN projections, and it is the leading suspect. I would rather publish
-the unexplained result than adjust the story until the arithmetic looks neat.
+I have not closed that gap. The merged DeltaNet projection at TP2 has a shape
+unlike the dense FFN projections and is my leading suspect, and I come back to it
+at the end. I would rather publish the result I cannot explain than tidy the
+story until the arithmetic looks neat.
 
 ## Graph capture changes both performance and observability
 
 Decode is a long chain of small operations. Graph replay removes much of the
 per-operation submission cost, so graph capture is part of the setup I actually
-use, not an optional benchmark trick. Earlier work on two other models on these
-same cards measured it as a first-order improvement. For Qwen3.8 I do not have a
+use, not an optional benchmark trick. Earlier work on two other models in this
+series measured it as a first-order improvement. For Qwen3.8 I do not have a
 clean graph-on/graph-off comparison, so I attach no new percentage to it.
 
 Capture also changes what instrumentation means. A Python-side counter that gets
@@ -454,8 +455,8 @@ and the Qwen attention override made it slower. The method transferred; the
 configuration did not.
 
 Those rows are reference points, not a competition between models. Each one
-deserves its own post, and I plan to write them. This one is about Qwen3.8 and the method I used
-to work out what it needed.
+deserves its own post, and I plan to write them. This one is about Qwen3.8 and
+the method I used to work out what it needed.
 
 That is also why I do not present a bag of "Xe2 optimizations" to enable all at
 once. Graph capture, rooflines, proof that a fast path actually ran, and
@@ -489,9 +490,9 @@ like an amazing performance result for a few seconds.
 
 The fix belonged in the harness rather than the prompting: fail loudly, record
 the exact setup and run number, keep retractions beside the results, and refuse
-to print metrics for a rejected request. My own job stayed
-the same: one benchmark on the GPUs at a time, one changed variable, and no
-number without a saved log.
+to print metrics for a rejected request. My own job stayed the same: one
+benchmark on the GPUs at a time, one changed variable, and no number without a
+saved log.
 
 ## Fast gibberish is still gibberish
 
@@ -507,8 +508,8 @@ list, because the container itself was not a `Linear`. The runtime matched ignor
 entries by substring, so that one entry hid every projection beneath it. Packed
 tensors existed in the checkpoint and were never loaded into those linears.
 
-Both cases now fail at build time. More importantly, I compare packed
-dequantization against an independent float64 reference on real tensors. Shape
+Both cases now fail at build time, and I also compare packed dequantization
+against an independent float64 reference on real tensors. Shape
 checks alone are not enough. A wrong packed orientation can be shape-valid and
 still produce fluent-looking, numerically wrong output.
 
@@ -546,16 +547,15 @@ and cannot answer whether MTP helps a real session.
 
 ## What still does not make sense?
 
-The byte model says the fully quantized DeltaNet projections should save more time
-than they do. Three independent views agree the gap is real: checkpoint-aware
-projection, same-shape kernel rates, and component removal. None of them yet
-explains why the merged projection behaves so differently from the dense FFN path.
+I cut 35% of the bytes read per decode step and got 9% more throughput back.
+Three independent views agree that the shortfall is real: checkpoint-aware
+projection, same-shape kernel rates, and component removal. None of them explains
+why the merged DeltaNet projection behaves so differently from the dense FFN
+path.
 
-That gap is the thing I most want to close. I cut 35% of the bytes per decode
-step and got 9% more throughput back. Somewhere in there is a good chunk of
-performance I have already paid for and am not collecting, and until I understand
-why, every other number in my AWQ build is standing on something I cannot
-explain. So it goes first.
+Somewhere in there is performance I have already paid for and am not collecting,
+and until I know why, every other number in my AWQ build rests on something I
+cannot account for. So it goes first.
 
 Some of the things I want to do next:
 
