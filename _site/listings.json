@@ -2,6 +2,8 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/2026-08-16-qwen38-27b-arc-pro-sglang.html",
+      "/posts/2024-12-11-expose-tunneling.html",
       "/posts/2023-12-05-qlora-finetuning-intel-gpu.html",
       "/posts/2022-09-06-arc-dgpu-stable-diffusion.html",
       "/posts/2022-08-12-arc-dgpu-linux.html",

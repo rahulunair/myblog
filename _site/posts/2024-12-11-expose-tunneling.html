@@ -7,10 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="unrahul">
-<meta name="dcterms.date" content="2016-01-03">
-<meta name="description" content="yup, that’s done!.">
+<meta name="dcterms.date" content="2024-11-18">
 
-<title>graduated – Technical ramblings</title>
+<title>Exposing Local Applications: Cloudflare and Gradio Tunnels – Technical ramblings</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -28,6 +27,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -83,11 +117,11 @@ ul.task-list li input[type="checkbox"] {
 <style>html{ scroll-behavior: smooth; }</style>
 
 
-<meta property="og:title" content="Technical ramblings">
-<meta property="og:description" content="yup, that’s done!.">
+<meta property="og:title" content="Exposing Local Applications: Cloudflare and Gradio Tunnels – Technical ramblings">
+<meta property="og:description" content="Notes on systems, Rust, Python and running AI workloads on Intel GPUs.">
 <meta property="og:site_name" content="Technical ramblings">
-<meta name="twitter:title" content="Technical ramblings">
-<meta name="twitter:description" content="yup, that’s done!.">
+<meta name="twitter:title" content="Exposing Local Applications: Cloudflare and Gradio Tunnels – Technical ramblings">
+<meta name="twitter:description" content="Notes on systems, Rust, Python and running AI workloads on Intel GPUs.">
 <meta name="twitter:creator" content="@108brushes">
 <meta name="twitter:card" content="summary">
 </head>
@@ -302,16 +336,8 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      
-                  <div>
-        <div class="description">
-          yup, that’s done!.
-        </div>
-      </div>
-                          <div class="quarto-categories">
-                <div class="quarto-category">life</div>
-              </div>
-                  </div>
+      <h1 class="title">Exposing Local Applications: Cloudflare and Gradio Tunnels</h1>
+                      </div>
   </div>
     
   
@@ -327,7 +353,7 @@ ul.task-list li input[type="checkbox"] {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">January 3, 2016</p>
+        <p class="date">November 18, 2024</p>
       </div>
     </div>
     
@@ -343,7 +369,21 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#graduated" id="toc-graduated" class="nav-link active" data-scroll-target="#graduated">Graduated</a></li>
+  <li><a href="#cloudflares-trycloudflare" id="toc-cloudflares-trycloudflare" class="nav-link active" data-scroll-target="#cloudflares-trycloudflare">Cloudflare’s TryCloudflare</a>
+  <ul class="collapse">
+  <li><a href="#why-use-cloudflare" id="toc-why-use-cloudflare" class="nav-link" data-scroll-target="#why-use-cloudflare">Why Use Cloudflare?</a></li>
+  <li><a href="#setting-up-trycloudflare" id="toc-setting-up-trycloudflare" class="nav-link" data-scroll-target="#setting-up-trycloudflare">Setting Up TryCloudflare</a></li>
+  <li><a href="#example-workloads" id="toc-example-workloads" class="nav-link" data-scroll-target="#example-workloads">Example Workloads:</a></li>
+  <li><a href="#for-production-use" id="toc-for-production-use" class="nav-link" data-scroll-target="#for-production-use">For Production Use:</a></li>
+  </ul></li>
+  <li><a href="#gradios-share-feature" id="toc-gradios-share-feature" class="nav-link" data-scroll-target="#gradios-share-feature">Gradio’s Share Feature</a>
+  <ul class="collapse">
+  <li><a href="#why-use-gradio" id="toc-why-use-gradio" class="nav-link" data-scroll-target="#why-use-gradio">Why Use Gradio?</a></li>
+  <li><a href="#setting-up-gradio-tunnels" id="toc-setting-up-gradio-tunnels" class="nav-link" data-scroll-target="#setting-up-gradio-tunnels">Setting Up Gradio Tunnels</a></li>
+  <li><a href="#example-workloads-1" id="toc-example-workloads-1" class="nav-link" data-scroll-target="#example-workloads-1">Example Workloads:</a></li>
+  <li><a href="#for-production-use-1" id="toc-for-production-use-1" class="nav-link" data-scroll-target="#for-production-use-1">For Production Use:</a></li>
+  </ul></li>
+  <li><a href="#recommendations-and-when-to-use" id="toc-recommendations-and-when-to-use" class="nav-link" data-scroll-target="#recommendations-and-when-to-use">Recommendations and When to Use</a></li>
   </ul>
 </nav>
     </div>
@@ -355,10 +395,103 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<section id="graduated" class="level1">
-<h1>Graduated</h1>
-<p>Finally, after two years of going to school, late-night working on projects when dinner meant calling Dominos at 2:00 AM, I have graduated with a Masters in Computer Engineering. The final semester had been very kind to me; I had a lot of opportunities to work with some cool folks on different aspects of the cloud and Machine Learning.</p>
-<p>Till a month back I had deadlines and submissions, now I am relatively free, I know I should enjoy this moment but it is really hard to focus when you don’t have anything much to do.</p>
+<p>When developing or testing applications locally, you may need to share them quickly over the internet. Whether it’s for demos, hackathons, or collaborative projects, tunneling tools like <strong>Cloudflare’s TryCloudflare</strong> and <strong>Gradio’s Share Feature</strong> provide effective solutions to expose local services to the public.</p>
+<p>This guide focuses on setting up tunnels for various workloads (e.g., web services, web apps, TGI servers, VLLM services) and provides detailed steps for using these tools. The examples assume your service is running locally on a specific port (e.g., <code>http://localhost:8080</code>).</p>
+<hr>
+<section id="cloudflares-trycloudflare" class="level2">
+<h2 class="anchored" data-anchor-id="cloudflares-trycloudflare">Cloudflare’s TryCloudflare</h2>
+<p><strong>Cloudflare’s TryCloudflare</strong> lets you quickly expose local services to the internet with no Cloudflare account required. While it’s intended for testing or temporary use, Cloudflare also offers premium tunnels for production-grade needs.</p>
+<section id="why-use-cloudflare" class="level3">
+<h3 class="anchored" data-anchor-id="why-use-cloudflare">Why Use Cloudflare?</h3>
+<ul>
+<li><strong>Quick Setup:</strong> A single command is enough to expose your service.</li>
+<li><strong>Secure:</strong> It uses Cloudflare’s global network, protecting your IP address.</li>
+<li><strong>Temporary Usage:</strong> Ideal for demos or quick sharing during development.</li>
+</ul>
+</section>
+<section id="setting-up-trycloudflare" class="level3">
+<h3 class="anchored" data-anchor-id="setting-up-trycloudflare">Setting Up TryCloudflare</h3>
+<ol type="1">
+<li><p><strong>Install <code>cloudflared</code>:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install <span class="at">-y</span> wget</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span> cloudflared-linux-amd64.deb</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Expose a Local Service</strong> (replace <code>8080</code> with your service’s port):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cloudflared</span> tunnel <span class="at">--url</span> http://localhost:8080</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Share the Public URL</strong>:</p>
+<p>After running the command, you’ll receive a public URL like:</p>
+<pre><code>https://&lt;random-subdomain&gt;.trycloudflare.com</code></pre>
+<p>This link is temporary and only works while the <code>cloudflared</code> process is running.</p></li>
+</ol>
+</section>
+<section id="example-workloads" class="level3">
+<h3 class="anchored" data-anchor-id="example-workloads">Example Workloads:</h3>
+<ul>
+<li><p><strong>Web Service</strong>: Start your web service (e.g., Flask, FastAPI, Node.js) locally on port <code>8080</code> and use <code>cloudflared</code> to expose it.</p></li>
+<li><p><strong>TGI or VLLM Server</strong>: Run your inference server locally, bound to a port, and use <code>cloudflared</code> to expose it for collaborators or clients to test.</p></li>
+</ul>
+</section>
+<section id="for-production-use" class="level3">
+<h3 class="anchored" data-anchor-id="for-production-use">For Production Use:</h3>
+<p>For permanent, production-grade tunnels with custom domains, better reliability, and SLAs, consider upgrading to <a href="https://www.cloudflare.com/products/tunnels/">Cloudflare’s premium tunnel services</a>.</p>
+<hr>
+</section>
+</section>
+<section id="gradios-share-feature" class="level2">
+<h2 class="anchored" data-anchor-id="gradios-share-feature">Gradio’s Share Feature</h2>
+<p><strong>Gradio</strong> is widely used for creating interfaces for machine learning models, but its <code>share=True</code> option can also be repurposed to expose general-purpose applications.</p>
+<section id="why-use-gradio" class="level3">
+<h3 class="anchored" data-anchor-id="why-use-gradio">Why Use Gradio?</h3>
+<ul>
+<li><strong>Ease of Use:</strong> Designed for developers, with minimal configuration required.</li>
+<li><strong>Temporary Links:</strong> Ideal for demos, with links valid for up to 72 hours.</li>
+<li><strong>Integrated with Python:</strong> Perfect for exposing Python-based services.</li>
+</ul>
+</section>
+<section id="setting-up-gradio-tunnels" class="level3">
+<h3 class="anchored" data-anchor-id="setting-up-gradio-tunnels">Setting Up Gradio Tunnels</h3>
+<ol type="1">
+<li><p><strong>Install Gradio</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install gradio</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Expose a Local Service</strong>:</p>
+<p>Create a minimal Gradio app to expose your service (replace <code>8080</code> with your service’s port):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> gradio <span class="im">as</span> gr</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> expose_app():</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">"Service running on http://localhost:8080"</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>demo <span class="op">=</span> gr.Interface(fn<span class="op">=</span>expose_app, inputs<span class="op">=</span>[], outputs<span class="op">=</span><span class="st">"text"</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>demo.launch(share<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Share the Public URL</strong>:</p>
+<p>Running the script provides a public URL like:</p>
+<pre><code>https://&lt;random-subdomain&gt;.gradio.live</code></pre>
+<p>This link is active for 72 hours.</p></li>
+</ol>
+</section>
+<section id="example-workloads-1" class="level3">
+<h3 class="anchored" data-anchor-id="example-workloads-1">Example Workloads:</h3>
+<ul>
+<li><p><strong>Web Service</strong>: Use Gradio to describe and share your web service running on <code>localhost:8080</code>.</p></li>
+<li><p><strong>Web App</strong>: Expose your local React, Vue, or other frontend applications by sharing the port they’re hosted on.</p></li>
+<li><p><strong>Inference Servers</strong>: Provide lightweight interaction interfaces for machine learning models.</p></li>
+</ul>
+</section>
+<section id="for-production-use-1" class="level3">
+<h3 class="anchored" data-anchor-id="for-production-use-1">For Production Use:</h3>
+<p>Gradio’s share links are temporary and not intended for production. For permanent hosting, consider deploying on platforms like <a href="https://huggingface.co/spaces">Hugging Face Spaces</a>.</p>
+<hr>
+</section>
+</section>
+<section id="recommendations-and-when-to-use" class="level2">
+<h2 class="anchored" data-anchor-id="recommendations-and-when-to-use">Recommendations and When to Use</h2>
+<ul>
+<li><p><strong>Cloudflare TryCloudflare</strong>: Best for quick exposure of services without additional Python dependencies. Use it for secure sharing during hackathons or short-lived projects. For production or long-term use, consider Cloudflare’s premium tunnels.</p></li>
+<li><p><strong>Gradio Share Feature</strong>: Ideal for Python developers or when you need a simple interface to accompany your service. Use it to share ML demos, Python apps, or lightweight experiments.</p></li>
+</ul>
+<p>Both tools are great for development and testing but remember their limitations for production-grade usage. Choose based on your workflow and requirements.</p>
+<hr>
+<p>This guide equips you with two powerful tools to expose local applications to the world, simplifying collaboration and testing. Happy sharing!</p>
 
 
 </section>
