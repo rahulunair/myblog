@@ -11,8 +11,8 @@ image-alt: "Four measured W4A16 paths on two Intel Arc Pro B65 cards, rising fro
 Qwen3.8-27B decodes at **37.8 tokens per second on two Intel Arc Pro B65 cards**,
 which lands within 9% of what the official FP8 checkpoint does on **four**. Give
 the same four-bit build all four cards and it reaches **52.1 tok/s**. Halving the
-hardware for a workload like this is the result I care about most, and it came
-from a quantization decision rather than a new kernel.
+hardware is the result I care about most here, and it came out of a decision
+about quantization.
 
 I wanted [Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B) as the local
 backend for coding agents: good at code, useful at long context, small enough to
@@ -26,8 +26,8 @@ vision tower, and enough different execution regimes that a change which looks
 great in a standalone kernel can vanish, or turn into a regression, once it is
 inside the server.
 
-The interesting results were not heroic. The largest four-bit step came from a
-library primitive that already existed. Group size 128 beat group size 32. A cost
+None of what worked was dramatic. The largest four-bit step came from a library
+primitive that already existed. Group size 128 beat group size 32. A cost
 I had written off as fixed host overhead turned out to be dense device work. And
 the 48 DeltaNet layers I expected to dominate decode were not where most of the
 time went.
@@ -81,11 +81,10 @@ else. The `SYS_PTRACE` and unconfined seccomp flags are there for one optional
 fast collective I describe later; drop both and the model still runs normally.
 
 Do check current upstream SGLang and Intel images before reaching for a pinned
-image. A pinned release is useful for reproducing this article, not evidence that
-its patch set deserves to live forever.
+image. A pinned release is useful for reproducing this article; it is not a reason
+to keep that patch set around forever.
 
-The rest of this post is how I got there, for anyone who wants the reasoning
-rather than the recipe.
+The rest of this post is how I got there.
 
 ## What are we actually running?
 
@@ -114,8 +113,8 @@ I kept two checkpoints working throughout.
 
 "FP8 model" and "AWQ model" describe how a checkpoint stores its weights, not
 necessarily the instruction that runs every projection. The runtime may
-dequantize into BF16, keep an extra signed-INT8 copy for decode, or dispatch a
-genuine four-bit primitive. Keeping storage precision, activation precision, and
+dequantize into BF16, keep an extra signed-INT8 copy for decode, or dispatch an
+actual four-bit primitive. Keeping storage precision, activation precision, and
 selected kernel separate in my head avoided a lot of confusion.
 
 These are the final runs. Output was coherent, graph replay and the expected fast
@@ -133,13 +132,13 @@ on, concurrency 1, second run, roughly 9K context at the end of decode.*
 
 The first two rows are the ones I keep coming back to. Two cards running my
 four-bit build land at 37.8 tok/s against 41.4 for the official checkpoint on
-four. I would not turn that into an efficiency percentage, because the two rows
-use different checkpoint formats and different code paths. As a practical
-statement about hardware, though, it is the whole point: the same class of
-interactive experience, on half the cards.
+four. The two rows use different checkpoint formats and different code
+paths, so an efficiency percentage between them would mean very little. What it
+does tell me is what this workload costs in hardware: two cards now give me the
+interactive feel I was getting from four.
 
 The official FP8 checkpoint stays useful. It is the standard model, it works in
-the release image, and it helped me separate genuine model behaviour from bugs in
+the release image, and it helped me separate real model behaviour from bugs in
 my own quantization pipeline.
 
 ## Before writing a kernel, do the boring math
@@ -184,15 +183,16 @@ The B65 has 20 Xe2 cores and 197 peak dense INT8 TOPS; the B70 has 32 cores and
 prefill should therefore scale differently even before software enters the
 picture.
 
-A roofline is not a target. It is a boundary and a smell detector. It tells you
-when a proposed optimization cannot possibly repay its complexity, when a
-measurement looks suspiciously good, and when writing another kernel is unlikely
-to be the best use of the time.
+A roofline gives you a boundary. Mostly I use it as a warning system: it tells me
+when a proposed optimization cannot possibly repay its
+complexity, when a measurement looks suspiciously good, and when writing another
+kernel is unlikely to be worth the time.
 
 ## Check upstream first, then add the missing bits
 
-Pinned containers are good for reproducibility and are also time capsules. The
-XPU stack kept moving while I worked, so my loop for every missing path became:
+Pinned containers are good for reproducibility, and they also freeze the stack at
+one moment. The XPU stack kept moving while I worked, so my loop for every
+missing path became:
 
 1. Check current SGLang, torch-xpu, oneDNN, Intel's images, and the XPU kernel
    packages.
@@ -205,11 +205,11 @@ Step three is the one that saves weeks, and it came up immediately.
 
 SGLang reads AWQ checkpoints through a component called `compressed-tensors`,
 which decides how packed four-bit weights get unpacked and which matrix kernel
-serves them. In the version I was using, two small things quietly assumed an
+serves them. In the version I was using, two small things assumed an
 NVIDIA GPU. A helper that rearranges packed weights into the layout the kernel
 expects was imported only when CUDA was available, then called later regardless.
 Separately, the code that picks a quantization scheme asked CUDA for the device's
-compute capability before it had chosen a scheme at all, which simply fails on a
+compute capability before it had chosen a scheme at all, which fails on a
 machine with no CUDA device.
 
 Neither of those means Intel GPUs lack a four-bit kernel. The kernel was there.
@@ -235,6 +235,7 @@ Once the model was correct enough to benchmark, the obvious question was which
 four-bit matrix path should serve the dense projections.
 
 The answer was not my hand-driven kernel. On the same community AWQ checkpoint,
+[`barrydeen/Qwen3.8-27B-AWQ-4bit`](https://huggingface.co/barrydeen/Qwen3.8-27B-AWQ-4bit),
 the same two B65 cards, and the same captured 128-input/512-output shape:
 
 ![](qwen38-27b/awq-path.svg){fig-alt="Four measured W4A16 paths on two B65 cards rise from 6.2 tokens per second for separate dequantization and matmul to 35.1 tokens per second for the existing oneDNN primitive." width=100%}
@@ -251,8 +252,8 @@ the same two B65 cards, and the same captured 128-input/512-output shape:
 That ATen primitive dispatches to oneDNN weight decompression. It needed no
 model-specific tuning file and, for this checkpoint layout, no second weight
 repack. Reading its source also explained a BF16/F16 difference I had measured:
-the specialized four-bit dequantization gate in the oneDNN version I used admits
-F16 and F32 compute types, while BF16 falls through to a more generic
+the specialized four-bit dequantization path in the oneDNN version I used only
+accepts F16 and F32 compute types, so BF16 falls through to a more generic
 tile-conversion branch.
 
 I spent a day pushing the hand-driven path before accepting the stop condition:
@@ -288,22 +289,25 @@ community checkpoint, and it ran slower. Two measurements explained the sign:
 - On the same `down_proj` tensor at `M=1`, oneDNN moved group-32 data at 383 GB/s
   and group-128 data at 505 GB/s. The matching BF16 GEMV reached 589 GB/s.
 
-Group size was not just a quality setting. It was a serving-layout decision, and
-re-quantizing at 128 was worth more than another day of kernel changes.
+Group size turned out to be a serving-layout decision as much as a quality
+setting, and re-quantizing at 128 was worth more than another day of kernel
+changes.
 
-There is a partial victory hiding here. Quantizing the DeltaNet projections cut
-measured decode traffic from 21.82 GiB to 14.19 GiB, about 35%. In the matching
-TP2 run, throughput moved from 35.4 to 38.5 tok/s, about 9%.
+Here the comparison is like for like: same cards, same TP2 setup, same
+128-input/512-output shape, same server, two four-bit checkpoints of the same
+model. Quantizing the DeltaNet projections cut measured decode
+traffic from 21.82 GiB to 14.19 GiB, about 35%, and throughput moved from 35.4 to
+38.5 tok/s.
 
-| TP2 checkpoint, same short-context setup | bytes read per step | TPOT | decode |
+| TP2, 128/512 shape | bytes read per step | TPOT | decode |
 |---|---:|---:|---:|
-| community AWQ, DeltaNet projections BF16 | 21.82 GiB | 28.24 ms | 35.4 tok/s |
-| my group-128 AWQ, DeltaNet projections INT4 | 14.19 GiB | 25.95 ms | 38.5 tok/s |
+| [`barrydeen/Qwen3.8-27B-AWQ-4bit`](https://huggingface.co/barrydeen/Qwen3.8-27B-AWQ-4bit), DeltaNet projections BF16 | 21.82 GiB | 28.24 ms | 35.4 tok/s |
+| [`ulkaa/Qwen3.8-27B-AWQ-INT4`](https://huggingface.co/ulkaa/Qwen3.8-27B-AWQ-INT4), group 128, DeltaNet projections INT4 | **14.19 GiB** | **25.95 ms** | **38.5 tok/s** |
 
-*Thirty-five percent fewer bytes produced about nine percent more tokens per
-second. The byte model found the opportunity, but the runtime said those newly
-quantized projection shapes were not behaving like ordinary dense four-bit
-GEMMs.*
+*About 9% faster than the community four-bit checkpoint. Thirty-five percent
+fewer bytes bought about nine percent more tokens per second, so the byte model
+found the opportunity, but those newly quantized projection shapes were clearly
+behaving unlike ordinary dense four-bit GEMMs.*
 
 That gap is still open. The merged DeltaNet projection at TP2 has a shape unlike
 the dense FFN projections, and it is the leading suspect. I would rather publish
@@ -427,8 +431,8 @@ their scaling does not automatically transfer.
 Prefill has a better reason to move, since the B70 has more Xe2 cores and roughly
 1.86x the advertised dense INT8 compute. Even there I would not simply multiply
 the measured result by 1.86. Attention, dequantization, collectives, and achieved
-occupancy do not all scale with peak matrix throughput. The next honest graph is
-a measured one.
+occupancy do not all scale with peak matrix throughput. The next graph I put here
+should be a measured one.
 
 ## A quick detour through the other models
 
@@ -439,9 +443,9 @@ survived contact with another model.
 
 | model | one useful result | what I brought forward |
 |---|---|---|
-| Qwen3-Coder-Next 80B-A3B | **100.9 tok/s**, B70 TP4, 8K/1K c=1 | graph replay, TP-specific tuning, small-collective latency, counting the weights actually used per token |
-| Ornith 1.0 35B | **106.8 tok/s**, B70 TP2, 8K/1K c=1 | check packed quantization against real tensors, and never assume a Qwen attention setting helps another hybrid model |
-| DeepSeek-V4-Flash | **35.1 tok/s** short-context decode and 2,355 tok/s at 8K prefill on 8x B70; a later single-stream test fit 801,024 usable tokens at a 1M setting | start with upstream, measure cold prefill separately, remove components to find where the time really goes |
+| [Qwen3-Coder-Next 80B-A3B](https://huggingface.co/Qwen/Qwen3-Coder-Next) | **100.9 tok/s**, B70 TP4, 8K/1K c=1 | graph replay, TP-specific tuning, small-collective latency, counting the weights actually used per token |
+| [Ornith 1.0 35B](https://huggingface.co/ornith-ai/Ornith-1.0-35B) | **106.8 tok/s**, B70 TP2, 8K/1K c=1 | check packed quantization against real tensors, and never assume a Qwen attention setting helps another hybrid model |
+| [DeepSeek-V4-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731) | **35.1 tok/s** short-context decode and 2,355 tok/s at 8K prefill on 8x B70; a later single-stream test fit 801,024 usable tokens at a 1M setting | start with upstream, measure cold prefill separately, remove components to find where the time really goes |
 
 The most useful warning came from Ornith. It looked similar to Qwen: hybrid
 attention, Gated DeltaNet, packed four-bit experts. Yet its asymmetric zero points
@@ -449,8 +453,8 @@ changed the correctness contract, its router already used a good XPU top-k path,
 and the Qwen attention override made it slower. The method transferred; the
 configuration did not.
 
-Those rows are signposts, not a cross-model contest. Each model deserves its own
-post, and I plan to write them. This one is about Qwen3.8 and the method I used
+Those rows are reference points, not a competition between models. Each one
+deserves its own post, and I plan to write them. This one is about Qwen3.8 and the method I used
 to work out what it needed.
 
 That is also why I do not present a bag of "Xe2 optimizations" to enable all at
@@ -483,11 +487,11 @@ finding. A `pkill -f` pattern matched the replacement command itself four times.
 One benchmark reported a rejected over-context request as zeros, which looked
 like an amazing performance result for a few seconds.
 
-The defense was not asking an agent to be more careful. It was making the harness
-fail loudly, recording the exact setup and run number, keeping retractions beside
-results, and refusing to print metrics for a rejected request. The human job
-stayed arbitration: one benchmark on the GPUs at a time, one changed variable, and
-no number without a saved log.
+The fix belonged in the harness rather than the prompting: fail loudly, record
+the exact setup and run number, keep retractions beside the results, and refuse
+to print metrics for a rejected request. My own job stayed
+the same: one benchmark on the GPUs at a time, one changed variable, and no
+number without a saved log.
 
 ## Fast gibberish is still gibberish
 
@@ -523,8 +527,8 @@ reference:
 
 Exact argmax agreement applies only where the sequences are still aligned. Every
 greedy sequence eventually diverged, leaving 7.4% of steps directly comparable.
-The honest takeaway is therefore modest: the quantized model stays close to BF16
-before divergence, at a measured +0.46 prefill-perplexity cost. It is still a
+So the claim stays modest: the quantized model tracks BF16 closely before
+divergence, at a measured +0.46 prefill-perplexity cost. It is still a
 four-bit model, not an exact BF16 drop-in.
 
 I also have an absolute IFEval result, but no current BF16 run through the same
@@ -551,8 +555,8 @@ The next work is concrete:
 
 1. Measure Qwen3.8 on B70 directly, and replace the estimated B70 range in this
    post with real numbers.
-2. Profile the merged DeltaNet four-bit shapes inside the running server, not only
-   as standalone GEMMs.
+2. Profile the merged DeltaNet four-bit shapes inside the running server, instead
+   of only as standalone GEMMs.
 3. Repeat the component-removal measurements afterwards, since these rankings
    expire whenever an algorithm changes.
 4. Measure how often MTP's speculated tokens are accepted during real
@@ -566,6 +570,6 @@ designing a tile, prove every fast path actually served, and measure with graph
 capture on, the way the model will be used day to day.
 
 That process is slower than collecting one exciting number, but it made the next
-model much faster to understand. More importantly for me, Qwen3.8 is now a local
-coding-agent backend I can use without thinking about every token it generates,
-which was the point of the exercise.
+model much faster to understand. And Qwen3.8 is now a local coding-agent backend I
+can use without thinking about every token it generates, which is what I wanted
+from it.

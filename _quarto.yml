@@ -24,8 +24,10 @@ website:
 format:
   html:
     theme:
-      light: [cosmo, theme-base.scss, theme-light.scss]
+      # listing dark first makes it the default on load; readers can still
+      # toggle, and their choice persists in localStorage
       dark: [darkly, theme-base.scss, theme-dark.scss]
+      light: [cosmo, theme-base.scss, theme-light.scss]
     highlight-style: github
     code-copy: true
     code-overflow: wrap
