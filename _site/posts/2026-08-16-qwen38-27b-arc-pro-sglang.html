@@ -10,7 +10,7 @@
 <meta name="dcterms.date" content="2026-08-16">
 <meta name="description" content="A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s, measured B70 numbers, and a byte-model prediction I had to retract.">
 
-<title>Qwen3.8-27B on Intel Arc Pro: two cards, near four-card speed – Technical ramblings</title>
+<title>Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s without a new kernel – Technical ramblings</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -116,14 +116,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <style>html{ scroll-behavior: smooth; }</style>
 
 
-<meta property="og:title" content="Qwen3.8-27B on Intel Arc Pro: two cards, near four-card speed – Technical ramblings">
+<meta property="og:title" content="Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s without a new kernel – Technical ramblings">
 <meta property="og:description" content="A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s, measured B70 numbers, and a byte-model prediction I had to retract.">
 <meta property="og:image" content="https://blog.rahul.onl/posts/qwen38-27b/card.png">
 <meta property="og:site_name" content="Technical ramblings">
 <meta property="og:image:height" content="763">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:alt" content="Decode rising from 2.82 tokens per second on the official FP8 checkpoint to 59.5 on the four-bit build, in five measured steps.">
-<meta name="twitter:title" content="Qwen3.8-27B on Intel Arc Pro: two cards, near four-card speed – Technical ramblings">
+<meta name="twitter:title" content="Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s without a new kernel – Technical ramblings">
 <meta name="twitter:description" content="A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s, measured B70 numbers, and a byte-model prediction I had to retract.">
 <meta name="twitter:image" content="https://blog.rahul.onl/posts/qwen38-27b/card.png">
 <meta name="twitter:creator" content="@108brushes">
@@ -341,8 +341,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Qwen3.8-27B on Intel Arc Pro: two cards, near four-card speed</h1>
-            <p class="subtitle lead">From 2.82 tok/s on the official FP8 checkpoint to an 18.2 GiB four-bit build at 59.5 tok/s, with the B70 numbers now measured rather than guessed.</p>
+      <h1 class="title">Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s without a new kernel</h1>
+            <p class="subtitle lead">An 18.2 GiB four-bit build that gets four-card speed out of two cards, and a byte model I had to retract.</p>
                   <div>
         <div class="description">
           A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s, measured B70 numbers, and a byte-model prediction I had to retract.
@@ -424,7 +424,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Along the way the same build reaches <strong>37.8 tok/s on two B65 cards</strong>, against 41.4 for the official checkpoint on four. Halving the hardware is the result I care about most, because it is the one that changed what I can actually run at my desk.</p>
 <p>I wanted <a href="https://huggingface.co/Qwen/Qwen3.8-27B">Qwen3.8-27B</a> as the local backend for coding agents: good at code, useful at long context, small enough to run on a few GPUs. Local agents make latency personal. A slow token is not a number in a benchmark, it is an interruption while you are editing a file, searching a repository, or waiting on a tool call.</p>
 <p>Getting there took longer than expected. The model is dense, multimodal, and mostly built from Gated DeltaNet layers. It has a multi-token-prediction head, a vision tower, and enough different execution regimes that a change which looks great in a standalone kernel can vanish, or turn into a regression, once it is inside the server.</p>
-<p>None of what worked was dramatic. The largest four-bit step came from a library primitive that already existed. Group size 128 beat group size 32. A cost I had written off as fixed host overhead turned out to be dense device work. And the 48 DeltaNet layers I expected to dominate decode were not where most of the time went.</p>
+<p>The biggest wins were all unglamorous. The 14.8x on the FP8 checkpoint was a missing dispatch branch and a routing bug. The largest four-bit step came from a library primitive that already existed. Group size 128 beat group size 32. A cost I had written off as fixed host overhead turned out to be dense device work, and the 48 DeltaNet layers I expected to dominate decode were not where the time went.</p>
 <p>This is independent work I did in my free time on hardware available to me. It is not an Intel release or an official Intel performance result. Intel XPU support has been arriving quickly in SGLang and the surrounding stack, so the job here was to optimize this particular model and add the model-specific pieces missing from the version I used. Before applying anything described below, check whether current upstream already has it.</p>
 <section id="running-it" class="level2">
 <h2 class="anchored" data-anchor-id="running-it">Running it</h2>
@@ -685,7 +685,7 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 </tr>
 </tbody>
 </table>
-<p><em>About 9% faster than the community four-bit checkpoint. Thirty-five percent fewer bytes bought about nine percent more tokens per second, so the byte model found the opportunity, but those newly quantized projection shapes were clearly behaving unlike ordinary dense four-bit GEMMs.</em></p>
+<p><em>About 9% faster than the community four-bit checkpoint. Thirty-five percent fewer bytes bought about nine percent more tokens per second: the byte model found the opportunity and then badly mispriced it.</em></p>
 <p>Thirty-five percent fewer bytes and nine percent more tokens is not the ratio a bandwidth model predicts. I spent a long time assuming I had lost a saving somewhere inside the merged DeltaNet projection. The last section is where that gets settled, and not in the direction I expected.</p>
 </section>
 <section id="four-bits-buys-decode-and-sells-prefill" class="level2">
