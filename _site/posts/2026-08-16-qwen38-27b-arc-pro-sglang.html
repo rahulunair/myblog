@@ -853,13 +853,14 @@ tokens_per_second = 1 / seconds_per_token</code></pre>
 <section id="what-still-does-not-make-sense" class="level2">
 <h2 class="anchored" data-anchor-id="what-still-does-not-make-sense">What still does not make sense?</h2>
 <p>The byte model says the fully quantized DeltaNet projections should save more time than they do. Three independent views agree the gap is real: checkpoint-aware projection, same-shape kernel rates, and component removal. None of them yet explains why the merged projection behaves so differently from the dense FFN path.</p>
-<p>The next work is concrete:</p>
+<p>That gap is the thing I most want to close. I cut 35% of the bytes per decode step and got 9% more throughput back. Somewhere in there is a good chunk of performance I have already paid for and am not collecting, and until I understand why, every other number in my AWQ build is standing on something I cannot explain. So it goes first.</p>
+<p>Some of the things I want to do next:</p>
 <ol type="1">
-<li>Measure Qwen3.8 on B70 directly, and replace the estimated B70 range in this post with real numbers.</li>
-<li>Profile the merged DeltaNet four-bit shapes inside the running server, instead of only as standalone GEMMs.</li>
-<li>Repeat the component-removal measurements afterwards, since these rankings expire whenever an algorithm changes.</li>
-<li>Measure how often MTP’s speculated tokens are accepted during real coding-agent sessions rather than synthetic prompts.</li>
-<li>Put numbers on the vision path with a full multimodal quality suite.</li>
+<li>Work out where the rest of that saving went. Profile the merged DeltaNet four-bit shapes inside the running server, not as standalone GEMMs, and find out what makes that shape different from the dense FFN projections.</li>
+<li>Redo the component-removal measurements once that changes, because the rankings expire the moment the algorithm does.</li>
+<li>Measure Qwen3.8 on B70 and put real numbers where the estimated range is now.</li>
+<li>See how often MTP’s speculated tokens actually get accepted in real coding-agent sessions instead of synthetic prompts.</li>
+<li>Run a full multimodal suite so the vision path has numbers too.</li>
 </ol>
 <p>What I would carry to the next model is the method rather than this configuration: check upstream first, count bytes from the checkpoint, keep the vendor library as the baseline, verify instruction and layout legality before designing a tile, prove every fast path actually served, and measure with graph capture on, the way the model will be used day to day.</p>
 <p>That process is slower than collecting one exciting number, but it made the next model much faster to understand. And Qwen3.8 is now a local coding-agent backend I can use without thinking about every token it generates, which is what I wanted from it.</p>

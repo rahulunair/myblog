@@ -551,17 +551,23 @@ than they do. Three independent views agree the gap is real: checkpoint-aware
 projection, same-shape kernel rates, and component removal. None of them yet
 explains why the merged projection behaves so differently from the dense FFN path.
 
-The next work is concrete:
+That gap is the thing I most want to close. I cut 35% of the bytes per decode
+step and got 9% more throughput back. Somewhere in there is a good chunk of
+performance I have already paid for and am not collecting, and until I understand
+why, every other number in my AWQ build is standing on something I cannot
+explain. So it goes first.
 
-1. Measure Qwen3.8 on B70 directly, and replace the estimated B70 range in this
-   post with real numbers.
-2. Profile the merged DeltaNet four-bit shapes inside the running server, instead
-   of only as standalone GEMMs.
-3. Repeat the component-removal measurements afterwards, since these rankings
-   expire whenever an algorithm changes.
-4. Measure how often MTP's speculated tokens are accepted during real
-   coding-agent sessions rather than synthetic prompts.
-5. Put numbers on the vision path with a full multimodal quality suite.
+Some of the things I want to do next:
+
+1. Work out where the rest of that saving went. Profile the merged DeltaNet
+   four-bit shapes inside the running server, not as standalone GEMMs, and find
+   out what makes that shape different from the dense FFN projections.
+2. Redo the component-removal measurements once that changes, because the
+   rankings expire the moment the algorithm does.
+3. Measure Qwen3.8 on B70 and put real numbers where the estimated range is now.
+4. See how often MTP's speculated tokens actually get accepted in real
+   coding-agent sessions instead of synthetic prompts.
+5. Run a full multimodal suite so the vision path has numbers too.
 
 What I would carry to the next model is the method rather than this
 configuration: check upstream first, count bytes from the checkpoint, keep the
