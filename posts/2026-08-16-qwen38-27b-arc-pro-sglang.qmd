@@ -45,15 +45,6 @@ was to optimize this particular model and add the model-specific pieces missing
 from the version I used. Before applying anything described below, check whether
 current upstream already has it.
 
-> **Scope of the numbers:** results here are on Intel Arc Pro B65 and B70, and
-> every row says which. The two sets sit either side of a physical card swap on
-> the same machine on 17 August; the image, the overlays and the checkpoint did
-> not change. Measured read bandwidth was 582 GB/s on B65 and 598 GB/s on B70,
-> both against an advertised 608, so these are achieved rather than spec figures.
-> "Decode tok/s" means `1000 / TPOT` at the stated context and concurrency; it is
-> not the benchmark's output-throughput field, which folds time-to-first-token
-> into the same wall-clock interval.
-
 ## Running it
 
 If you only want the model serving, this is the setup I use daily: four Arc Pro
@@ -129,7 +120,9 @@ selected kernel separate in my head avoided a lot of confusion.
 
 These are the final runs. Output was coherent, graph replay and the expected fast
 paths were active, and I used the second run of each shape. Earlier numbers
-helped me debug the model but are not useful baselines.
+helped me debug the model but are not useful baselines. Where I say decode
+tok/s I mean `1000 / TPOT`, not the benchmark's output-throughput field, which
+folds time-to-first-token into the same interval and reads lower.
 
 | model and setup | GPUs / TP | input / output | TTFT | prefill, TTFT-derived | TPOT | decode |
 |---|---:|---:|---:|---:|---:|---:|
