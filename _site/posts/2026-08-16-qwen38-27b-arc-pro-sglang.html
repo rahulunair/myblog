@@ -880,7 +880,7 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 </section>
 <section id="what-b70-actually-did" class="level2">
 <h2 class="anchored" data-anchor-id="what-b70-actually-did">What B70 actually did</h2>
-<p>I published a predicted range for B70 rather than a measurement, then swapped the cards and measured it. The prediction is worth keeping because one half of it was wrong in an interesting way.</p>
+<p>Before I had B70 cards I worked out a range for them instead of a number, with a deliberately wide gap between the two edges. Then the cards arrived and I measured it. The prediction is worth showing because one half of it was wrong in an interesting way.</p>
 <p><img src="qwen38-27b/b65-b70-measured.svg" class="img-fluid" style="width:100.0%" alt="Measured B65 and B70 decode plotted inside the predicted band: TP2 rises 37.8 to 44.0 tokens per second, TP4 rises 52.1 to 59.5, both landing nearer the optimistic edge."></p>
 <p><em>Figure 5. Both measurements landed inside the band I predicted, nearer its optimistic edge.</em></p>
 <table class="caption-top table">
@@ -1065,7 +1065,7 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 </section>
 <section id="the-gap-i-went-looking-for-was-not-there" class="level2">
 <h2 class="anchored" data-anchor-id="the-gap-i-went-looking-for-was-not-there">The gap I went looking for was not there</h2>
-<p>The open question in the first version of this post was a missing saving. Quantizing the DeltaNet projections removed 35% of the bytes read per decode step and returned 9% more throughput. I said I would rather publish a result I could not explain than tidy it up. Having measured it properly, the answer is that there was nothing to find. The saving was never there to collect.</p>
+<p>Back to the 35% of bytes that returned 9% of throughput. I spent a long time treating that as a saving I had somehow dropped between the checkpoint and the step, and looking for where it went. It turns out there was nothing to find. The saving was never there to collect.</p>
 <p>Three measurements closed it.</p>
 <p><strong>The shape is not unusually slow.</strong> Timing the weight-decompression matmul at every real decode shape, per rank, at M=1:</p>
 <table class="caption-top table">
@@ -1121,7 +1121,7 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p><strong>The ablation was sitting in my own notes.</strong> A build with those projections left at 16 bit measured 28.24 ms against 25.95 ms for the four-bit build. They occupy about 2.3 ms of the step, not the 9.7 ms their bytes imply.</p>
 <p>So the model was wrong, not the build. A bandwidth model prices a weight at bytes over bandwidth and assumes that time comes back when you shrink it. That only holds while the weight read is the critical path for that stretch of the step. In a hybrid recurrent architecture it frequently is not: the recurrence kernel, its state traffic and the pointwise work around it are serialised with the projection in every layer, and making the projection smaller leaves all of that untouched.</p>
 <p>One reader worked backwards from my numbers to what the new projections must be achieving, got roughly a third of peak, and called it a falsifiable prediction. It was, and it is falsified. That shape measures 466 GB/s. The reasoning was sound; the premise it rested on, that the removed BF16 traffic had been costing what the byte model assigned it, was not.</p>
-<p>I am leaving the original claim in the post above rather than quietly editing it out. The byte model earned its place by finding the group-size problem and the BF16 DeltaNet projections. It also over-promised here, and both halves are worth knowing.</p>
+<p>I have kept the byte-model reasoning where it is earlier in this post rather than pruning it back to the parts that worked out. It earned its place: it found the group-size problem and it found the BF16 DeltaNet projections. It also over-promised here. Both halves are worth knowing, and a model that is useful and wrong in known places beats one that has been quietly tidied.</p>
 </section>
 <section id="some-of-the-things-i-want-to-do-next" class="level2">
 <h2 class="anchored" data-anchor-id="some-of-the-things-i-want-to-do-next">Some of the things I want to do next</h2>

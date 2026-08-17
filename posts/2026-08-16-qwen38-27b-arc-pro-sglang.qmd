@@ -522,9 +522,10 @@ distribution is as boring on B70 as on B65, just lower.
 
 ## What B70 actually did
 
-I published a predicted range for B70 rather than a measurement, then swapped the
-cards and measured it. The prediction is worth keeping because one half of it was
-wrong in an interesting way.
+Before I had B70 cards I worked out a range for them instead of a number, with a
+deliberately wide gap between the two edges. Then the cards arrived and I
+measured it. The prediction is worth showing because one half of it was wrong in
+an interesting way.
 
 ![](qwen38-27b/b65-b70-measured.svg){fig-alt="Measured B65 and B70 decode plotted inside the predicted band: TP2 rises 37.8 to 44.0 tokens per second, TP4 rises 52.1 to 59.5, both landing nearer the optimistic edge." width=100%}
 
@@ -710,11 +711,10 @@ and cannot answer whether MTP helps a real session.
 
 ## The gap I went looking for was not there
 
-The open question in the first version of this post was a missing saving.
-Quantizing the DeltaNet projections removed 35% of the bytes read per decode step
-and returned 9% more throughput. I said I would rather publish a result I could
-not explain than tidy it up. Having measured it properly, the answer is that
-there was nothing to find. The saving was never there to collect.
+Back to the 35% of bytes that returned 9% of throughput. I spent a long time
+treating that as a saving I had somehow dropped between the checkpoint and the
+step, and looking for where it went. It turns out there was nothing to find. The
+saving was never there to collect.
 
 Three measurements closed it.
 
@@ -754,10 +754,11 @@ It was, and it is falsified. That shape measures 466 GB/s. The reasoning was
 sound; the premise it rested on, that the removed BF16 traffic had been costing
 what the byte model assigned it, was not.
 
-I am leaving the original claim in the post above rather than quietly editing it
-out. The byte model earned its place by finding the group-size problem and the
-BF16 DeltaNet projections. It also over-promised here, and both halves are worth
-knowing.
+I have kept the byte-model reasoning where it is earlier in this post rather
+than pruning it back to the parts that worked out. It earned its place: it found
+the group-size problem and it found the BF16 DeltaNet projections. It also
+over-promised here. Both halves are worth knowing, and a model that is useful
+and wrong in known places beats one that has been quietly tidied.
 
 ## Some of the things I want to do next
 
