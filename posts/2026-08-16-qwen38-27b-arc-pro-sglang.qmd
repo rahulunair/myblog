@@ -786,7 +786,7 @@ vendor library as the baseline, prove every fast path actually served, measure
 with graph capture on because that is how the model will be used, and remember
 what a byte model cannot see.
 
-That is slower than collecting one exciting number, but it made the next model
-much faster to understand. And Qwen3.8 is now a local coding-agent backend I can
+That is slower than collecting one exciting number, but it makes the next model
+faster to understand. And Qwen3.8 is now a local coding-agent backend I can
 use without thinking about every token it generates, which is what I wanted from
 it.
