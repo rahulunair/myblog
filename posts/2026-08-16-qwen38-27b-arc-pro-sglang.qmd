@@ -1,8 +1,8 @@
 ---
-title: "Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s without a new kernel"
-subtitle: "An 18.2 GiB four-bit build that gets four-card speed out of two cards, on Intel Arc Pro B65 and B70."
+title: "Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s"
+subtitle: "An 18.2 GiB four-bit build that gets four-card speed out of two cards, mostly by routing the work onto oneDNN primitives that already existed."
 date: "2026-08-16"
-description: "A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s, what B65 and B70 measure, and where my byte model went wrong."
+description: "A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s on oneDNN primitives, what B65 and B70 measure, and where my byte model went wrong."
 categories: [intel, arc, arc-pro, xe2, xpu, sglang, llm-inference, quantization, agentic-coding]
 image: qwen38-27b/card.png
 image-alt: "Decode rising from 2.82 tokens per second on the official FP8 checkpoint to 59.5 on the four-bit build, in five measured steps."
@@ -10,10 +10,11 @@ image-alt: "Decode rising from 2.82 tokens per second on the official FP8 checkp
 
 The official Qwen3.8-27B FP8 checkpoint decoded at **2.82 tokens per second** on
 four Intel Arc Pro B65 cards the first time I ran it. It now runs at **59.5
-tok/s** on four B70s as an 18.2 GiB four-bit build of my own. Almost none of that
-came from writing a kernel. Most of it came from removing one that should never
-have been running, fixing a routing bug that made a fast path invisible, and
-choosing a quantization group size.
+tok/s** on four B70s as an 18.2 GiB four-bit build of my own. Very little of that
+came from writing kernels. Most of it came from removing one that should never
+have been running, fixing a routing bug that made a fast path invisible, choosing
+a quantization group size, and letting oneDNN's existing primitives do the
+matrix work.
 
 Along the way the same build reaches **37.8 tok/s on two B65 cards**, against
 41.4 for the official checkpoint on four. Halving the hardware is the result I
@@ -278,7 +279,8 @@ Had I A/B tested dense INT8 in that state I would have measured nothing and
 concluded the INT8 lever does not transfer to this model. The fix is also the
 truer description of the arm: once the block scale is folded in, the weight is an
 unquantized BF16 linear, so the unquantized method should be the one serving it.
-That is 25.3 to 41.7, and 14.8x in total without writing a kernel.
+That is 25.3 to 41.7, and 14.8x on the FP8 checkpoint in total, without writing
+a kernel.
 
 One trap on the way out. The logprob gate reported the BF16 and INT8 arms
 identical to four decimal places, which reads like INT8 being lossless. It is

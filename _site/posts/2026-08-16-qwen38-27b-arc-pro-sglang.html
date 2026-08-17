@@ -8,9 +8,9 @@
 
 <meta name="author" content="unrahul">
 <meta name="dcterms.date" content="2026-08-16">
-<meta name="description" content="A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s, what B65 and B70 measure, and where my byte model went wrong.">
+<meta name="description" content="A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s on oneDNN primitives, what B65 and B70 measure, and where my byte model went wrong.">
 
-<title>Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s without a new kernel – Technical ramblings</title>
+<title>Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s – Technical ramblings</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -116,15 +116,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <style>html{ scroll-behavior: smooth; }</style>
 
 
-<meta property="og:title" content="Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s without a new kernel – Technical ramblings">
-<meta property="og:description" content="A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s, what B65 and B70 measure, and where my byte model went wrong.">
+<meta property="og:title" content="Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s – Technical ramblings">
+<meta property="og:description" content="A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s on oneDNN primitives, what B65 and B70 measure, and where my byte model went wrong.">
 <meta property="og:image" content="https://blog.rahul.onl/posts/qwen38-27b/card.png">
 <meta property="og:site_name" content="Technical ramblings">
 <meta property="og:image:height" content="763">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:alt" content="Decode rising from 2.82 tokens per second on the official FP8 checkpoint to 59.5 on the four-bit build, in five measured steps.">
-<meta name="twitter:title" content="Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s without a new kernel – Technical ramblings">
-<meta name="twitter:description" content="A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s, what B65 and B70 measure, and where my byte model went wrong.">
+<meta name="twitter:title" content="Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s – Technical ramblings">
+<meta name="twitter:description" content="A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s on oneDNN primitives, what B65 and B70 measure, and where my byte model went wrong.">
 <meta name="twitter:image" content="https://blog.rahul.onl/posts/qwen38-27b/card.png">
 <meta name="twitter:creator" content="@108brushes">
 <meta name="twitter:image-height" content="763">
@@ -341,11 +341,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s without a new kernel</h1>
-            <p class="subtitle lead">An 18.2 GiB four-bit build that gets four-card speed out of two cards, on Intel Arc Pro B65 and B70.</p>
+      <h1 class="title">Qwen3.8-27B on Intel Arc Pro: 2.82 to 59.5 tok/s</h1>
+            <p class="subtitle lead">An 18.2 GiB four-bit build that gets four-card speed out of two cards, mostly by routing the work onto oneDNN primitives that already existed.</p>
                   <div>
         <div class="description">
-          A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s, what B65 and B70 measure, and where my byte model went wrong.
+          A four-bit Qwen3.8-27B build for Intel Arc Pro B-series GPUs: 2.82 to 59.5 tok/s on oneDNN primitives, what B65 and B70 measure, and where my byte model went wrong.
         </div>
       </div>
                           <div class="quarto-categories">
@@ -420,7 +420,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<p>The official Qwen3.8-27B FP8 checkpoint decoded at <strong>2.82 tokens per second</strong> on four Intel Arc Pro B65 cards the first time I ran it. It now runs at <strong>59.5 tok/s</strong> on four B70s as an 18.2 GiB four-bit build of my own. Almost none of that came from writing a kernel. Most of it came from removing one that should never have been running, fixing a routing bug that made a fast path invisible, and choosing a quantization group size.</p>
+<p>The official Qwen3.8-27B FP8 checkpoint decoded at <strong>2.82 tokens per second</strong> on four Intel Arc Pro B65 cards the first time I ran it. It now runs at <strong>59.5 tok/s</strong> on four B70s as an 18.2 GiB four-bit build of my own. Very little of that came from writing kernels. Most of it came from removing one that should never have been running, fixing a routing bug that made a fast path invisible, choosing a quantization group size, and letting oneDNN’s existing primitives do the matrix work.</p>
 <p>Along the way the same build reaches <strong>37.8 tok/s on two B65 cards</strong>, against 41.4 for the official checkpoint on four. Halving the hardware is the result I care about most, because it is the one that changed what I can actually run at my desk.</p>
 <p>I wanted <a href="https://huggingface.co/Qwen/Qwen3.8-27B">Qwen3.8-27B</a> as the local backend for coding agents: good at code, useful at long context, small enough to run on a few GPUs. Local agents make latency personal. A slow token is not a number in a benchmark, it is an interruption while you are editing a file, searching a repository, or waiting on a tool call.</p>
 <p>Getting there took longer than expected. The model is dense, multimodal, and mostly built from Gated DeltaNet layers. It has a multi-token-prediction head, a vision tower, and enough different execution regimes that a change which looks great in a standalone kernel can vanish, or turn into a regression, once it is inside the server.</p>
@@ -601,7 +601,7 @@ tokens_per_second = 1 / seconds_per_token</code></pre>
 <p><strong>The routing bug</strong>, which is the part worth telling. The BF16 arm returned <code>torch.nn.functional.linear</code> straight out of <code>Fp8LinearMethod.apply</code>, while every XPU dense fast path binds <code>UnquantizedLinearMethod.apply</code>. The dequantized layers were invisible to all of them, so dense INT8, which the image enables by default, had been declining every single tensor:</p>
 <pre class="text"><code>before   served   0.000 GB   declined  8.753 GB   served fraction  0.0%
 after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></pre>
-<p>Had I A/B tested dense INT8 in that state I would have measured nothing and concluded the INT8 lever does not transfer to this model. The fix is also the truer description of the arm: once the block scale is folded in, the weight is an unquantized BF16 linear, so the unquantized method should be the one serving it. That is 25.3 to 41.7, and 14.8x in total without writing a kernel.</p>
+<p>Had I A/B tested dense INT8 in that state I would have measured nothing and concluded the INT8 lever does not transfer to this model. The fix is also the truer description of the arm: once the block scale is folded in, the weight is an unquantized BF16 linear, so the unquantized method should be the one serving it. That is 25.3 to 41.7, and 14.8x on the FP8 checkpoint in total, without writing a kernel.</p>
 <p>One trap on the way out. The logprob gate reported the BF16 and INT8 arms identical to four decimal places, which reads like INT8 being lossless. It is not. Input logprobs are computed during prefill, where the INT8 path declines because M is the prompt length and its <code>max_m</code> is 4. The metric is structurally blind to a decode-only change. Comparing generated text instead, which can see it: three of four prompts identical, the fourth diverging at character 97 into a different but equally coherent continuation, which is a near-tie logit flipping under greedy decode.</p>
 </section>
 <section id="the-existing-library-primitive-was-the-fastest-kernel-i-tested" class="level2">
