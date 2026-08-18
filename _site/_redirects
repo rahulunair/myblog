@@ -1,4 +1,0 @@
-# Netlify redirects. Old URLs that the 1.3-era site served.
-/blog.xml     /index.xml  301
-/blog.html    /           301
-/archive.html /           301
