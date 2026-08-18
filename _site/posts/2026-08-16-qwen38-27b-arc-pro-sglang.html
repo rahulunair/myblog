@@ -84,8 +84,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-568df3714da8cbef77d69c472e6ea8a1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-c494543206d00ebf67c85e3545d33d4e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-38e3489f5ae581b1557cc87873ccb062.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-a87f03ec3485a783962195ea5017112b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-c846bc0f481673d67028cdc9925e5226.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -393,21 +393,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#running-it" id="toc-running-it" class="nav-link active" data-scroll-target="#running-it">Running it</a></li>
   <li><a href="#what-are-we-actually-running" id="toc-what-are-we-actually-running" class="nav-link" data-scroll-target="#what-are-we-actually-running">What are we actually running?</a></li>
+  <li><a href="#making-it-fast" id="toc-making-it-fast" class="nav-link" data-scroll-target="#making-it-fast">Making it fast</a>
+  <ul class="collapse">
   <li><a href="#before-writing-a-kernel-do-the-boring-math" id="toc-before-writing-a-kernel-do-the-boring-math" class="nav-link" data-scroll-target="#before-writing-a-kernel-do-the-boring-math">Before writing a kernel, do the boring math</a></li>
   <li><a href="#check-upstream-first-then-add-the-missing-bits" id="toc-check-upstream-first-then-add-the-missing-bits" class="nav-link" data-scroll-target="#check-upstream-first-then-add-the-missing-bits">Check upstream first, then add the missing bits</a></li>
   <li><a href="#the-fp8-checkpoint-was-running-the-wrong-kernel" id="toc-the-fp8-checkpoint-was-running-the-wrong-kernel" class="nav-link" data-scroll-target="#the-fp8-checkpoint-was-running-the-wrong-kernel">The FP8 checkpoint was running the wrong kernel</a></li>
   <li><a href="#the-existing-library-primitive-was-the-fastest-kernel-i-tested" id="toc-the-existing-library-primitive-was-the-fastest-kernel-i-tested" class="nav-link" data-scroll-target="#the-existing-library-primitive-was-the-fastest-kernel-i-tested">The existing library primitive was the fastest kernel I tested</a></li>
   <li><a href="#four-bits-is-not-really-four-bits" id="toc-four-bits-is-not-really-four-bits" class="nav-link" data-scroll-target="#four-bits-is-not-really-four-bits">Four bits is not really four bits</a></li>
   <li><a href="#four-bits-buys-decode-and-sells-prefill" id="toc-four-bits-buys-decode-and-sells-prefill" class="nav-link" data-scroll-target="#four-bits-buys-decode-and-sells-prefill">Four bits buys decode and sells prefill</a></li>
+  </ul></li>
+  <li><a href="#where-the-time-actually-goes" id="toc-where-the-time-actually-goes" class="nav-link" data-scroll-target="#where-the-time-actually-goes">Where the time actually goes</a>
+  <ul class="collapse">
   <li><a href="#graph-capture-changes-both-performance-and-observability" id="toc-graph-capture-changes-both-performance-and-observability" class="nav-link" data-scroll-target="#graph-capture-changes-both-performance-and-observability">Graph capture changes both performance and observability</a></li>
   <li><a href="#the-trace-blamed-the-wrong-component" id="toc-the-trace-blamed-the-wrong-component" class="nav-link" data-scroll-target="#the-trace-blamed-the-wrong-component">The trace blamed the wrong component</a></li>
   <li><a href="#the-final-latency-distribution-is-pleasantly-boring" id="toc-the-final-latency-distribution-is-pleasantly-boring" class="nav-link" data-scroll-target="#the-final-latency-distribution-is-pleasantly-boring">The final latency distribution is pleasantly boring</a></li>
   <li><a href="#what-b70-actually-did" id="toc-what-b70-actually-did" class="nav-link" data-scroll-target="#what-b70-actually-did">What B70 actually did</a></li>
   <li><a href="#a-4.4x-kernel-win-the-step-never-noticed" id="toc-a-4.4x-kernel-win-the-step-never-noticed" class="nav-link" data-scroll-target="#a-4.4x-kernel-win-the-step-never-noticed">A 4.4x kernel win the step never noticed</a></li>
+  </ul></li>
+  <li><a href="#what-the-method-was-worth" id="toc-what-the-method-was-worth" class="nav-link" data-scroll-target="#what-the-method-was-worth">What the method was worth</a>
+  <ul class="collapse">
   <li><a href="#a-quick-detour-through-the-other-models" id="toc-a-quick-detour-through-the-other-models" class="nav-link" data-scroll-target="#a-quick-detour-through-the-other-models">A quick detour through the other models</a></li>
   <li><a href="#what-were-codex-and-claude-actually-useful-for" id="toc-what-were-codex-and-claude-actually-useful-for" class="nav-link" data-scroll-target="#what-were-codex-and-claude-actually-useful-for">What were Codex and Claude actually useful for?</a></li>
+  </ul></li>
+  <li><a href="#was-any-of-it-correct" id="toc-was-any-of-it-correct" class="nav-link" data-scroll-target="#was-any-of-it-correct">Was any of it correct?</a>
+  <ul class="collapse">
   <li><a href="#fast-gibberish-is-still-gibberish" id="toc-fast-gibberish-is-still-gibberish" class="nav-link" data-scroll-target="#fast-gibberish-is-still-gibberish">Fast gibberish is still gibberish</a></li>
   <li><a href="#the-gap-i-went-looking-for-was-not-there" id="toc-the-gap-i-went-looking-for-was-not-there" class="nav-link" data-scroll-target="#the-gap-i-went-looking-for-was-not-there">The gap I went looking for was not there</a></li>
+  </ul></li>
   <li><a href="#some-of-the-things-i-want-to-do-next" id="toc-some-of-the-things-i-want-to-do-next" class="nav-link" data-scroll-target="#some-of-the-things-i-want-to-do-next">Some of the things I want to do next</a></li>
   </ul>
 </nav>
@@ -534,8 +546,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The first two rows are the ones I keep coming back to. Two cards running my four-bit build land at 37.8 tok/s against 41.4 for the official checkpoint on four. The two rows use different checkpoint formats and different code paths, so an efficiency percentage between them would mean very little. What it does tell me is what this workload costs in hardware: two cards now give me the interactive feel I was getting from four.</p>
 <p>The official FP8 checkpoint stays useful. It is the standard model, it works in the release image, and it helped me separate real model behaviour from bugs in my own quantization pipeline.</p>
 </section>
-<section id="before-writing-a-kernel-do-the-boring-math" class="level2">
-<h2 class="anchored" data-anchor-id="before-writing-a-kernel-do-the-boring-math">Before writing a kernel, do the boring math</h2>
+<section id="making-it-fast" class="level2">
+<h2 class="anchored" data-anchor-id="making-it-fast">Making it fast</h2>
+<p>Two pieces of method first, then the changes that actually moved the number.</p>
+<section id="before-writing-a-kernel-do-the-boring-math" class="level3">
+<h3 class="anchored" data-anchor-id="before-writing-a-kernel-do-the-boring-math">Before writing a kernel, do the boring math</h3>
 <p>The first question about any operator is whether it is limited by arithmetic or by memory traffic:</p>
 <pre class="text"><code>time &gt;= max(useful_FLOPs / achievable_FLOPs_per_second,
             bytes_moved / achievable_bytes_per_second)</code></pre>
@@ -549,8 +564,8 @@ tokens_per_second = 1 / seconds_per_token</code></pre>
 <p>Intel lists both the B65 and the B70 at 32 GiB and 608 GB/s of memory bandwidth. The B65 has 20 Xe2 cores and 197 peak dense INT8 TOPS; the B70 has 32 cores and 367 TOPS. Same advertised bandwidth, roughly 1.86x the INT8 compute. Decode and prefill should therefore scale differently even before software enters the picture.</p>
 <p>A roofline gives you a boundary. Mostly I use it as a warning system: it tells me when a proposed optimization cannot possibly repay its complexity, when a measurement looks suspiciously good, and when writing another kernel is unlikely to be worth the time.</p>
 </section>
-<section id="check-upstream-first-then-add-the-missing-bits" class="level2">
-<h2 class="anchored" data-anchor-id="check-upstream-first-then-add-the-missing-bits">Check upstream first, then add the missing bits</h2>
+<section id="check-upstream-first-then-add-the-missing-bits" class="level3">
+<h3 class="anchored" data-anchor-id="check-upstream-first-then-add-the-missing-bits">Check upstream first, then add the missing bits</h3>
 <p>Pinned containers are good for reproducibility, and they also freeze the stack at one moment. The XPU stack kept moving while I worked, so my loop for every missing path became:</p>
 <ol type="1">
 <li>Check current SGLang, torch-xpu, oneDNN, Intel’s images, and the XPU kernel packages.</li>
@@ -565,8 +580,8 @@ tokens_per_second = 1 / seconds_per_token</code></pre>
 <p>The MTP path had the same shape. I registered the XPU attention backend in the speculative draft maps, routed the token-tree convolution to a Triton implementation that accepts tree arguments, and relaxed two helpers that rejected non-CUDA tensors even though their implementation was already Triton. Small integration fixes, not a replacement serving stack.</p>
 <p>One more lesson: “the model loaded” is only the beginning of correctness. My first text-only quantization build silently omitted the vision tower and the MTP head. The library never instantiated an MTP module, so <code>save_pretrained</code> could not save tensors it did not know existed. I now build with the multimodal class, copy the MTP tensors explicitly, and verify the tensor list before any performance run.</p>
 </section>
-<section id="the-fp8-checkpoint-was-running-the-wrong-kernel" class="level2">
-<h2 class="anchored" data-anchor-id="the-fp8-checkpoint-was-running-the-wrong-kernel">The FP8 checkpoint was running the wrong kernel</h2>
+<section id="the-fp8-checkpoint-was-running-the-wrong-kernel" class="level3">
+<h3 class="anchored" data-anchor-id="the-fp8-checkpoint-was-running-the-wrong-kernel">The FP8 checkpoint was running the wrong kernel</h3>
 <p>The official FP8 checkpoint is where this started, and the first clean run of it managed 2.82 tok/s on four B65 cards. That number is real, and it is not a quantization problem. It was one missing branch, one fact about the hardware, and one routing bug.</p>
 <p><img src="qwen38-27b/fp8-to-int4-ladder.svg" class="img-fluid" style="width:100.0%" alt="Decode rises from 2.82 tokens per second on the official FP8 checkpoint through 25.3 and 41.7 to 52.1 on the four-bit build and 59.5 on B70."></p>
 <p><em>Figure 1. The first three bars are the same weights. Nothing was quantized between them; a mismatched kernel was removed and a routing bug was fixed.</em></p>
@@ -604,8 +619,8 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p>Had I A/B tested dense INT8 in that state I would have measured nothing and concluded the INT8 lever does not transfer to this model. The fix is also the truer description of the arm: once the block scale is folded in, the weight is an unquantized BF16 linear, so the unquantized method should be the one serving it. That is 25.3 to 41.7, and 14.8x on the FP8 checkpoint in total, without writing a kernel.</p>
 <p>One trap on the way out. The logprob gate reported the BF16 and INT8 arms identical to four decimal places, which reads like INT8 being lossless. It is not. Input logprobs are computed during prefill, where the INT8 path declines because M is the prompt length and its <code>max_m</code> is 4. The metric is structurally blind to a decode-only change. Comparing generated text instead, which can see it: three of four prompts identical, the fourth diverging at character 97 into a different but equally coherent continuation, which is a near-tie logit flipping under greedy decode.</p>
 </section>
-<section id="the-existing-library-primitive-was-the-fastest-kernel-i-tested" class="level2">
-<h2 class="anchored" data-anchor-id="the-existing-library-primitive-was-the-fastest-kernel-i-tested">The existing library primitive was the fastest kernel I tested</h2>
+<section id="the-existing-library-primitive-was-the-fastest-kernel-i-tested" class="level3">
+<h3 class="anchored" data-anchor-id="the-existing-library-primitive-was-the-fastest-kernel-i-tested">The existing library primitive was the fastest kernel I tested</h3>
 <p>Once the model was correct enough to benchmark, the obvious question was which four-bit matrix path should serve the dense projections.</p>
 <p>The answer was not my hand-driven kernel. On the same community AWQ checkpoint, <a href="https://huggingface.co/barrydeen/Qwen3.8-27B-AWQ-4bit"><code>barrydeen/Qwen3.8-27B-AWQ-4bit</code></a>, the same two B65 cards, and the same captured 128-input/512-output shape:</p>
 <p><img src="qwen38-27b/awq-path.svg" class="img-fluid" style="width:100.0%" alt="Four measured W4A16 paths on two B65 cards rise from 6.2 tokens per second for separate dequantization and matmul to 35.1 tokens per second for the existing oneDNN primitive."></p>
@@ -650,8 +665,8 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p>I spent a day pushing the hand-driven path before accepting the stop condition: if the library primitive is already close to the in-situ roofline, keep it as the baseline and move up a level. oneDNN wins this round.</p>
 <p>That was a large improvement, and it exposed the next problem. The community AWQ checkpoint left the three large Gated DeltaNet projections in BF16, and those represented nearly half the bytes read during a decode step. The kernel was no longer the only question. The checkpoint itself had become part of the latency path.</p>
 </section>
-<section id="four-bits-is-not-really-four-bits" class="level2">
-<h2 class="anchored" data-anchor-id="four-bits-is-not-really-four-bits">Four bits is not really four bits</h2>
+<section id="four-bits-is-not-really-four-bits" class="level3">
+<h3 class="anchored" data-anchor-id="four-bits-is-not-really-four-bits">Four bits is not really four bits</h3>
 <p>My checkpoint inventory measured the three large projections in every DeltaNet layer (input QKV, input Z, and output) at roughly 10.36 GiB in BF16. That is about 47% of the community checkpoint’s decode traffic. I nearly left them alone. Then I looked at the official FP8 release and found scale tensors for those same projections, with only the small surrounding tensors excluded. Useful prior: the model authors quantize these in their own low-precision release.</p>
 <p>My AWQ build quantizes 24.33 billion parameters with asymmetric group-128 W4A16. Per-group scales and zero points bring the stored cost of those weights to 4.16 bits per parameter. Another 3.45 billion parameters stay BF16: embeddings, output head, norms, small DeltaNet gates, vision tower, and MTP head. Across the full checkpoint that averages 5.63 bits per parameter, or 18.2 GiB.</p>
 <p>I did not arrive at group 128 immediately. The first all-four-bit build used group 32. It had finer quantization groups and fewer total model bytes than the community checkpoint, and it ran slower. Two measurements explained the sign:</p>
@@ -688,8 +703,8 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p><em>About 9% faster than the community four-bit checkpoint. Thirty-five percent fewer bytes bought about nine percent more tokens per second: the byte model found the opportunity and then badly mispriced it.</em></p>
 <p>Thirty-five percent fewer bytes and nine percent more tokens is not the ratio a bandwidth model predicts. I spent a long time assuming I had lost a saving somewhere inside the merged DeltaNet projection. The last section is where that gets settled, and not in the direction I expected.</p>
 </section>
-<section id="four-bits-buys-decode-and-sells-prefill" class="level2">
-<h2 class="anchored" data-anchor-id="four-bits-buys-decode-and-sells-prefill">Four bits buys decode and sells prefill</h2>
+<section id="four-bits-buys-decode-and-sells-prefill" class="level3">
+<h3 class="anchored" data-anchor-id="four-bits-buys-decode-and-sells-prefill">Four bits buys decode and sells prefill</h3>
 <p>Quantizing to four bits is a trade, and it is worth stating in both directions.</p>
 <p><img src="qwen38-27b/fp8-vs-int4-trade.svg" class="img-fluid" style="width:100.0%" alt="Side by side bars: the four-bit build wins decode by 1.26x on both B65 and B70, and loses prefill, running at 0.84x and 0.87x of the FP8 checkpoint."></p>
 <p><em>Figure 3. The same 1.26x decode gain on both parts, and the same prefill cost.</em></p>
@@ -765,8 +780,12 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p>That is 1.455x, essentially the full byte ratio. Read from the other side, going from one stream to eight costs FP8 9.41 ms per token and the four-bit build 4.18 ms, so FP8 degrades about twice as fast with batch. That fits Xe2 having no FP8 matrix path: conversion work scales with activations, and activations grow with batch, while the weight-side saving does not.</p>
 <p>So the shortfall against the byte ratio is a concurrency-1 effect rather than a fixed property of four-bit decode. At one stream the step has slack the byte model cannot see. At eight, the bytes convert almost in full. (The c=8 TTFT is a queueing figure with eight requests contending, not a prefill rate, so it does not belong next to the c=1 prefill numbers.)</p>
 </section>
-<section id="graph-capture-changes-both-performance-and-observability" class="level2">
-<h2 class="anchored" data-anchor-id="graph-capture-changes-both-performance-and-observability">Graph capture changes both performance and observability</h2>
+</section>
+<section id="where-the-time-actually-goes" class="level2">
+<h2 class="anchored" data-anchor-id="where-the-time-actually-goes">Where the time actually goes</h2>
+<p>Once it was quick enough to use every day, the question became where the rest of the step was going, and whether the tools telling me were trustworthy.</p>
+<section id="graph-capture-changes-both-performance-and-observability" class="level3">
+<h3 class="anchored" data-anchor-id="graph-capture-changes-both-performance-and-observability">Graph capture changes both performance and observability</h3>
 <p>Decode is a long chain of small operations. Graph replay removes much of the per-operation submission cost, so graph capture is part of the setup I actually use, not an optional benchmark trick. Earlier work on two other models in this series measured it as a first-order improvement. For Qwen3.8 I do not have a clean graph-on/graph-off comparison, so I attach no new percentage to it.</p>
 <p>Capture also changes what instrumentation means. A Python-side counter that gets incremented while the graph is being captured can replay the device work forever without ever incrementing the Python value again. I once had a fast collective serving happily inside the graph while its own log insisted <code>served=0</code>.</p>
 <p>The only trustworthy proof was controlled removal:</p>
@@ -781,8 +800,8 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p>Because it maps shared-memory handles across those processes, it needs <code>SYS_PTRACE</code> and <code>seccomp=unconfined</code> in my container. Those permissions widen what the container can do. They are required for this optional collective, not for running Qwen3.8 in general, so remove them and disable the path if that tradeoff does not suit you.</p>
 <p>Hybrid models have another memory pool to watch. The recurrent state pool competes with the KV cache and can bound concurrency before the ordinary request limit does. I once configured it below the number of slots a single request needs and got a server reporting zero runnable requests, with an error that mostly talked about memory. Raising the request limit was never going to help. There was nowhere to put the recurrent state.</p>
 </section>
-<section id="the-trace-blamed-the-wrong-component" class="level2">
-<h2 class="anchored" data-anchor-id="the-trace-blamed-the-wrong-component">The trace blamed the wrong component</h2>
+<section id="the-trace-blamed-the-wrong-component" class="level3">
+<h3 class="anchored" data-anchor-id="the-trace-blamed-the-wrong-component">The trace blamed the wrong component</h3>
 <p>At one point I fit TP2 and TP4 measurements to a simple model with a sharded weight term and a constant term. The fit suggested roughly 12 ms that did not shrink with more cards. Host overhead or graph replay looked guilty.</p>
 <p>Rather than apportion a busy trace, I priced components by removal on the real captured graph. Replace one component with shape-matched zeros, keep the rest of the graph and the collectives intact, and measure against an unchanged repeat. This does not produce a perfect additive profile, since collectives overlap some module rows, but it answers the causal question: what disappears if this component is removed?</p>
 <p>Starting from a 28.59 ms B65 TP2 run:</p>
@@ -835,8 +854,8 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p>The supposedly fixed host term was mostly dense MLP device work, whose poor multi-card scaling made a two-point fit look constant. The DeltaNet recurrence itself was small. Had I trusted the fit, I would probably have spent another week optimizing the wrong layer family.</p>
 <p>That changed the order of future work: merged four-bit projection shapes first, then dense scaling, then whatever a fresh removal budget turns up. The recurrence is not free, but it is not the first problem.</p>
 </section>
-<section id="the-final-latency-distribution-is-pleasantly-boring" class="level2">
-<h2 class="anchored" data-anchor-id="the-final-latency-distribution-is-pleasantly-boring">The final latency distribution is pleasantly boring</h2>
+<section id="the-final-latency-distribution-is-pleasantly-boring" class="level3">
+<h3 class="anchored" data-anchor-id="the-final-latency-distribution-is-pleasantly-boring">The final latency distribution is pleasantly boring</h3>
 <p>A mean TPOT can hide an ugly tail, so I measured the inter-token latency distribution for the final AWQ release. Each point below summarizes 1,023 inter-token intervals from the second run of a 1,024-token output, concurrency one, graph capture on.</p>
 <p><img src="qwen38-27b/awq-itl-percentiles.svg" class="img-fluid" style="width:100.0%" alt="Median-to-p99 inter-token latency stays narrow across eight cells: two and four cards, B65 and B70, at short and 8K prompts. Every range is under 0.7 ms wide."></p>
 <p><em>Figure 4. Every median-to-p99 range is under 0.7 ms wide, on both parts.</em></p>
@@ -878,8 +897,8 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 </table>
 <p>This is the kind of graph I like: not dramatic, just steady. It supports a more useful statement than “the model does 52 tok/s”. At these contexts and this concurrency the ordinary token-to-token experience hides no large tail, and the distribution is as boring on B70 as on B65, just lower.</p>
 </section>
-<section id="what-b70-actually-did" class="level2">
-<h2 class="anchored" data-anchor-id="what-b70-actually-did">What B70 actually did</h2>
+<section id="what-b70-actually-did" class="level3">
+<h3 class="anchored" data-anchor-id="what-b70-actually-did">What B70 actually did</h3>
 <p>Before I had B70 cards I worked out a range for them instead of a number, with a deliberately wide gap between the two edges. Then the cards arrived and I measured it. The prediction is worth showing because one half of it was wrong in an interesting way.</p>
 <p><img src="qwen38-27b/b65-b70-measured.svg" class="img-fluid" style="width:100.0%" alt="Measured B65 and B70 decode plotted inside the predicted band: TP2 rises 37.8 to 44.0 tokens per second, TP4 rises 52.1 to 59.5, both landing nearer the optimistic edge."></p>
 <p><em>Figure 5. Both measurements landed inside the band I predicted, nearer its optimistic edge.</em></p>
@@ -963,8 +982,8 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 </table>
 <p>The weight term halves exactly, as bandwidth-bound decode must. The remainder does not fall at all, it rises. That is why doubling the cards buys 1.35x on B70 and 1.38x on B65 instead of 2x, and that 9.48 ms is the largest single thing standing between 59.5 tok/s and the 157 tok/s TP4 roofline. At 38 percent of that ceiling, what is left is a factor of two, not an order of magnitude.</p>
 </section>
-<section id="a-4.4x-kernel-win-the-step-never-noticed" class="level2">
-<h2 class="anchored" data-anchor-id="a-4.4x-kernel-win-the-step-never-noticed">A 4.4x kernel win the step never noticed</h2>
+<section id="a-4.4x-kernel-win-the-step-never-noticed" class="level3">
+<h3 class="anchored" data-anchor-id="a-4.4x-kernel-win-the-step-never-noticed">A 4.4x kernel win the step never noticed</h3>
 <p>Since the thesis here is about method, a clean negative result belongs in it.</p>
 <p>I built a successive-halving tuner for the Gated DeltaNet chunk kernel over the Xe2 configuration space, with a measured noise floor and a refusal to promote any winner inside it. It found one: 3.91 ms down to 0.89 ms, 4.4x, at the exact per-rank shape the server launches. (Hg=4, H=12 at TP4, not the full-model geometry. I tuned the wrong shape first and had to redo it.)</p>
 <p><img src="qwen38-27b/tuning-null-result.svg" class="img-fluid" style="width:100.0%" alt="The chunk kernel drops 4.4x from 3.913 to 0.890 milliseconds, while time to first token moves 0.09 percent, from 2638.9 to 2636.5 milliseconds, inside the control spread."></p>
@@ -973,8 +992,12 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p>What I can explain is why the lever was small to start with. On the two earlier hybrid models the tuned kernel was the MoE grouped GEMM: dominant, on the decode path, with a real configuration space and no tuned file for those shapes. All three of those conditions fail here. Qwen3.8 is dense, so there is no MoE. The kernel I tuned sits on the prefill path, and prefill was already past target. And this model’s hot decode kernel is a oneDNN library call with no <code>num_warps</code> to sweep. The one Triton decode kernel that did have a configuration space had already been retiled 32 to 16 on BV, and that gain is inside the 59.5 rather than sitting on top of it.</p>
 <p>The transferable part is not that tuning does not work. It is that a lever’s value lives in the step, not in the kernel.</p>
 </section>
-<section id="a-quick-detour-through-the-other-models" class="level2">
-<h2 class="anchored" data-anchor-id="a-quick-detour-through-the-other-models">A quick detour through the other models</h2>
+</section>
+<section id="what-the-method-was-worth" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-method-was-worth">What the method was worth</h2>
+<p>What carried over from earlier models, and what the coding agents were and were not good for.</p>
+<section id="a-quick-detour-through-the-other-models" class="level3">
+<h3 class="anchored" data-anchor-id="a-quick-detour-through-the-other-models">A quick detour through the other models</h3>
 <p>Qwen3.8 was the fourth model in this line of work. The earlier three are not apples-to-apples competitors, since they use different architectures, card counts, TP sizes, and workloads. Their value here is showing which methods survived contact with another model.</p>
 <table class="caption-top table">
 <thead>
@@ -1006,8 +1029,8 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p>Those rows are reference points, not a competition between models. Each one deserves its own post, and I plan to write them. This one is about Qwen3.8 and the method I used to work out what it needed.</p>
 <p>That is also why I do not present a bag of “Xe2 optimizations” to enable all at once. Graph capture, rooflines, proof that a fast path actually ran, and controlled A/Bs are methods. A tile size, context cutoff, or packed layout belongs to the exact model, card, and TP combination that earned it.</p>
 </section>
-<section id="what-were-codex-and-claude-actually-useful-for" class="level2">
-<h2 class="anchored" data-anchor-id="what-were-codex-and-claude-actually-useful-for">What were Codex and Claude actually useful for?</h2>
+<section id="what-were-codex-and-claude-actually-useful-for" class="level3">
+<h3 class="anchored" data-anchor-id="what-were-codex-and-claude-actually-useful-for">What were Codex and Claude actually useful for?</h3>
 <p>I used coding agents extensively during this work, mainly Codex and Claude. They were useful in a narrower and more practical way than “the agents wrote the optimization”.</p>
 <ul>
 <li><strong>Reading an unreasonable amount of source.</strong> One investigation followed the SYCL grouped GEMM through its tile policy and reorder atoms, then compared it against oneDNN. That is how I learned the clever four-bit conversion I was about to implement already existed.</li>
@@ -1018,8 +1041,12 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p>They were also entirely capable of producing a confident conclusion from an empty log. Twice a container had stopped and the missing output was treated as a finding. A <code>pkill -f</code> pattern matched the replacement command itself four times. One benchmark reported a rejected over-context request as zeros, which looked like an amazing performance result for a few seconds.</p>
 <p>The fix belonged in the harness rather than the prompting: fail loudly, record the exact setup and run number, keep retractions beside the results, and refuse to print metrics for a rejected request. My own job stayed the same: one benchmark on the GPUs at a time, one changed variable, and no number without a saved log.</p>
 </section>
-<section id="fast-gibberish-is-still-gibberish" class="level2">
-<h2 class="anchored" data-anchor-id="fast-gibberish-is-still-gibberish">Fast gibberish is still gibberish</h2>
+</section>
+<section id="was-any-of-it-correct" class="level2">
+<h2 class="anchored" data-anchor-id="was-any-of-it-correct">Was any of it correct?</h2>
+<p>Speed is easy to measure and easy to fake. These are the checks, including the one where I had the wrong model in my head.</p>
+<section id="fast-gibberish-is-still-gibberish" class="level3">
+<h3 class="anchored" data-anchor-id="fast-gibberish-is-still-gibberish">Fast gibberish is still gibberish</h3>
 <p>Two quantization mistakes produced clean server starts and output consisting almost entirely of exclamation marks.</p>
 <p>First, the text-only model class changed module prefixes. Weight loading had a name-translation layer, but the quantization ignore list did not, so exclusions silently missed their targets.</p>
 <p>Then the quantizer added the container module <code>layers.N.linear_attn</code> to the ignore list, because the container itself was not a <code>Linear</code>. The runtime matched ignore entries by substring, so that one entry hid every projection beneath it. Packed tensors existed in the checkpoint and were never loaded into those linears.</p>
@@ -1063,8 +1090,8 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p>I also have an absolute IFEval result, but no current BF16 run through the same harness and scored subset, and I will not compare it against an older result that skipped a different set of instruction types.</p>
 <p>Multimodal inference works. The checkpoint keeps the vision tower in BF16, images load, and the model answers questions about them. What I have not done is score it against a broad image benchmark suite, so I can say the capability is present and working without yet quantifying what the four-bit text weights cost it. The MTP path is enabled as well, though acceptance rates and end-to-end benefit on natural coding prompts still need a proper campaign. Random token IDs are useful for defeating the prefix cache, but they pin speculative yield near its minimum and cannot answer whether MTP helps a real session.</p>
 </section>
-<section id="the-gap-i-went-looking-for-was-not-there" class="level2">
-<h2 class="anchored" data-anchor-id="the-gap-i-went-looking-for-was-not-there">The gap I went looking for was not there</h2>
+<section id="the-gap-i-went-looking-for-was-not-there" class="level3">
+<h3 class="anchored" data-anchor-id="the-gap-i-went-looking-for-was-not-there">The gap I went looking for was not there</h3>
 <p>Back to the 35% of bytes that returned 9% of throughput. I spent a long time treating that as a saving I had somehow dropped between the checkpoint and the step, and looking for where it went. It turns out there was nothing to find. The saving was never there to collect.</p>
 <p>Three measurements closed it.</p>
 <p><strong>The shape is not unusually slow.</strong> Timing the weight-decompression matmul at every real decode shape, per rank, at M=1:</p>
@@ -1122,6 +1149,7 @@ after    served 121.635 GB   declined 38.549 GB   served fraction 75.9%</code></
 <p>So the model was wrong, not the build. A bandwidth model prices a weight at bytes over bandwidth and assumes that time comes back when you shrink it. That only holds while the weight read is the critical path for that stretch of the step. In a hybrid recurrent architecture it frequently is not: the recurrence kernel, its state traffic and the pointwise work around it are serialised with the projection in every layer, and making the projection smaller leaves all of that untouched.</p>
 <p>One reader worked backwards from my numbers to what the new projections must be achieving, got roughly a third of peak, and called it a falsifiable prediction. It was, and it is falsified. That shape measures 466 GB/s. The reasoning was sound; the premise it rested on, that the removed BF16 traffic had been costing what the byte model assigned it, was not.</p>
 <p>I have kept the byte-model reasoning where it is earlier in this post rather than pruning it back to the parts that worked out. It earned its place: it found the group-size problem and it found the BF16 DeltaNet projections. It also over-promised here. Both halves are worth knowing, and a model that is useful and wrong in known places beats one that has been quietly tidied.</p>
+</section>
 </section>
 <section id="some-of-the-things-i-want-to-do-next" class="level2">
 <h2 class="anchored" data-anchor-id="some-of-the-things-i-want-to-do-next">Some of the things I want to do next</h2>

@@ -148,7 +148,11 @@ The official FP8 checkpoint stays useful. It is the standard model, it works in
 the release image, and it helped me separate real model behaviour from bugs in
 my own quantization pipeline.
 
-## Before writing a kernel, do the boring math
+## Making it fast
+
+Two pieces of method first, then the changes that actually moved the number.
+
+### Before writing a kernel, do the boring math
 
 The first question about any operator is whether it is limited by arithmetic or
 by memory traffic:
@@ -195,7 +199,7 @@ when a proposed optimization cannot possibly repay its complexity, when a
 measurement looks suspiciously good, and when writing another kernel is unlikely
 to be worth the time.
 
-## Check upstream first, then add the missing bits
+### Check upstream first, then add the missing bits
 
 Pinned containers are good for reproducibility, and they also freeze the stack at
 one moment. The XPU stack kept moving while I worked, so my loop for every
@@ -236,7 +240,7 @@ not save tensors it did not know existed. I now build with the multimodal class,
 copy the MTP tensors explicitly, and verify the tensor list before any
 performance run.
 
-## The FP8 checkpoint was running the wrong kernel
+### The FP8 checkpoint was running the wrong kernel
 
 The official FP8 checkpoint is where this started, and the first clean run of it
 managed 2.82 tok/s on four B65 cards. That number is real, and it is not a
@@ -291,7 +295,7 @@ it: three of four prompts identical, the fourth diverging at character 97 into a
 different but equally coherent continuation, which is a near-tie logit flipping
 under greedy decode.
 
-## The existing library primitive was the fastest kernel I tested
+### The existing library primitive was the fastest kernel I tested
 
 Once the model was correct enough to benchmark, the obvious question was which
 four-bit matrix path should serve the dense projections.
@@ -328,7 +332,7 @@ represented nearly half the bytes read during a decode step. The kernel was no
 longer the only question. The checkpoint itself had become part of the latency
 path.
 
-## Four bits is not really four bits
+### Four bits is not really four bits
 
 My checkpoint inventory measured the three large projections in every DeltaNet
 layer (input QKV, input Z, and output) at roughly 10.36 GiB in BF16. That is
@@ -375,7 +379,7 @@ bandwidth model predicts. I spent a long time assuming I had lost a saving
 somewhere inside the merged DeltaNet projection. The last section is where that
 gets settled, and not in the direction I expected.
 
-## Four bits buys decode and sells prefill
+### Four bits buys decode and sells prefill
 
 Quantizing to four bits is a trade, and it is worth stating in both directions.
 
@@ -421,7 +425,12 @@ model cannot see. At eight, the bytes convert almost in full. (The c=8 TTFT is a
 queueing figure with eight requests contending, not a prefill rate, so it does
 not belong next to the c=1 prefill numbers.)
 
-## Graph capture changes both performance and observability
+## Where the time actually goes
+
+Once it was quick enough to use every day, the question became where the rest of
+the step was going, and whether the tools telling me were trustworthy.
+
+### Graph capture changes both performance and observability
 
 Decode is a long chain of small operations. Graph replay removes much of the
 per-operation submission cost, so graph capture is part of the setup I actually
@@ -466,7 +475,7 @@ got a server reporting zero runnable requests, with an error that mostly talked
 about memory. Raising the request limit was never going to help. There was
 nowhere to put the recurrent state.
 
-## The trace blamed the wrong component
+### The trace blamed the wrong component
 
 At one point I fit TP2 and TP4 measurements to a simple model with a sharded
 weight term and a constant term. The fit suggested roughly 12 ms that did not
@@ -499,7 +508,7 @@ That changed the order of future work: merged four-bit projection shapes first,
 then dense scaling, then whatever a fresh removal budget turns up. The recurrence
 is not free, but it is not the first problem.
 
-## The final latency distribution is pleasantly boring
+### The final latency distribution is pleasantly boring
 
 A mean TPOT can hide an ugly tail, so I measured the inter-token latency
 distribution for the final AWQ release. Each point below summarizes 1,023
@@ -522,7 +531,7 @@ useful statement than "the model does 52 tok/s". At these contexts and this
 concurrency the ordinary token-to-token experience hides no large tail, and the
 distribution is as boring on B70 as on B65, just lower.
 
-## What B70 actually did
+### What B70 actually did
 
 Before I had B70 cards I worked out a range for them instead of a number, with a
 deliberately wide gap between the two edges. Then the cards arrived and I
@@ -568,7 +577,7 @@ and 1.38x on B65 instead of 2x, and that 9.48 ms is the largest single thing
 standing between 59.5 tok/s and the 157 tok/s TP4 roofline. At 38 percent of that
 ceiling, what is left is a factor of two, not an order of magnitude.
 
-## A 4.4x kernel win the step never noticed
+### A 4.4x kernel win the step never noticed
 
 Since the thesis here is about method, a clean negative result belongs in it.
 
@@ -601,7 +610,12 @@ sitting on top of it.
 The transferable part is not that tuning does not work. It is that a lever's
 value lives in the step, not in the kernel.
 
-## A quick detour through the other models
+## What the method was worth
+
+What carried over from earlier models, and what the coding agents were and were
+not good for.
+
+### A quick detour through the other models
 
 Qwen3.8 was the fourth model in this line of work. The earlier three are not
 apples-to-apples competitors, since they use different architectures, card
@@ -629,7 +643,7 @@ once. Graph capture, rooflines, proof that a fast path actually ran, and
 controlled A/Bs are methods. A tile size, context cutoff, or packed layout belongs
 to the exact model, card, and TP combination that earned it.
 
-## What were Codex and Claude actually useful for?
+### What were Codex and Claude actually useful for?
 
 I used coding agents extensively during this work, mainly Codex and Claude. They
 were useful in a narrower and more practical way than "the agents wrote the
@@ -660,7 +674,12 @@ to print metrics for a rejected request. My own job stayed the same: one
 benchmark on the GPUs at a time, one changed variable, and no number without a
 saved log.
 
-## Fast gibberish is still gibberish
+## Was any of it correct?
+
+Speed is easy to measure and easy to fake. These are the checks, including the
+one where I had the wrong model in my head.
+
+### Fast gibberish is still gibberish
 
 Two quantization mistakes produced clean server starts and output consisting
 almost entirely of exclamation marks.
@@ -711,7 +730,7 @@ natural coding prompts still need a proper campaign. Random token IDs are useful
 for defeating the prefix cache, but they pin speculative yield near its minimum
 and cannot answer whether MTP helps a real session.
 
-## The gap I went looking for was not there
+### The gap I went looking for was not there
 
 Back to the 35% of bytes that returned 9% of throughput. I spent a long time
 treating that as a saving I had somehow dropped between the checkpoint and the
