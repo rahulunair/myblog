@@ -147,9 +147,10 @@ Keep these rules when adding or renaming a post:
   controls require JavaScript and are not sufficient on their own.
 - Keep drafts as `draft: true`. Preview a specific draft with
   `quarto preview <post>.qmd -M draft:false`; never publish with that override.
-- A named draft URL may have a Netlify 404 rule in `_redirects` so Quarto's
-  empty production placeholder cannot return HTTP 200. Remove that rule in the
-  same change that removes `draft: true` and publishes the article.
+- A named draft URL may have a forced Netlify `404!` rule in `_redirects` so
+  Quarto's existing empty production placeholder cannot shadow the rule and
+  return HTTP 200. Remove that rule in the same change that removes
+  `draft: true` and publishes the article.
 - Do not add ratings, FAQ schema, an Organization, or a WebSite SearchAction
   unless the visible page and real site functionality support them. This is a
   personal blog, so `Person` is the intentional publisher entity.
