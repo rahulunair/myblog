@@ -254,6 +254,76 @@ blockquote {
 .topic-cloud .topic-tag:nth-child(6n + 5) { border-left-color: #ff5722; }
 .topic-cloud .topic-tag:nth-child(6n) { border-left-color: #8e6cff; }
 
+@media (min-width: 992px) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .topic-jenga-stage.jenga-enabled {
+    position: relative;
+    width: 190px;
+    height: 625px;
+    overflow: clip;
+    overflow-clip-margin: 64px;
+    border-bottom: 2px solid var(--blog-jenga-floor);
+    contain: layout paint;
+    touch-action: none;
+  }
+
+  .topic-jenga-stage.jenga-enabled .topic-cloud {
+    position: absolute;
+    inset: 0;
+    display: block;
+    margin: 0;
+  }
+
+  .topic-jenga-stage.jenga-enabled .topic-tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 176px;
+    height: 28px;
+    padding: 0 0.18rem;
+    overflow: hidden;
+    border-width: 1px 1px 1px 4px;
+    color: var(--blog-jenga-block-fg);
+    background: var(--blog-jenga-block-bg);
+    box-shadow: 1px 2px 0 var(--blog-jenga-block-shadow);
+    font-size: 0.68rem;
+    line-height: 1;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: none;
+    will-change: transform;
+    cursor: grab;
+  }
+
+  .topic-jenga-stage.jenga-enabled .topic-tag:active {
+    cursor: grabbing;
+  }
+
+  .topic-jenga-stage.jenga-enabled.is-settling .topic-tag {
+    cursor: default;
+  }
+
+  .topic-jenga-stage.jenga-enabled .topic-tag:focus-visible {
+    outline-offset: -3px;
+  }
+
+  .topic-jenga-stage.jenga-enabled .topic-tag[aria-current="true"] {
+    outline: 2px solid var(--blog-focus-ring);
+    outline-offset: 2px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topic-jenga-stage,
+  .topic-jenga-stage .topic-tag {
+    transition: none !important;
+  }
+}
+
 // Graph paper lives only behind the title. Dense prose stays on a quiet page.
 .quarto-title-block .quarto-title-banner {
   background-image:
