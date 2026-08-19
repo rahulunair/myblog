@@ -1,7 +1,7 @@
 ---
 title: "About Rahul Nair"
 pagetitle: "About Rahul Nair"
-description: "Rahul Nair writes Technical ramblings: measured engineering notes on Intel GPUs, model serving, kernels, Rust, and machine learning."
+description: "I use Technical ramblings to work through Intel GPUs, model serving, kernels, Rust, and machine learning with runnable code and measured results."
 image: dali2.jpeg
 image-alt: "A Stable Diffusion image of Salvador Dalí designing a cyberpunk microprocessor from a dream."
 about:
@@ -21,11 +21,11 @@ about:
 
 Hi, I am Rahul Nair. Online, I usually go by `unrahul`.
 
-This is where I write through systems work in enough detail that someone else
-can reproduce it. Recent posts start with a small runnable example, then follow
-the Intel GPU, inference-server, kernel, or model-internals problem through to
-the measurements that changed my mind. Older notes cover Rust, machine
-learning, and the occasional not-so-technical detour.
+Most of what I write starts with something I can run and measure. Lately that
+has meant Intel GPUs, inference servers, kernels, and model internals. I keep
+enough detail that someone else can reproduce the work, including the
+measurements that changed my mind. Older notes cover Rust, machine learning,
+and the occasional not-so-technical detour.
 
 The image on the left came from an early Stable Diffusion experiment with this
 prompt:
