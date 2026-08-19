@@ -1,15 +1,19 @@
 ---
 toc: true
 title: "Text-to-SQL Generation Using LLMs Fine-Tuned with QLoRA on Intel GPUs"
+pagetitle: "QLoRA Text-to-SQL on Intel GPUs"
+description: "Fine-tune large language models for text-to-SQL with QLoRA on Intel GPUs, then compare base and adapted model inference using reusable LoRA adapters."
 date: "2023-12-05"
-categories: [intel, dgpu, PVC1100, arc, PyTorch, bigdl-llm]
+categories: [intel, dgpu, pvc1100, arc, pytorch, bigdl-llm]
+image: /assets/site-card.png
+image-alt: "Technical ramblings: Intel GPUs, kernels, model serving, Rust, and machine learning."
 ---
 
 The landscape of AI and natural language processing has dramatically shifted with the advent of Large Language models (LLMs). This shift is characterized by advancements like Low-Rank Adaptation (LoRA) and its more advanced iteration, Quantized LoRA (QLoRA), which have transformed the fine-tuning process from a compute-intensive task into an efficient, scalable procedure.
 
 <figure align="center">
-  <img src="./images/launghing_llama.jpg" width="800" alt="laughing llama">
-   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">Generated with Stable Diffusion XL using the prompt: "A cute laughing llama with big eye lashes, sitting on a beach with sunglasses reading in gibili style."</figcaption>
+  <img src="./images/launghing_llama.jpg" width="800" alt="Illustration of a smiling llama wearing sunglasses on a tropical beach">
+   <figcaption style="font-size: 0.8em; margin-top: 5px; max-width: 800px; text-align: center;">Generated with Stable Diffusion XL using the prompt: "A cute laughing llama with big eye lashes, sitting on a beach with sunglasses reading in gibili style."</figcaption>
  </figure>
 
 ## The Advent of LoRA: A Paradigm Shift in LLM Fine-Tuning
@@ -22,8 +26,8 @@ LoRA represents a significant advancement in the fine-tuning of LLMs. By introdu
 
 
 <figure align="center">
-  <img src="./images/lora_library.png" width="800" alt="lora adapter library">
-   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">Left: Integration of LoRA adapters into the model. Right: Deployment of LoRA adapters with a foundation model as a task-specific model library
+  <img src="./images/lora_library.png" width="800" alt="Two-part diagram showing frozen model weights with trainable low-rank A and B adapters, then a frozen foundation model selecting among task-specific LoRA adapters">
+   <figcaption style="font-size: 0.8em; margin-top: 5px; max-width: 800px; text-align: center;">Left: Integration of LoRA adapters into the model. Right: Deployment of LoRA adapters with a foundation model as a task-specific model library
   </figcaption>
 </figure>
 
@@ -75,8 +79,8 @@ training_args = TrainingArguments(
 During the fine-tuning process, there is a notable rapid decrease in the loss after just a few steps, which then gradually levels off, reaching a value near 0.6 at approximately 300 steps as seen in the graph below:
 
 <figure align="center">
-  <img src="./images/loss_chart.jpg" width="800" alt="loss chart">
-   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">Training and Validation loss during fine-tuning a CodeLlama-7b model on the b-mc2/sql-create-context dataset.</figcaption>
+  <img src="./images/loss_chart.jpg" width="800" alt="Training and evaluation loss fall from above 2.2 to about 0.7 over 320 fine-tuning steps">
+   <figcaption style="font-size: 0.8em; margin-top: 5px; max-width: 800px; text-align: center;">Training and Validation loss during fine-tuning a CodeLlama-7b model on the b-mc2/sql-create-context dataset.</figcaption>
 </figure>
 
 
@@ -154,15 +158,15 @@ Following a 15-minute session training itself, the fine-tuned model demonstrates
 Finetuned Model:
 
 <figure align="center">
-  <img src="./images/finetuned.png" width="800" alt="finetuned llm">
-   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">Fine-tuned model SQL generation for a given question and context.</figcaption>
+  <img src="./images/finetuned.png" width="800" alt="Fine-tuned model correctly generates a COUNT query for John Smith's goals last season">
+   <figcaption style="font-size: 0.8em; margin-top: 5px; max-width: 800px; text-align: center;">Fine-tuned model SQL generation for a given question and context.</figcaption>
 </figure>
 
 Base Model:
 
 <figure align="center">
-  <img src="./images/base_model.png" width="800" alt="base llm">
-   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">Base model SQL generation for a given question and context.</figcaption>
+  <img src="./images/base_model.png" width="800" alt="Base model incorrectly generates a SUM query and continues with unrelated text">
+   <figcaption style="font-size: 0.8em; margin-top: 5px; max-width: 800px; text-align: center;">Base model SQL generation for a given question and context.</figcaption>
 </figure>
 
 ### LoRA Adapters: A Library of Task-Specific Enhancements
@@ -174,12 +178,11 @@ One of the most compelling aspects of LoRA is its ability to act as a library of
 I invite AI practitioners and developers to explore the full notebook on the Intel Developer Cloud, where you can experiment with and explore the capabilities of fine-tuning LLMs using QLoRA on Intel hardware with Intel AI software optimizations. Once you log into Intel Developer Cloud, go to the “Training Catalog”. Under “Gen AI Essentials” in the catalog, you can find the LLM fine-tuning notebook and other notebooks.
 
 <figure align="center">
-  <img src="./images/idc_page.webp" width="800" alt="idc genai">
-   <figcaption style="font-size: 0.8em; color: #666; margin-top: 5px; max-width: 800px; text-align: center;">LLM Fine-tuning and other notebooks in Gen AI Essentials under the Training Catalog on IDC.</figcaption>
+  <img src="./images/idc_page.webp" width="800" alt="Intel Developer Cloud Gen AI Essentials catalog showing six notebooks, including LLM fine-tuning with QLoRA">
+   <figcaption style="font-size: 0.8em; margin-top: 5px; max-width: 800px; text-align: center;">LLM Fine-tuning and other notebooks in Gen AI Essentials under the Training Catalog on IDC.</figcaption>
 </figure>
 
 
 ## Repo
 
 You can find the full code and other related notebooks [here](https://github.com/rahulunair/genAI).
-

@@ -1,6 +1,7 @@
 ---
 toc: true
-description: Reinforment Learning for the unintiated
+title: "Reinforcement Learning Basics"
+description: "A compact introduction to reinforcement learning terms: MDPs, policies, model-free and model-based methods, value functions, and Bellman updates."
 categories: [prose, ml]
 date: "2020-07-09"
 ---
@@ -99,7 +100,6 @@ Awesome, thus in a two step process, we are able to identify `an optimum` policy
 <img src="https://www.oldbookillustrations.com/wp-content/uploads/2020/02/de-groof-falling.jpg" alt="Fall of the Flying Man, London." height="300" width="400"/>
 <figcaption>Fall of the Flying Man, London.</figcaption>
 </figure>
-
 
 
 

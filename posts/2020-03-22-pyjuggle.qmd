@@ -1,12 +1,11 @@
 ---
 toc: true
-description: when to use threads and processes.
+title: "Python concurrency lessons"
+description: "A hands-on comparison of Python threads and processes for downloading and processing Project Gutenberg books, with guidance on when to use each."
 categories: [coding]
 author: unrahul
 date: "2020-03-22"
 ---
-
-# Python concurrency lessons
 
 Now that everyone is talking about and using `async/await` and
 event loops everywhere, I thought I would go to the basics (well
@@ -151,11 +150,8 @@ if you find any such techincal inacurracies ping me on twitter or on github.
 May be next time I will write, when to use `async-await`.
 
 <p align="center">
-  <img src="https://rahul.onl/images/juggle.png" alt="python_juggle" width="200" height="300"/>
+  <img src="images/juggle.png" alt="Cartoon juggler balancing on a ball while juggling six colored balls" width="200" height="300"/>
 </p>
-
-
-
 
 
 

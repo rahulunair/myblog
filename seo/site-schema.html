@@ -1,0 +1,36 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://blog.rahul.onl/#author",
+      "name": "Rahul Nair",
+      "alternateName": ["unrahul", "rahulunair"],
+      "url": "https://blog.rahul.onl/about.html",
+      "sameAs": [
+        "https://github.com/rahulunair",
+        "https://x.com/108brushes",
+        "https://huggingface.co/ulkaa"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://blog.rahul.onl/#website",
+      "name": "Technical ramblings",
+      "alternateName": ["Rahul Nair's blog", "unrahul", "blog.rahul.onl"],
+      "url": "https://blog.rahul.onl/",
+      "author": { "@id": "https://blog.rahul.onl/#author" }
+    },
+    {
+      "@type": "Blog",
+      "@id": "https://blog.rahul.onl/#blog",
+      "name": "Technical ramblings",
+      "url": "https://blog.rahul.onl/",
+      "description": "Rahul Nair's measured engineering notes on Intel Arc GPUs, XPU kernels, model serving, Rust, and machine learning.",
+      "author": { "@id": "https://blog.rahul.onl/#author" },
+      "isPartOf": { "@id": "https://blog.rahul.onl/#website" }
+    }
+  ]
+}
+</script>

@@ -1,8 +1,13 @@
 ---
 toc: true
 title: "Configure Intel Arc A370M Xe-HPG discrete GPU on Linux"
+pagetitle: "Intel Arc A370M Setup on Linux"
+description: "A step-by-step Ubuntu 22.04 setup for Intel Arc A370M graphics on Linux, including the kernel, Mesa, oneAPI, SYCL discovery, and GPU monitoring."
 date: "2022-10-12"
+date-published: "2022-10-12"
 categories: [intel,dgpu, graphics]
+image: /assets/site-card.png
+image-alt: "Technical ramblings: Intel GPUs, kernels, model serving, Rust, and machine learning."
 ---
 
 These instructions are for Ubuntu 22.04 LTS-based Oses. I am using Pop!_OS 22.04 LTS derivative of Ubuntu 22.04.
@@ -21,7 +26,7 @@ Coding → apt install mainline
 ```
 As seen in the screenshot below, I am using Kernel 6.0.0:
 
-![Mainline kernel installer](https://user-images.githubusercontent.com/45503355/195398959-c28fe9f3-47c9-46cd-b1a0-5e26d8e6228a.png)
+![Ubuntu Mainline Kernel Installer](https://user-images.githubusercontent.com/45503355/195398959-c28fe9f3-47c9-46cd-b1a0-5e26d8e6228a.png){fig-alt="Ubuntu Mainline Kernel Installer showing Linux 6.0.0 with status Running"}
 
 After installing the kernel, please restart the machine.
 
@@ -147,7 +152,7 @@ Coding → glxinfo -B | grep -i device
 Coding → glmark2
 ```
 
-![glmark2 running on Arc 370m dGPU](assets/arc370m_bench.gif)
+![glmark2 running on an Intel Arc A370M GPU](assets/arc370m_bench.gif){fig-alt="Terminal running glmark2 on an Intel Arc A370M GPU, with the benchmark window displaying a rotating textured cube"}
 
 4. Now, let's install the intel compute drivers. [Goto](https://github.com/intel/compute-runtime/releases). Get the latest release and install using the deb packages for OpenCL, level zero, igc etc. 
 
@@ -261,7 +266,7 @@ Coding → cmake -DCMAKE_BUILD_TYPE=Release .. && make
 ./sysmon
 ```
 
-![system monitor output on my laptop](https://user-images.githubusercontent.com/45503355/195416715-923dc33a-acbd-411e-a774-7a38c13e72f3.png)
+![sysmon output on my laptop](https://user-images.githubusercontent.com/45503355/195416715-923dc33a-acbd-411e-a774-7a38c13e72f3.png){fig-alt="sysmon terminal output listing the Intel Arc A370M discrete GPU and integrated Intel graphics device details"}
 
 As seen above both the igpu and dgpu performance can be monitored using the tool.
 
@@ -278,5 +283,3 @@ Please create an [issue](https://github.com/rahulunair/intel_arc_dgpu_linux/issu
 If you are using this information, please cite using the below link:
 
 Unnikrishnan Nair, R. (2022). dgpu_setup_pytorch (Version 1.0.0) [Computer software]. https://github.com/rahulunair/intel_arc_dgpu_linux
-
-

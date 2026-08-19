@@ -1,6 +1,7 @@
 ---
 toc: true
-description: Catastrophic forgetting in Neural Nets
+title: "Catastrophic Forgetting in ML"
+description: "A survey of catastrophic forgetting in neural networks and reinforcement learning, covering regularization, EWC, PathNet, replay, and lifelong learning."
 categories: [ml]
 date: 2020-07-15
 author: unrahul
@@ -138,7 +139,6 @@ Thats all for now folks on Catastrophic Forgetting in Learning systems using con
 <img src="https://www.oldbookillustrations.com/wp-content/uploads/2020/02/de-groof-falling.jpg" alt="Fall of the Flying Man, London." height="300" width="400"/>
 <figcaption>Fall of the Flying Man, London.</figcaption>
 </figure>
-
 
 
 

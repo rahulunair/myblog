@@ -1,14 +1,13 @@
 ---
 toc: true
-description: Pseudo random functions and message authentication.
+title: "Message Authentication and PRFs"
+description: "A story-led introduction to pseudorandom functions and message authentication codes, showing how Alice and Bob can authenticate messages without shared state."
 categories: [crypto]
 date: "2017-02-12"
 author: unrahul
 ---
-# Message Authentication and PRFs
-
 <p align="center">
-<img src="https://imgur.com/ZiOuEd1.png"/>
+<img src="https://imgur.com/ZiOuEd1.png" alt="Chalkboard drawing of Alice and Bob sitting beside each other"/>
 </p>
 
 Bob gets a message from Alice, as Bob doesn’t think a girl like **Alice** would talk to him, he wants Alice to authenticate or convince him that it is indeed she who is talking.

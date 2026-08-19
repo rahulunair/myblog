@@ -1,11 +1,10 @@
 ---
 toc: true
-description: A minimal introduction to Rust.
+title: "Flashcard Rust: First steps"
+description: "A first Rust flashcard: install Rust with rustup, compile a tiny program with rustc, and meet the language from the command line."
 categories: [coding, rust]
 date: "2020-03-07"
 ---
-# Flashcard Rust: First steps
-
 Rust is one of the coolest systems programming lanugage on the block, let's dip our feet in it.
 
 ## Setup
@@ -56,5 +55,4 @@ ahoy ahoy!
 Now that you have written 2 lines of rust, do [read](https://doc.rust-lang.org/stable/book/ch01-02-hello-world.html)
 
 ## The end
-[![https://imgur.com/LZ6VxZR.png](https://imgur.com/LZ6VxZR.png)](https://imgur.com/LZ6VxZR.png)
-
+<a href="https://imgur.com/LZ6VxZR.png"><img src="https://imgur.com/LZ6VxZR.png" alt="Orange Rust crab logo"></a>

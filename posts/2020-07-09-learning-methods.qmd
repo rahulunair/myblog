@@ -1,6 +1,7 @@
 ---
 toc: true
-description: Learning methods in RL
+title: "Model-Free Reinforcement Learning"
+description: "An introduction to model-free reinforcement learning through temporal-difference updates, Q-learning, SARSA, and actor-critic algorithms."
 categories: [prose, ml]
 date: "2020-07-09"
 author: unrahul
@@ -47,7 +48,6 @@ Awesome, thus in a two step process, we are able to identify `an optimum` policy
 <img src="https://www.oldbookillustrations.com/wp-content/high-res/n-d-after-1915/fun-study-768.jpg" alt="Fun and study well combined." height="300" width="400"/>
 <figcaption>Fun and study well combined.</figcaption>
 </figure>
-
 
 
 

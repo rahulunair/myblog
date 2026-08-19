@@ -1,12 +1,12 @@
 ---
 toc: false
-description: A minimal introduction to Rust.
+title: "Flashcard Rust: Result Type in Rust and how to handle it"
+pagetitle: "Rust Result and Error Handling"
+description: "A worked Rust guide to Result values, pattern matching, the ? operator, unwrap, expect, and propagating recoverable errors cleanly."
 categories: [coding, rust]
 author: unrahul
 date: "2021-01-14"
 ---
-# Flashcard Rust: Result Type in Rust and how to handle it
-
 Rust `Result` is a type used to return / propogate errors from a function to the 
 caller. It is an `Enum` with two variants - an `Ok(T)` and an `Err(E)`. 
 An `Ok(T)` represents success and error represents failure.
@@ -185,4 +185,3 @@ For more details, please read:
 
 In this post, we got a basic idea of what Results are and how to handle them.
 Next time, we can see how to handle errors in a bit more detail.
-

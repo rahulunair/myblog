@@ -1,12 +1,12 @@
 ---
 toc: true
-description: An interesting design pattern - Borg
+title: "Borg"
+description: "A small Python example of the Borg design pattern, where separate class instances share state through a common dictionary."
+pagetitle: "Python Borg Pattern: Shared State"
 categories: [coding]
 date: "2017-03-28"
 author: unrahul
 ---
-# Borg
-
 So I was reading up on some Python and found this interesting pattern by Alex Martelli. It’s call the Borg pattern, which I think is very cool and a bit philosphical.
 
 ```python

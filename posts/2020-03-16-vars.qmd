@@ -1,12 +1,12 @@
 ---
 toc: true
-description: A minimal introduction to Rust.
+title: "Flashcard Rust: Variables"
+description: "A compact Rust guide to immutable bindings, mutable variables, constants, and shadowing, with small programs and compiler output."
+pagetitle: "Rust Variables and Shadowing"
 categories: [coding, rust]
 author: unrahul
 date: "2020-03-16"
 ---
-# Flashcard Rust: Variables
-
 In this post, let's look at how variables are considered in Rust.
 
 ## Immutable by default
@@ -124,4 +124,3 @@ new name is rahul
 ## The end
 
 Now that we have seen `immutable` and `mutable` variables, and also `shadowing`, may be primitive types next?..
-

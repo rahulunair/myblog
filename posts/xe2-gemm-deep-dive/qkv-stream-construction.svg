@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">Qwen3-Coder-Next builds a 9,216-wide packed projection from Q, gate, K, and V</title>
+  <desc id="desc">An input with M rows and hidden width 2048 enters a full-attention projection. Sixteen query heads of width 256 produce 4096 query values. A query-sized output gate contributes another 4096 values. Two key heads and two value heads of width 256 contribute 512 values each. Logically concatenating the four streams produces a packed output with shape M by 9216. The stream-summary cards are schematic and do not specify channel proportions or physical memory order.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1 L11 6 L1 11" fill="none" stroke="#243447" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#243447" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="700" fill="#fffdf7"/>
+  <path d="M34 35 Q305 27 585 35 T1165 34" fill="none" stroke="#243447" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+  <text x="54" y="82" font-family="Verdana, sans-serif" font-size="30" font-weight="700" fill="#243447">Where 9,216 output channels come from</text>
+  <text x="56" y="116" font-family="Verdana, sans-serif" font-size="17" fill="#243447">QKV alone is 5,120 wide. The query-sized output gate supplies the missing 4,096.</text>
+
+  <g filter="url(#soft-shadow)">
+    <rect x="52" y="238" width="220" height="164" rx="18" fill="#d9f8ef" stroke="#06d6a0" stroke-width="5"/>
+    <text x="84" y="292" font-family="monospace" font-size="26" font-weight="700" fill="#243447">x [M, 2048]</text>
+    <text x="84" y="330" font-family="Verdana, sans-serif" font-size="17" fill="#243447">M token rows</text>
+    <text x="84" y="361" font-family="Verdana, sans-serif" font-size="16" fill="#243447">K = hidden size</text>
+  </g>
+
+  <path d="M278 320 C308 317 322 321 354 320" fill="none" stroke="#243447" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <g filter="url(#soft-shadow)">
+    <rect x="370" y="218" width="235" height="204" rx="18" fill="#e5f3fb" stroke="#168aad" stroke-width="5"/>
+    <text x="405" y="271" font-family="Verdana, sans-serif" font-size="18" font-weight="700" fill="#243447">full-attention</text>
+    <text x="405" y="301" font-family="Verdana, sans-serif" font-size="18" font-weight="700" fill="#243447">projection</text>
+    <text x="405" y="347" font-family="monospace" font-size="20" fill="#243447">[M, K] × [K, N]</text>
+    <text x="405" y="383" font-family="Verdana, sans-serif" font-size="15" fill="#243447">one logical packed output</text>
+  </g>
+
+  <path d="M612 320 C642 316 653 320 682 320" fill="none" stroke="#243447" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <text x="700" y="168" font-family="monospace" font-size="15" font-weight="700" fill="#243447">[Q | gate | K | V] → packed output [M, 9,216]</text>
+
+  <g filter="url(#soft-shadow)">
+    <rect x="700" y="190" width="382" height="82" rx="15" fill="#d9f8ef" stroke="#06d6a0" stroke-width="4"/>
+    <text x="725" y="225" font-family="Verdana, sans-serif" font-size="18" font-weight="700" fill="#243447">Q</text>
+    <text x="785" y="225" font-family="monospace" font-size="18" fill="#243447">16 × 256</text>
+    <text x="937" y="225" font-family="monospace" font-size="21" font-weight="700" fill="#243447">4,096</text>
+    <text x="725" y="252" font-family="Verdana, sans-serif" font-size="14" fill="#243447">query values used by attention</text>
+  </g>
+
+  <g filter="url(#soft-shadow)">
+    <rect x="700" y="286" width="382" height="82" rx="15" fill="#eee9ff" stroke="#8e6cff" stroke-width="4"/>
+    <text x="725" y="321" font-family="Verdana, sans-serif" font-size="18" font-weight="700" fill="#243447">gate</text>
+    <text x="785" y="321" font-family="monospace" font-size="18" fill="#243447">16 × 256</text>
+    <text x="937" y="321" font-family="monospace" font-size="21" font-weight="700" fill="#243447">4,096</text>
+    <text x="725" y="348" font-family="Verdana, sans-serif" font-size="14" fill="#243447">applied to the attention output</text>
+  </g>
+
+  <g filter="url(#soft-shadow)">
+    <rect x="700" y="382" width="248" height="72" rx="15" fill="#fff0c5" stroke="#ffd166" stroke-width="4"/>
+    <text x="725" y="414" font-family="Verdana, sans-serif" font-size="18" font-weight="700" fill="#243447">K</text>
+    <text x="772" y="414" font-family="monospace" font-size="17" fill="#243447">2 × 256</text>
+    <text x="856" y="438" font-family="monospace" font-size="20" font-weight="700" fill="#243447">512</text>
+  </g>
+
+  <g filter="url(#soft-shadow)">
+    <rect x="700" y="468" width="248" height="72" rx="15" fill="#ffe1e4" stroke="#f25f5c" stroke-width="4"/>
+    <text x="725" y="500" font-family="Verdana, sans-serif" font-size="18" font-weight="700" fill="#243447">V</text>
+    <text x="772" y="500" font-family="monospace" font-size="17" fill="#243447">2 × 256</text>
+    <text x="856" y="524" font-family="monospace" font-size="20" font-weight="700" fill="#243447">512</text>
+  </g>
+
+  <path d="M1095 190 Q1114 360 1095 540" fill="none" stroke="#243447" stroke-width="3" stroke-linecap="round"/>
+  <path d="M1095 365 C1125 365 1136 365 1150 365" fill="none" stroke="#243447" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <text x="1145" y="318" text-anchor="end" font-family="Verdana, sans-serif" font-size="15" fill="#243447">concat</text>
+  <text x="1145" y="402" text-anchor="end" font-family="monospace" font-size="22" font-weight="700" fill="#243447">N = 9,216</text>
+
+  <path d="M56 590 Q320 582 590 590 T1140 589" fill="none" stroke="#168aad" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+  <text x="58" y="628" font-family="monospace" font-size="17" fill="#243447">checkpoint: q_proj [8192, 2048] + k_proj [512, 2048] + v_proj [512, 2048]</text>
+  <text x="58" y="661" font-family="Verdana, sans-serif" font-size="15" fill="#6b7785">Stream cards are schematic. Labels carry the channel counts; this is not a memory-layout diagram.</text>
+</svg>

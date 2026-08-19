@@ -1,12 +1,11 @@
 ---
 toc: true
-description: A simple intro to concurrency in Go
+title: "Monkeys, Juggling and some Golang"
+description: "A playful introduction to Go concurrency and goroutines, using concurrent calculations of Euler's number to make scheduling easier to picture."
 categories: [coding]
 author: unrahul
 date: "2017-03-31"
 ---
-# Monkeys, Juggling and some Golang
-
 Today let's do some basic monkey work, rather lets do some juggling. I am always fascinated by people being able to juggle multiple balls. It’s something amazing, at least to me. They even have a World Juggling day, can you believe it?!
 So, why are we talking about monkeys, juggling and what not... Well, to me golang goroutines is sort of juggling. Where the juggler is able to do one thing at one time and, is able to keep track of multiple balls or whatever is being juggled. Well, you might have a different opinion and you are right, if the opinion is something like we can truely do tasks parallely if there are multiple CPUs, akin to two monkeys handling 2 seperate balls. hmm... yeah, so this might be the most over simplified and in some ways incorrect expalnation of concurrency and parallelism. For people who are curious to know the difference, there are awesome videos out there, particularly one comes to mind, the one Rob Pike gave. Check it out, you might like it.
 
@@ -102,5 +101,5 @@ Essentially, go routines are simple at first, and that is important. As in any c
 
 
 <p align="center">
-  <img src="https://i.imgur.com/1MvLPvn.jpg" alt="monkey_juggle"/>
+  <img src="https://i.imgur.com/1MvLPvn.jpg" alt="Cartoon monkey riding a unicycle while juggling four colored balls"/>
 </p>

@@ -1,8 +1,13 @@
 ---
 toc: true
 title: "Stable Diffusion inference on Intel Arc GPUs"
+pagetitle: "Stable Diffusion on Intel Arc GPUs"
+description: "Run Stable Diffusion on Intel Arc GPUs under Linux with both PyTorch and TensorFlow, including Arc setup, package installation, and sample inference."
 date: "2022-11-06"
+date-published: "2022-11-06"
 categories: [intel, dgpu, graphics, arc, pytorch, tensorflow]
+image: /assets/site-card.png
+image-alt: "Technical ramblings: Intel GPUs, kernels, model serving, Rust, and machine learning."
 ---
 
 [Now](https://blog.rahul.onl/posts/2022-08-12-arc-dgpu-linux.html) that we have our
@@ -84,7 +89,7 @@ In [9]: image = pipe(prompt).images[0]
 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 51/51 [00:09<00:00,  5.20it/s]
 ```
 
-![](./images/sd_pyt_fp16.png)
+![Stable Diffusion output from PyTorch FP16](./images/sd_pyt_fp16.png){fig-alt="Stable Diffusion PyTorch FP16 output showing red heart-shaped hot-air balloons over Paris and the Eiffel Tower"}
 
 As you can see the first time you run the model, it takes about 35 seconds, subsequent runs take about 10 seconds, you can expect this number to double when using fp32. 
 
@@ -135,11 +140,10 @@ Executing this, we get the result:
   0   1: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 50/50 [00:29<00:00,  1.67it/s]
 ```
 
-![](./images/sd_tf_fp32.png)
+![Stable Diffusion output from TensorFlow FP32](./images/sd_tf_fp32.png){fig-alt="Stable Diffusion TensorFlow FP32 output showing red hot-air balloons above Parisian buildings at sunset"}
 
 As you can see the first time you run the model, it takes about 60 seconds, subsequent runs take about 30 seconds. One thing to note here is that, for the TensorFlow version we used FP32 and not FP16 as in the case of pyTorch.
 
 ## Repo
 
 You can find the full code and other related materials [here](https://github.com/rahulunair/stable_diffusion_arc).
-

@@ -1,12 +1,12 @@
 ---
 toc: true
-description: A minimal introduction to Rust.
+title: "Flashcard Rust: Cargo"
+description: "A practical Rust Cargo walkthrough covering project creation, dependency management, builds, runs, and optimized release binaries."
+pagetitle: "Rust Cargo: Build, Run, and Release"
 categories: [coding, rust]
 author: unrahul
 date: "2020-03-09"
 ---
-# Flashcard Rust: Cargo
-
 Cargo is the one ring to rule them all, the one build tool that:
 
 - builds our rust project
@@ -149,6 +149,6 @@ That's it, so we saw what `cargo` can do, it is a tool that can be used when we 
 
 <p align="center">
 <a href="https://imgur.com/EboHRWB.png">
-  <img src="https://imgur.com/EboHRWB.png" />
+  <img src="https://imgur.com/EboHRWB.png" alt="Rusting cargo shipwreck at sea" />
 </a>
 </p>

@@ -2,3 +2,9 @@
 /blog.xml     /index.xml  301
 /blog.html    /           301
 /archive.html /           301
+/index.html   /           301
+/posts/2020-07-14-learning-methods.html /posts/2020-07-09-learning-methods.html 301
+# Draft URLs return the custom 404 on Netlify while remaining visible in local preview.
+# Remove the matching rule in the same change that publishes either article.
+/posts/2026-08-18-xe2-gemm-deep-dive.html /404.html 404
+/posts/2026-08-19-qwen38-speculative-decoding-arc-pro.html /404.html 404

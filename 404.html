@@ -1,21 +1,99 @@
-<style type="text/css" media="screen">
-  .container {
-    margin: 10px auto;
-    max-width: 600px;
-    text-align: center;
-  }
-  h1 {
-    margin: 30px 0;
-    font-size: 4em;
-    line-height: 1;
-    letter-spacing: -1px;
-  }
-</style>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#15191f">
+  <title>Page not found · Technical ramblings</title>
+  <style>
+    @font-face {
+      font-family: "Space Grotesk";
+      src: url("/assets/fonts/space-grotesk-latin.woff2") format("woff2");
+      font-display: swap;
+    }
 
-<div class="container">
-  <h1>404</h1>
-  <p><strong>Content not found :(</strong></p>
-  <p align="center">
-  <img src="./not_found.png" height="566" width="350"/>
-  </p>
-</div>
+    @font-face {
+      font-family: "IBM Plex Sans";
+      src: url("/assets/fonts/ibm-plex-sans-latin.woff2") format("woff2");
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: dark;
+      --paper: #15191f;
+      --ink: #f8f4e8;
+      --muted: #bcc5d3;
+      --pink: #ff4fa3;
+      --yellow: #ffd84d;
+      --cyan: #42d9ff;
+      --mint: #56f0b3;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 2rem;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+    }
+
+    main {
+      width: min(42rem, 100%);
+      text-align: center;
+    }
+
+    .signal {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .45rem;
+      width: min(18rem, 70vw);
+      margin: 0 auto 1.5rem;
+      transform: rotate(-1deg);
+    }
+
+    .signal span { height: .55rem; }
+    .signal span:nth-child(1) { background: var(--pink); }
+    .signal span:nth-child(2) { background: var(--yellow); }
+    .signal span:nth-child(3) { background: var(--cyan); }
+    .signal span:nth-child(4) { background: var(--mint); }
+
+    h1 {
+      margin: 0;
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-size: clamp(4.5rem, 18vw, 9rem);
+      line-height: .9;
+      letter-spacing: -.07em;
+    }
+
+    p { color: var(--muted); font-size: 1.15rem; }
+    img { display: block; max-width: min(22rem, 80vw); height: auto; margin: 1.5rem auto; }
+
+    a {
+      display: inline-block;
+      padding: .65rem 1rem;
+      border: 2px solid var(--yellow);
+      color: var(--ink);
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: .3rem .3rem 0 var(--pink);
+    }
+
+    a:hover, a:focus-visible { background: var(--yellow); color: #15191f; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="signal" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <h1>404</h1>
+    <p><strong>This page wandered off.</strong> The rest of the engineering notes are still here.</p>
+    <img src="./not_found.png" width="350" height="566" alt="">
+    <a href="/">Back to the blog</a>
+  </main>
+</body>
+</html>

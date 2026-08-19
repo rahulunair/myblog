@@ -1,12 +1,12 @@
 ---
 toc: true
-description: A simple timing decorator for python
+title: "Timing python functions"
+description: "A tiny Python timing decorator built around perf_counter, with installation and usage examples for measuring mean runtime and standard deviation."
+pagetitle: "Timing Python Functions with tiemy"
 categories: [coding]
 date: "2020-03-23"
 author: unrahul
 ---
-
-# Timing python functions
 
 I have been writing some performant code in Python (oxymoron?), and I wanted a simple decorator to time funtions essentially to measure running time.
 

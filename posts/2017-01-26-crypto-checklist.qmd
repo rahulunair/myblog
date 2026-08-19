@@ -1,11 +1,10 @@
 ---
 toc: true
-description: A checklist to have when thinking of implementing crypto
+title: "An opinionated checklist on crypto"
+description: "An opinionated first-pass checklist for reviewing cryptographic implementations, from key sizes and storage to transport, tokens, and common mistakes."
 categories: [crypto]
 date: "2017-01-26"
 ---
-# An opinonated checklist on crypto
-
 Please dont roll your own crypto!!
 
 Ohkay, so you are not heeding the warning ha, let's see how we can minimize the damage then..

@@ -1,12 +1,12 @@
 ---
 toc: false
-description: A minimal introduction to Rust.
+title: "Flashcard Rust: What type is this variable again?!"
+pagetitle: "Print a Rust Value's Type"
+description: "A tiny Rust helper built with std::any::type_name that prints the concrete type of a value when inference makes it hard to see."
 categories: [coding, rust]
 date: "2021-03-22"
 author: unrahul
 ---
-# Flashcard Rust: What type is this variable again?!
-
 This is going to be a very short post on a tiny function that can help
 us in figuring out what is the type of a variable.
 

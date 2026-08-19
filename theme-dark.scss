@@ -1,20 +1,20 @@
 /*-- scss:defaults --*/
 // Dark palette. Same roles as theme-light.scss, luminance inverted.
 
-$body-bg:    #1b1e21 !default;
-$body-color: #e6e8ea !default;
+$body-bg:    #15191f !default;
+$body-color: #f6f3ea !default;
 
-$primary:   #7aa2f7 !default;
+$primary:   #7dcfff !default;
 $link-color: $primary !default;
-$link-hover-color: #9db8f9 !default;
+$link-hover-color: #a9ddff !default;
 
-$border-color: #2e3338 !default;
-$secondary-color: #9aa3ab !default;
+$blog-border-color: #38414d;
+$secondary-color: #aab3c0 !default;
 
 // code
-$code-color:            #e6e8ea !default;
-$code-block-bg:         #22262b !default;
-$code-block-border-left: #7aa2f7 !default;
+$code-color:            #f6f3ea !default;
+$code-block-bg:         #1a1b26 !default;
+$code-block-border-left: #00bcd4 !default;
 
 $navbar-bg: $body-bg !default;
 $navbar-fg: $body-color !default;
@@ -24,7 +24,22 @@ $footer-fg: $secondary-color !default;
 /*-- scss:rules --*/
 
 :root {
-  --bs-border-color: #{$border-color};
+  --bs-border-color: #{$blog-border-color};
   --bs-secondary-color: #{$secondary-color};
-  --bs-code-bg-inline: #262b31;
+  --bs-code-bg-inline: #242735;
+  --blog-section-accent: #06d6a0;
+  --blog-selection-bg: #ffc107;
+  --blog-selection-fg: #243447;
+  --blog-link-underline: #00bcd4;
+  --blog-focus-ring: #e91e63;
+  --blog-title-grid: rgba(0, 188, 212, 0.09);
 }
+
+code span.co, code span.cv, code span.do { color: #8f9bb3; }
+code span.kw, code span.cf, code span.im, code span.pp { color: #f7768e; }
+code span.op { color: #7dcfff; }
+code span.st, code span.ss, code span.vs, code span.ch { color: #9ece6a; }
+code span.dv, code span.fl, code span.bn, code span.cn { color: #ff9e64; }
+code span.fu, code span.ex { color: #bb9af7; }
+code span.dt, code span.bu { color: #2ac3de; }
+code span.va, code span.at { color: #c0caf5; }

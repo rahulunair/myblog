@@ -1,6 +1,8 @@
 ---
 toc: true
-description: Multiprocessing using ray.
+title: "Python Multiprocessing with Ray"
+pagetitle: "Python Multiprocessing with Ray"
+description: "A small side-by-side example of Python multiprocessing and Ray, showing how two functions can run in parallel and scale beyond one machine."
 categories: [coding]
 date: "2020-05-23"
 author: unrahul
@@ -18,7 +20,7 @@ part of the Python standard library.
 I was doing some webscraping and parsing and needed to parallelize
 some part of my code, specifically I wanted to run 2 functions parallely.
 
-# Python multiprocessing
+## Python multiprocessing
 
 The usual approach I would choose to do this is using the `multiprocessing`
 library, although `threads` or `asyncio` can be used as well, as this were
@@ -56,7 +58,7 @@ That was fairly simple wasn't it? Although real world functions
 will have parameters and might have need to share memory etc..
 I am avoiding all those here for simplicity.
 
-# Using Ray to do the same thing
+## Using Ray to do the same thing
 
 ```python
 import ray
@@ -112,7 +114,6 @@ My initial thoughts are all positive and it looks really great.
 <img src="https://www.oldbookillustrations.com/wp-content/high-res/1880/dickinson-lorenz-machines-768.jpg" alt="Jup used to spend some of his time in the kitchen." height="300" width="400"/>
 <figcaption>Dickinson-Lorenz Typesetting and Distributing Machines</figcaption>
 </figure>
-
 
 
 

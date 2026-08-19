@@ -3,11 +3,42 @@
 // Colors live in theme-light.scss / theme-dark.scss so the mode toggle
 // changes luminance only, never the design.
 
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/assets/fonts/space-grotesk-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+}
 
-$font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !default;
-$font-family-monospace:  "Fira Code", SFMono-Regular, Menlo, Consolas, monospace !default;
-$headings-font-family:   "Sora", -apple-system, BlinkMacSystemFont, sans-serif !default;
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/assets/fonts/ibm-plex-sans-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono-400-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono-500-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+$font-family-sans-serif: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !default;
+$font-family-monospace:  "IBM Plex Mono", SFMono-Regular, Menlo, Consolas, monospace !default;
+$headings-font-family:   "Space Grotesk", "IBM Plex Sans", sans-serif !default;
+$web-font-path: false;
 
 $font-size-root:      17px !default;
 $headings-font-weight: 600 !default;
@@ -39,10 +70,11 @@ h1, h2, h3, h4 {
 }
 
 // h2 is a part heading, h3 is a section within it
-h2 {
+#quarto-document-content > section.level2 > h2.anchored {
   margin-top: 2.8rem;
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid var(--bs-border-color);
+  padding: 0.08rem 0 0.08rem 0.85rem;
+  border-left: 5px solid var(--blog-section-accent);
+  text-wrap: pretty;
 }
 
 h3 {
@@ -64,11 +96,64 @@ pre code {
   line-height: 1.55;
 }
 
-// inline code should read as a token, not a shout
-p code, li code, td code {
+// inline code should read as a token, not a shout. The :not() guard keeps
+// fenced code inside list items out of this rule.
+:where(#quarto-document-content, .quarto-title-block) code:not(pre code) {
   padding: 0.1em 0.35em;
+  color: var(--bs-code-color);
   background-color: var(--bs-code-bg-inline);
   border: 1px solid var(--bs-border-color);
+  border-radius: 0;
+}
+
+#quarto-document-content a > code:not(pre code) {
+  color: inherit;
+}
+
+::selection {
+  color: var(--blog-selection-fg);
+  background-color: var(--blog-selection-bg);
+  text-shadow: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blog-focus-ring);
+  outline-offset: 3px;
+}
+
+.quarto-title-block h1.title {
+  line-height: 1.15;
+  text-wrap: pretty;
+}
+
+// Keep the short SEO/listing description in metadata without repeating the
+// hand-written subtitle in the visible title block.
+.quarto-title:has(> .subtitle) > div > .description {
+  display: none;
+}
+
+.quarto-title-block .quarto-title::before {
+  content: "";
+  display: block;
+  width: min(18rem, 72%);
+  height: 1.7rem;
+  margin-bottom: 0.85rem;
+  background: url("/assets/theme/signal-strokes.svg") left center / contain no-repeat;
+}
+
+#quarto-document-content :where(p, li, dd, figcaption, blockquote)
+  a:not(.anchorjs-link) {
+  text-decoration-line: underline;
+  text-decoration-color: var(--blog-link-underline);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.2em;
+  text-decoration-skip-ink: auto;
+}
+
+#quarto-document-content :where(p, li, dd, figcaption, blockquote)
+  a:not(.anchorjs-link):hover {
+  color: var(--bs-link-hover-color);
+  text-underline-offset: 0.28em;
 }
 
 blockquote {
@@ -93,22 +178,85 @@ blockquote {
 }
 
 .listing-title {
-  font-family: "Sora", sans-serif;
+  font-family: "Space Grotesk", sans-serif;
   font-weight: 600;
 }
 
 // category pills
 .quarto-category, .listing-category {
   border-radius: 0 !important;
+  border-left-width: 3px !important;
   font-size: 0.72rem;
   text-transform: lowercase;
   letter-spacing: 0.02em;
   opacity: 0.85;
 }
 
-// title banner: flat, not a gradient slab
+.quarto-category:nth-child(6n + 1), .listing-category:nth-child(6n + 1) { border-left-color: #e91e63 !important; }
+.quarto-category:nth-child(6n + 2), .listing-category:nth-child(6n + 2) { border-left-color: #ffc107 !important; }
+.quarto-category:nth-child(6n + 3), .listing-category:nth-child(6n + 3) { border-left-color: #00bcd4 !important; }
+.quarto-category:nth-child(6n + 4), .listing-category:nth-child(6n + 4) { border-left-color: #06d6a0 !important; }
+.quarto-category:nth-child(6n + 5), .listing-category:nth-child(6n + 5) { border-left-color: #ff5722 !important; }
+.quarto-category:nth-child(6n), .listing-category:nth-child(6n) { border-left-color: #8e6cff !important; }
+
+.topic-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1rem 0 2rem;
+}
+
+.topic-cloud .topic-tag {
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--bs-border-color);
+  border-left: 4px solid #00bcd4;
+  color: var(--bs-body-color);
+  font-family: $font-family-monospace;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.topic-cloud .topic-tag:hover {
+  color: var(--bs-link-hover-color);
+  border-color: currentColor;
+}
+
+.topic-cloud .topic-tag:nth-child(6n + 1) { border-left-color: #e91e63; }
+.topic-cloud .topic-tag:nth-child(6n + 2) { border-left-color: #ffc107; }
+.topic-cloud .topic-tag:nth-child(6n + 3) { border-left-color: #00bcd4; }
+.topic-cloud .topic-tag:nth-child(6n + 4) { border-left-color: #06d6a0; }
+.topic-cloud .topic-tag:nth-child(6n + 5) { border-left-color: #ff5722; }
+.topic-cloud .topic-tag:nth-child(6n) { border-left-color: #8e6cff; }
+
+// Graph paper lives only behind the title. Dense prose stays on a quiet page.
 .quarto-title-block .quarto-title-banner {
-  background-image: none;
+  background-image:
+    linear-gradient(var(--blog-title-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--blog-title-grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+// Let evidence breathe beyond the prose measure on wide screens.
+@media (min-width: 992px) {
+  #quarto-document-content section > .code-copy-outer-scaffold,
+  #quarto-document-content section > div.sourceCode,
+  #quarto-document-content section > figure.figure {
+    margin-inline: -1.5rem;
+  }
+
+  #quarto-document-content section > figure.figure {
+    display: block;
+  }
+
+  #quarto-document-content section > figure.figure > img {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
 }
 
 // square off remaining bootstrap roundness
@@ -123,7 +271,7 @@ div.quarto-about-trestles .about-entity .about-link {
 }
 
 .navbar-brand {
-  font-family: "Sora", sans-serif;
+  font-family: "Space Grotesk", sans-serif;
   font-weight: 700;
   letter-spacing: -0.02em;
 }

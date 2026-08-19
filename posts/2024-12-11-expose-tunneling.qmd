@@ -1,7 +1,10 @@
 ---
 toc: true
 title: "Exposing Local Applications: Cloudflare and Gradio Tunnels"
+pagetitle: "Cloudflare and Gradio Tunnels"
+description: "Expose local web apps, Gradio demos, TGI servers, and vLLM endpoints with temporary Cloudflare and Gradio tunnels, plus production guidance."
 date: "2024-11-18"
+date-published: "2024-11-18"
 ---
 
 When developing or testing applications locally, you may need to share them quickly over the internet. Whether it’s for demos, hackathons, or collaborative projects, tunneling tools like **Cloudflare's TryCloudflare** and **Gradio's Share Feature** provide effective solutions to expose local services to the public.
