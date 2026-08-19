@@ -12,13 +12,9 @@
   );
   if (links.length === 0) return;
 
-  const { Body, Bodies, Composite, Constraint, Engine, Sleeping, Vector } = window.Matter;
-  const WIDTH = 190;
-  const BLOCK_HEIGHT = 28;
-  const FLOOR_TOP = 620;
+  const { Bodies, Composite, Constraint, Engine, Sleeping, Vector } = window.Matter;
   const DRAG_THRESHOLD = 6;
-  const ACCENTS = ["#e91e63", "#ffc107", "#00bcd4", "#06d6a0", "#ff5722", "#8e6cff"];
-  const OFFSETS = [0, -8, 7, -5, 8, -4, 5];
+  const COLLISION_GUTTER = 5;
 
   let engine = null;
   let entries = [];
@@ -29,27 +25,9 @@
   let enabled = false;
   let visible = true;
 
-  function topicFor(link) {
-    const url = new URL(link.href, window.location.href);
-    return new URLSearchParams(url.hash.slice(1)).get("category") || link.textContent.trim();
-  }
-
-  function blockWidth(link) {
-    return Math.min(180, Math.max(76, 20 + topicFor(link).length * 7.1));
-  }
-
-  function initialPosition(index, width) {
-    const layer = links.length - 1 - index;
-    const unclampedX = WIDTH / 2 + OFFSETS[layer % OFFSETS.length];
-    return {
-      x: Math.max(width / 2 + 2, Math.min(WIDTH - width / 2 - 2, unclampedX)),
-      y: FLOOR_TOP - BLOCK_HEIGHT / 2 - layer * BLOCK_HEIGHT,
-    };
-  }
-
   function syncEntry(entry) {
     const x = entry.body.position.x - entry.width / 2;
-    const y = entry.body.position.y - BLOCK_HEIGHT / 2;
+    const y = entry.body.position.y - entry.height / 2;
     entry.link.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${entry.body.angle}rad)`;
   }
 
@@ -64,7 +42,7 @@
   }
 
   function frame(now) {
-    if (!enabled || !visible || document.hidden) {
+    if (!enabled || !engine || !visible || document.hidden) {
       stopLoop();
       return;
     }
@@ -81,7 +59,7 @@
   }
 
   function startLoop() {
-    if (!frameId && enabled && visible && !document.hidden) {
+    if (!frameId && enabled && engine && visible && !document.hidden) {
       frameId = window.requestAnimationFrame(frame);
     }
   }
@@ -97,7 +75,7 @@
     if (active.constraint && engine) Composite.remove(engine.world, active.constraint);
   }
 
-  function clearWorld() {
+  function clearPhysics() {
     stopLoop();
     releaseActiveDrag();
     if (restoreTimer) window.clearTimeout(restoreTimer);
@@ -105,41 +83,68 @@
     if (engine) Composite.clear(engine.world, false, true);
     engine = null;
     entries = [];
+
+    stage.classList.remove("is-physical", "is-settling");
+    stage.style.removeProperty("height");
+    links.forEach((link) => {
+      link.style.removeProperty("transform");
+      link.style.removeProperty("width");
+      link.style.removeProperty("height");
+      link.removeAttribute("draggable");
+      link.classList.remove("is-dragging");
+      delete link.dataset.suppressPhysicsClick;
+    });
   }
 
-  function buildStack() {
-    clearWorld();
-    stage.classList.remove("is-settling");
+  function activatePhysics() {
+    const stageRect = stage.getBoundingClientRect();
+    const snapshots = links.map((link) => {
+      const rect = link.getBoundingClientRect();
+      return {
+        link,
+        width: rect.width,
+        height: rect.height,
+        x: rect.left - stageRect.left + rect.width / 2,
+        y: rect.top - stageRect.top + rect.height / 2,
+      };
+    });
+    const contentBottom = Math.max(...snapshots.map(({ y, height }) => y + height / 2));
+    const stageHeight = Math.max(stageRect.height, contentBottom);
+
+    stage.style.height = `${stageHeight}px`;
+    stage.classList.add("is-physical");
     engine = Engine.create({ enableSleeping: true });
     engine.gravity.y = 1;
     engine.gravity.scale = 0.001;
     engine.positionIterations = 10;
     engine.velocityIterations = 7;
 
-    const floor = Bodies.rectangle(WIDTH / 2, FLOOR_TOP + 10, WIDTH * 4, 20, {
+    const floor = Bodies.rectangle(stageRect.width / 2, stageHeight + 10, stageRect.width * 5, 20, {
       isStatic: true,
       friction: 1,
       restitution: 0,
     });
 
-    entries = links.map((link, index) => {
-      const width = blockWidth(link);
-      const position = initialPosition(index, width);
-      const body = Bodies.rectangle(position.x, position.y, width, BLOCK_HEIGHT, {
-        friction: 0.9,
-        frictionStatic: 1,
-        frictionAir: 0.012,
-        restitution: 0.02,
-        density: 0.0025,
-        sleepThreshold: 24,
-      });
-
-      Body.setAngle(body, ((index % 5) - 2) * 0.0014);
+    entries = snapshots.map((snapshot) => {
+      const body = Bodies.rectangle(
+        snapshot.x,
+        snapshot.y,
+        snapshot.width + COLLISION_GUTTER,
+        snapshot.height + COLLISION_GUTTER,
+        {
+          friction: 0.9,
+          frictionStatic: 1,
+          frictionAir: 0.012,
+          restitution: 0.02,
+          density: 0.0025,
+          sleepThreshold: 24,
+        }
+      );
       Sleeping.set(body, true);
-      link.style.width = `${width}px`;
-      link.style.borderLeftColor = ACCENTS[index % ACCENTS.length];
-      link.draggable = false;
-      return { body, link, width };
+      snapshot.link.style.width = `${snapshot.width}px`;
+      snapshot.link.style.height = `${snapshot.height}px`;
+      snapshot.link.draggable = false;
+      return { ...snapshot, body };
     });
 
     Composite.add(engine.world, [floor, ...entries.map(({ body }) => body)]);
@@ -149,12 +154,20 @@
   function stagePoint(event) {
     const rect = stage.getBoundingClientRect();
     return {
-      x: Math.max(-WIDTH, Math.min(WIDTH * 2, event.clientX - rect.left)),
-      y: Math.max(BLOCK_HEIGHT / 2, Math.min(FLOOR_TOP - BLOCK_HEIGHT / 2, event.clientY - rect.top)),
+      x: Math.max(-64, Math.min(rect.width + 64, event.clientX - rect.left)),
+      y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)),
     };
   }
 
   function beginDrag(event) {
+    activatePhysics();
+    drag.entry = entries.find((entry) => entry.link === drag.link);
+    if (!drag.entry) {
+      clearPhysics();
+      return;
+    }
+
+    drag.baseY = drag.entry.body.position.y;
     const point = stagePoint(event);
     const localPoint = Vector.rotate(Vector.sub(point, drag.entry.body.position), -drag.entry.body.angle);
     drag.constraint = Constraint.create({
@@ -173,35 +186,32 @@
   }
 
   function pointerDown(event) {
-    if (!enabled || drag || restoreTimer || event.button !== 0) return;
-    const link = event.currentTarget;
-    const entry = entries.find((candidate) => candidate.link === link);
-    if (!entry) return;
+    if (!enabled || drag || restoreTimer || event.button !== 0 || event.pointerType !== "mouse") return;
     drag = {
-      entry,
-      link,
+      link: event.currentTarget,
       pointerId: event.pointerId,
       originX: event.clientX,
       originY: event.clientY,
-      baseY: entry.body.position.y,
       active: false,
+      entry: null,
+      baseY: 0,
       constraint: null,
     };
-    link.setPointerCapture(event.pointerId);
+    drag.link.setPointerCapture(event.pointerId);
   }
 
   function pointerMove(event) {
     if (!drag || drag.pointerId !== event.pointerId) return;
     const distance = Math.hypot(event.clientX - drag.originX, event.clientY - drag.originY);
     if (!drag.active && distance >= DRAG_THRESHOLD) beginDrag(event);
-    if (!drag.active) return;
+    if (!drag?.active) return;
 
     event.preventDefault();
     const point = stagePoint(event);
     drag.constraint.pointA.x = point.x;
     drag.constraint.pointA.y = Math.max(
-      drag.baseY - BLOCK_HEIGHT / 2,
-      Math.min(drag.baseY + BLOCK_HEIGHT / 2, point.y)
+      drag.baseY - drag.entry.height / 2,
+      Math.min(drag.baseY + drag.entry.height / 2, point.y)
     );
   }
 
@@ -216,17 +226,14 @@
     link.dataset.suppressPhysicsClick = "true";
     window.setTimeout(() => delete link.dataset.suppressPhysicsClick, 0);
     stage.classList.add("is-settling");
-    restoreTimer = window.setTimeout(() => {
-      restoreTimer = 0;
-      buildStack();
-    }, 1800);
+    restoreTimer = window.setTimeout(clearPhysics, 1800);
     startLoop();
   }
 
   function cancelPointer(event) {
     if (!drag) return;
     if (typeof event?.pointerId === "number" && event.pointerId !== drag.pointerId) return;
-    buildStack();
+    clearPhysics();
   }
 
   function attachEvents() {
@@ -246,12 +253,6 @@
       link.removeEventListener("pointerup", pointerUp);
       link.removeEventListener("pointercancel", cancelPointer);
       link.removeEventListener("lostpointercapture", cancelPointer);
-      link.style.removeProperty("transform");
-      link.style.removeProperty("width");
-      link.style.removeProperty("border-left-color");
-      link.removeAttribute("draggable");
-      link.classList.remove("is-dragging");
-      delete link.dataset.suppressPhysicsClick;
     });
   }
 
@@ -260,16 +261,14 @@
     enabled = true;
     stage.classList.add("jenga-enabled");
     attachEvents();
-    buildStack();
   }
 
   function disable() {
     if (!enabled) return;
     enabled = false;
-    clearWorld();
+    clearPhysics();
     detachEvents();
     stage.classList.remove("jenga-enabled");
-    stage.classList.remove("is-settling");
   }
 
   function respondToMedia() {
@@ -280,12 +279,12 @@
   window.addEventListener("blur", cancelPointer);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) stopLoop();
-    else if (enabled && (drag || entries.some(({ body }) => !body.isSleeping))) startLoop();
+    else if (enabled && engine && (drag || entries.some(({ body }) => !body.isSleeping))) startLoop();
   });
   new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
     if (!visible) stopLoop();
-    else if (enabled && (drag || entries.some(({ body }) => !body.isSleeping))) startLoop();
+    else if (enabled && engine && (drag || entries.some(({ body }) => !body.isSleeping))) startLoop();
   }).observe(stage);
 
   media.addEventListener("change", respondToMedia);

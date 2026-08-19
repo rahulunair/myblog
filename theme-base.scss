@@ -255,50 +255,47 @@ blockquote {
 .topic-cloud .topic-tag:nth-child(6n) { border-left-color: #8e6cff; }
 
 @media (min-width: 992px) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .topic-jenga-stage.jenga-enabled {
-    position: relative;
-    width: 190px;
-    height: 625px;
-    overflow: clip;
-    overflow-clip-margin: 64px;
-    border-bottom: 2px solid var(--blog-jenga-floor);
-    contain: layout paint;
-    touch-action: none;
+  .home-topic-sidebar:has(.topic-jenga-stage.jenga-enabled) {
+    width: 145px;
   }
 
-  .topic-jenga-stage.jenga-enabled .topic-cloud {
+  .topic-jenga-stage.jenga-enabled {
+    width: 145px;
+  }
+
+  .topic-jenga-stage.jenga-enabled .topic-tag {
+    cursor: grab;
+  }
+
+  .topic-jenga-stage.jenga-enabled.is-physical {
+    position: relative;
+    overflow: clip;
+    overflow-clip-margin: 64px;
+    contain: layout;
+  }
+
+  .topic-jenga-stage.jenga-enabled.is-physical .topic-cloud {
     position: absolute;
     inset: 0;
     display: block;
     margin: 0;
   }
 
-  .topic-jenga-stage.jenga-enabled .topic-tag {
+  .topic-jenga-stage.jenga-enabled.is-physical .topic-tag {
     position: absolute;
     top: 0;
     left: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 176px;
-    height: 28px;
-    padding: 0 0.18rem;
-    overflow: hidden;
-    border-width: 1px 1px 1px 4px;
+    box-sizing: border-box;
     color: var(--blog-jenga-block-fg);
     background: var(--blog-jenga-block-bg);
     box-shadow: 1px 2px 0 var(--blog-jenga-block-shadow);
-    font-size: 0.68rem;
-    line-height: 1;
-    text-align: center;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     user-select: none;
     will-change: transform;
-    cursor: grab;
   }
 
-  .topic-jenga-stage.jenga-enabled .topic-tag:active {
+  .topic-jenga-stage.jenga-enabled.is-physical .topic-tag:active {
     cursor: grabbing;
   }
 
@@ -306,15 +303,14 @@ blockquote {
     cursor: default;
   }
 
-  .topic-jenga-stage.jenga-enabled .topic-tag:focus-visible {
+  .topic-jenga-stage.jenga-enabled.is-physical .topic-tag:focus-visible {
     outline-offset: -3px;
   }
 
-  .topic-jenga-stage.jenga-enabled .topic-tag[aria-current="true"] {
+  .topic-jenga-stage.jenga-enabled.is-physical .topic-tag[aria-current="true"] {
     outline: 2px solid var(--blog-focus-ring);
-    outline-offset: 2px;
+    outline-offset: -3px;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {
