@@ -173,6 +173,13 @@ blockquote {
   margin-top: 1.5rem;
 }
 
+// Quarto's page-left grid makes room for a margin column, but anchors that
+// whole block to the viewport edge. Centre the home listing and its topic rail
+// as one unit so the rail reads as a sidebar rather than stranded content.
+#quarto-document-content:has(.home-topic-sidebar) {
+  margin-inline: auto;
+}
+
 .quarto-post .metadata {
   font-size: 0.85rem;
 }
@@ -204,6 +211,25 @@ blockquote {
   flex-wrap: wrap;
   gap: 0.55rem;
   margin: 1rem 0 2rem;
+}
+
+.home-topic-sidebar {
+  align-self: start;
+}
+
+.home-topic-sidebar h2 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.home-topic-sidebar .topic-cloud {
+  gap: 0.42rem;
+  margin: 0.8rem 0 0;
+}
+
+.home-topic-sidebar .topic-tag {
+  padding: 0.2rem 0.42rem;
+  font-size: 0.7rem;
 }
 
 .topic-cloud .topic-tag {
