@@ -24,7 +24,7 @@ website:
       - icon: github
         aria-label: GitHub
         href: https://github.com/rahulunair
-      - text: HF
+      - text: Hugging Face
         aria-label: Hugging Face
         href: https://huggingface.co/ulkaa
       - icon: twitter-x

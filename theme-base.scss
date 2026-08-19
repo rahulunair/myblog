@@ -275,3 +275,21 @@ div.quarto-about-trestles .about-entity .about-link {
   font-weight: 700;
   letter-spacing: -0.02em;
 }
+
+.navbar a[href="https://huggingface.co/ulkaa"] .menu-text {
+  display: inline-block;
+  width: 1.3rem;
+  height: 1.3rem;
+  overflow: hidden;
+  color: transparent;
+  vertical-align: -0.28rem;
+  background: url("/assets/theme/hugging-face.svg") center / contain no-repeat;
+}
+
+.quarto-about-broadside a.about-link[href="https://huggingface.co/ulkaa"]::before {
+  content: "";
+  width: 1.15em;
+  height: 1.15em;
+  margin-right: 0.4em;
+  background: url("/assets/theme/hugging-face.svg") center / contain no-repeat;
+}
