@@ -7,8 +7,8 @@
 # ///
 """Generate the speculative-decoding article's annotated SVG evidence.
 
-The numeric inputs are copied from the retained 2026-08-19 qualification
-records in the Qwen3.8-27B project. Diagrams are explicitly schematic.
+The numeric inputs are copied from the retained test records in the
+Qwen3.8-27B project. Diagrams are explicitly schematic.
 """
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ def finish(fig, name: str, title: str, description: str, *, pad: float = 0.18) -
             "Title": title,
             "Description": description,
             "Creator": "posts/qwen38-spec-decode/plot_figures.py",
-            "Date": "2026-08-19",
+            "Date": "2026-08-20",
         },
     )
     plt.close(fig)
@@ -257,19 +257,22 @@ def verify_cliff() -> None:
 
 
 def draft_ring() -> None:
-    title = "A compact DFlash2 draft ring preserves the full target token pool"
+    title = "Opt-in one-million-token DFlash2 physical layout"
     description = (
-        "The target keeps 1,048,576 physical token slots. Each of eight effective "
-        "DFlash2 requests receives a page-aligned ring of 2,176 draft slots, derived "
-        "from a 2,048-token window, page alignment, and an eight-token verify block. "
-        "The eight rings total 17,408 physical draft slots. The drawing is schematic."
+        "The opt-in one-million-token profile keeps 1,048,576 physical target "
+        "token slots. Each of eight DFlash2 state slots receives a private, "
+        "page-aligned ring of 2,176 draft slots, derived from a 2,048-token "
+        "logical window, page alignment, and an eight-token verify block. The "
+        "native 256K profile instead shares the target allocator's physical "
+        "indices. The drawing is schematic."
     )
     with plt.xkcd(scale=0.6, length=100, randomness=2), style():
         fig, ax = plt.subplots(figsize=(12, 6.8), dpi=160)
         ax.set_xlim(0, 12)
         ax.set_ylim(0, 7)
         ax.axis("off")
-        ax.set_title("logical window became a physical allocation", loc="left", pad=12)
+        ax.set_title("the private ring belongs only to the opt-in 1M profile",
+                     loc="left", pad=12)
 
         box(ax, (0.45, 4.8), 11.0, 1.05, "target KV pool: exactly 1,048,576 slots", VIOLET,
             sub="shared by active input and requested output")
@@ -294,12 +297,13 @@ def draft_ring() -> None:
 
 
 def crossover() -> None:
-    title = "MTP leads through 128K and DFlash2 leads at 512K"
+    title = "Original August 19 sweep before the final graph and lifecycle fixes"
     description = (
-        "Median streaming decode on four Arc Pro B70 GPUs with a one-million-token "
-        "target pool. MTP measured 109.2, 82.3, 50.0, and 37.2 tokens per second at "
-        "32K, 128K, 256K, and 512K input. DFlash2 measured 71.4, 58.1, 49.1, and "
-        "42.2. Each long-context cell is one reported prompt after one warm-up."
+        "Original August 19 median streaming decode on four Arc Pro B70 GPUs "
+        "with a one-million-token target pool. MTP measured 109.2, 82.3, 50.0, "
+        "and 37.2 tokens per second at 32K, 128K, 256K, and 512K input. DFlash2 "
+        "measured 71.4, 58.1, 49.1, and 42.2. Each cell is one reported prompt "
+        "after one warm-up and predates the final DFlash2 graph and lifecycle fixes."
     )
     x = [32, 128, 256, 512]
     mtp = [109.2, 82.3, 50.0, 37.2]
@@ -315,7 +319,8 @@ def crossover() -> None:
         ax.set_xticks(x, ["32K", "128K", "256K", "512K"])
         ax.set_xlabel("exact input tokens")
         ax.set_ylabel("median streaming decode, tok/s")
-        ax.set_title("the useful result is the crossover", loc="left")
+        ax.set_title("August 19 campaign: MTP leads early, DFlash2 at 512K",
+                     loc="left")
         for xx, yy in zip(x, mtp):
             ax.text(xx, yy + 4.5, f"{yy:.1f}", ha="center", color=INK, fontsize=10)
         for xx, yy in zip(x, dflash):
@@ -324,7 +329,8 @@ def crossover() -> None:
         ax.annotate("within 1.8%", xy=(256, 49.55), xytext=(315, 70),
                     arrowprops={"arrowstyle": "-|>", "color": ORANGE, "lw": 1.8},
                     fontsize=10.5, fontweight="bold")
-        ax.text(0.01, 0.02, "C=1 | radix cold | 1 warm-up + 1 reported prompt per cell",
+        ax.text(0.01, 0.02,
+                "Aug 19 binary | C=1 | cold radix | 1 warm-up + 1 sample/cell",
                 transform=ax.transAxes, color=MUTED, fontsize=9.5)
         finish(fig, "long-context-crossover.svg", title, description)
 
@@ -418,8 +424,9 @@ def phase_split() -> None:
 def social_card() -> None:
     title = "MTP and DFlash2 speculative decoding at long context on Arc Pro"
     description = (
-        "Social card showing MTP leading at 32K and 128K input, the two speculative "
-        "modes meeting at 256K, and DFlash2 leading at 512K on four Arc Pro B70 GPUs."
+        "Social card for the original August 19 sweep, with MTP leading at 32K "
+        "and 128K input, the modes meeting at 256K, and DFlash2 leading at 512K "
+        "on four Arc Pro B70 GPUs."
     )
     x = [32, 128, 256, 512]
     mtp = [109.2, 82.3, 50.0, 37.2]
@@ -435,7 +442,8 @@ def social_card() -> None:
         ax.set_xticks(x, ["32K", "128K", "256K", "512K"])
         ax.set_ylabel("median decode, tok/s")
         ax.set_title("speculative decoding at 512K on Arc Pro", loc="left", fontsize=24)
-        ax.text(0.01, 0.92, "Qwen3.8-27B | four B70 GPUs | exact 1M target pool",
+        ax.text(0.01, 0.92,
+                "original Aug 19 sweep | four B70 GPUs | exact 1M target pool",
                 transform=ax.transAxes, fontsize=12, color=MUTED)
         ax.legend(frameon=False, loc="upper right", fontsize=13)
         ax.annotate("crossover", xy=(276, 49.6), xytext=(350, 70),
