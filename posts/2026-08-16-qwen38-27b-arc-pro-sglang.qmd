@@ -22,10 +22,12 @@ Along the way the same build reaches **37.8 tok/s on two B65 cards**, against
 care about most, because it is the one that changed what I can actually run at
 my desk.
 
-**Follow-up:** Speculative decoding takes the same AWQ target to **109.2 tok/s
-at 32K** and **82.3 tok/s at 128K** on four B70s with MTP, while DFlash2 leads
-at 512K. The full crossover and the commands to reproduce it are in
-[Speculative decoding at 512K on Intel Arc Pro](/posts/2026-08-19-qwen38-speculative-decoding-arc-pro.html).
+::: {.follow-up-note}
+> **Follow-up:** Speculative decoding takes the same AWQ target to **109.2 tok/s
+> at 32K** and **82.3 tok/s at 128K** on four B70s with MTP, while DFlash2 leads
+> at 512K. The full crossover and the commands to reproduce it are in
+> [Speculative decoding at 512K on Intel Arc Pro](/posts/2026-08-19-qwen38-speculative-decoding-arc-pro.html).
+:::
 
 I wanted [Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B) as the local
 backend for coding agents: good at code, useful at long context, small enough to

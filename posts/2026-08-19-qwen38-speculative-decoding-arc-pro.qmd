@@ -8,6 +8,9 @@ description: "MTP and DFlash2 on four Arc Pro B70s, with XPU graph and cache fix
 categories: [intel, arc, arc-pro, xe2, xpu, sglang, llm-inference, speculative-decoding, agentic-coding]
 image: qwen38-spec-decode/card.png
 image-alt: "The original August 19 sweep: MTP leads DFlash2 at 32K and 128K, the two meet at 256K, and DFlash2 leads at 512K."
+resources:
+  - qwen38-spec-decode/crush-290k-mtp.webm
+  - qwen38-spec-decode/crush-290k-mtp-poster.webp
 ---
 
 I was already deep into making Qwen3.8's MTP head useful on Arc Pro when
@@ -23,6 +26,24 @@ prompt. That is the part of this result I am most excited about. This was not an
 old speculative path that happened to start on XPU. DFlash2 had just been
 released, and I had the real checkpoint serving long-context requests on Arc
 Pro.
+
+<figure class="video-evidence">
+<div class="video-evidence__label" aria-hidden="true"><strong>LIVE AGENT RUN</strong><span>290K+ context · MTP · TP4</span></div>
+<video controls playsinline preload="none"
+  width="1384" height="1013"
+  poster="qwen38-spec-decode/crush-290k-mtp-poster.webp"
+  aria-label="Crush coding with Qwen3.8-27B MTP beyond 290K tokens of context"
+  aria-describedby="crush-mtp-caption">
+<source src="qwen38-spec-decode/crush-290k-mtp.webm" type="video/webm">
+<a href="qwen38-spec-decode/crush-290k-mtp.webm">Download the WebM recording.</a>
+</video>
+<figcaption id="crush-mtp-caption">
+Above 290K tokens of live context, Qwen3.8-27B MTP remains above 60 tok/s
+while Crush works through a second-pass C++ city-scene repair on four B70s.
+The server is configured for a 512K maximum context. The recording has no
+audio.
+</figcaption>
+</figure>
 
 I wanted the comparison to match how I use this model: long coding
 sessions where the repository, tool history, and working notes keep filling the
