@@ -1,0 +1,141 @@
+---
+title: "The visible narrative title"
+pagetitle: "Concise search title"
+subtitle: "One sentence that names the system, operation, hardware, and result."
+description: "A unique 70 to 160 character description naming the system, operation, environment, and useful result."
+categories: [coding]
+date: "YYYY-MM-DD"
+draft: true
+toc: true
+image: /posts/SLUG/card.png
+image-alt: "Describe the social card and the technical claim it carries."
+---
+
+<!--
+AUTHORING CONTRACT
+
+Primary archetype:
+Absorbed archetype, if any:
+Audience:
+Depth tuple: (opening rung, body residency, closing rung, traversal)
+Measured claim:
+Evidence available:
+
+Delete sections that do not belong to the chosen archetype. Do not force a
+performance investigation into a launch shape, or a migration into a tutorial.
+-->
+
+Open in first person with the concrete reason I started the work. Put the
+system, model, hardware, or failure in the first paragraph. Land the measured
+result, mystery, or stakes before the first part heading.
+
+## Running it
+
+State the prerequisites before the command.
+
+```bash
+the smallest command that reproduces the useful operation
+```
+
+Explain what the reader should observe, which image or version is pinned, and
+which parts of the environment materially affect the result.
+
+## Part I: Start with the real operation
+
+### The smallest artifact
+
+Show one actual tensor operation, request, trace, command, error, kernel call,
+or configuration block.
+
+```text
+real input -> real operation -> real output
+```
+
+Explain every visible dimension, field, argument, and unit in ordinary
+language. Do not begin with the general theory.
+
+### A tiny version I can hold in my head
+
+Shrink the operation without changing the relationship being explained.
+State exactly what the toy version removes.
+
+```text
+toy input -> same mechanism -> toy output
+```
+
+Map each toy object back to the real system before adding the next abstraction.
+
+## Part II: Follow the data into the system
+
+### What physically happens next
+
+Name the component that owns the data now, the representation it receives, and
+the representation it produces. Separate the logical view from the packed,
+sharded, fused, cached, or lowered physical view.
+
+<!--
+Place an architecture or data-flow figure only when it carries information the
+prose cannot carry as cleanly. Precede it with the claim. Follow it with the
+reading. The caption states the finding.
+-->
+
+### The implementation boundary
+
+Show the smallest source slice that proves the mechanism. Deep-dive snippets
+should disclose the load-bearing code, mark every elision, and avoid dumping a
+whole file.
+
+```text
+minimal source slice
+```
+
+Say what was removed and what this code proves.
+
+## Part III: The investigation
+
+### The baseline and measurement contract
+
+| Item | Value |
+|---|---|
+| hardware | |
+| software and image | |
+| workload | |
+| statistic | p50, p90, p99, mean, minimum, or another named statistic |
+| samples | |
+| warm-up | |
+| measurement window | |
+| correctness check | |
+
+### What I expected
+
+Write the actual hypothesis I had at the time and the evidence that made it
+reasonable.
+
+### What failed
+
+Keep failed paths when they changed the model of the system. State the
+measurement or trace that ruled each one out.
+
+### The change that held
+
+Describe one change, re-measure it, and read the evidence before moving to the
+next bottleneck. Repeat this section shape when the investigation had several
+independent fixes.
+
+## Part IV: Results and limits
+
+### What moved
+
+Present the comparison with the same axes, units, environment, and statistic.
+Performance work needs the distribution and sample count, not only an average.
+
+### What did not move
+
+Name the remaining bottleneck, negative result, unsupported mode, or scope
+boundary. Separate what was measured from what is inferred.
+
+## What I want to try next
+
+Return to the concrete question from the opening. Name the next experiment,
+implementation step, or measurement I would run. Do not end with a generic
+summary.

@@ -39,6 +39,7 @@ format:
     canonical-url: true
     include-in-header: seo/site-schema.html
     filters:
+      - filters/table-wrap.lua
       - filters/blogposting.lua
     theme:
       # listing dark first makes it the default on load; readers can still

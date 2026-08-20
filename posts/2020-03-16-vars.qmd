@@ -1,126 +1,142 @@
 ---
-toc: true
+toc: false
 title: "Flashcard Rust: Variables"
-description: "A compact Rust guide to immutable bindings, mutable variables, constants, and shadowing, with small programs and compiler output."
-pagetitle: "Rust Variables and Shadowing"
+pagetitle: "Rust Variables, mut, and Shadowing"
+description: "A compact Rust flashcard about immutable bindings, mutable variables, and shadowing, with small programs and compiler output."
 categories: [coding, rust]
 author: unrahul
 date: "2020-03-16"
+image: /assets/flashcards/rust-flashcards-card.png
+image-alt: "A bright mustard Flashcard Rust card stacked over cyan and pink cards."
 ---
-In this post, let's look at how variables are considered in Rust.
+
+::: {.flashcard-page}
+
+The first thing that surprised me about Rust variables was that a plain `let`
+does not give me something I can freely reassign. Rust makes the safer choice
+the short choice.
+
+::: {.flashcard-stage}
+::: {.flashcard-card}
+<div class="flashcard-meta">
+  <span class="flashcard-number">Flashcard 03</span>
+  <span class="flashcard-topic">Rust</span>
+</div>
+
+<div class="flashcard-eyebrow">The question</div>
+
+::: {#flashcard-question .flashcard-question role="heading" aria-level="2"}
+Why can’t I assign a new value to this variable?
+:::
+
+<p class="flashcard-hint">Look at the binding. A plain <code>let</code> carries an important default.</p>
+
+<details class="flashcard-reveal">
+  <summary>Reveal the answer</summary>
+<div class="flashcard-answer"><p>Rust bindings are immutable by default. Add <code>mut</code> when the value must change, or use a new <code>let</code> when shadowing is what you mean.</p></div>
+</details>
+:::
+:::
 
 ## Immutable by default
 
-By default all variables in Rust are `immutable`, what that means is, once we assign a value to a variable, we cannot reassign another value. The keyword `let` is used to create variables and bind values to them in Rust.
+The keyword `let` creates a binding:
 
 ```rust
 fn main() {
-  let name = "unrahul";
-  println!("name is {}", name);
-```
-Output of the above program is:
-
-```python
-name is unrahul
-```
-
-There you go, what we have done is; we have created a string literal `name` in Rust of type `&str`. Now, if we try to reassign the same variable `name` in the same scope as `main`: 
-
-```rust
-fn main() {
-    let name = "unrahul";    // created a variable `name` and assigned a value to it
+    let name = "unrahul";
     println!("name is {}", name);
-    name = "rahul";    // trying to assign a new value to the variable `name`  
-    println!("new name is {}", name);
 }
 ```
 
-The compiler will throw an error:
-
-```python
-error[E0384]: cannot assign twice to immutable variable `name`
- --> src/main.rs:4:5
-  |
-2 |     let name = "unrahul";
-  |         ----
-  |         |
-  |         first assignment to `name`
-  |         help: make this binding mutable: `mut name`
-3 |     println!("name is {}", name);
-4 |     name = "rahul";
-  |     ^^^^^^^^^^^^^^ cannot assign twice to immutable variable
-
-error: aborting due to previous error
-For more information about this error, try `rustc --explain E0384`.
-error: could not compile `playground`.
+```text
+name is unrahul
 ```
 
-{% include info.html text="try rustc --explain E0384 to see what the error is all about" %}
-
-This is freakin' cool, now that variables cannot be reassigned, in a program, we do not have to worry if the types are going to change
-or if the state of a variable will change unintentionally.
-
-## Can a variable ever be a mutable?
-
-In some situtations, we want variables to be reassigned like in a loop, or ehmm if we want to change our name to a new one.., for those situations, in Rust we can do:
+If I try to assign another value to `name`, the compiler stops me:
 
 ```rust
 fn main() {
-    let mut name = "unrahul";    // just change the varible to a `mutable` variable
+    let name = "unrahul";
     println!("name is {}", name);
     name = "rahul";
     println!("new name is {}", name);
 }
 ```
 
-An the output is:
-
-```python
-name is unrahul
-new name is rahul
+```text
+error[E0384]: cannot assign twice to immutable variable `name`
+  |
+2 |     let name = "unrahul";
+  |         ---- first assignment to `name`
+3 |     name = "rahul";
+  |     ^^^^^^^^^^^^^^ cannot assign twice to immutable variable
 ```
 
-## Shadowing
+::: {.flashcard-block .flashcard-block--compiler}
+<p class="flashcard-block-label">A useful compiler follow-up</p>
 
-Shadowing in simple terms mean, a variable already declared can be redeclared with in a inner block with the same name. 
+Running `rustc --explain E0384` gives a longer explanation of this exact error.
+The compiler error codes are worth following.
+:::
 
-For example, we can do this in Rust:
+## Make the binding mutable
+
+When reassignment is actually part of the program, I can say so explicitly:
 
 ```rust
 fn main() {
-    let name = "unrahul";
+    let mut name = "unrahul";
     println!("name is {}", name);
-    {
-    	let name = "rahul";    // here the variable is in inner scope (see the braces?), and this is shadowing the external declartion of `name`
-    	println!("new name is {}", name);
-    }
-}
-```
-
-Compiling and running this, we get:
-
-```python
-name is unrahul
-new name is rahul
-```
-Okay, I lied a bit, **shadows** need not be in inner or seperate block, this below is perfectly valid:
-
-```rust
-fn main() {
-    let name = "unrahul";
-    println!("name is {}", name);
-    let name = "rahul";    // This is also considered as shadowing
+    name = "rahul";
     println!("new name is {}", name);
 }
 ```
 
-And the output of this is:
-
-```python
+```text
 name is unrahul
 new name is rahul
 ```
 
-## The end
+The only change is `let mut name`. Anyone reading the code can now see that the
+binding may change.
 
-Now that we have seen `immutable` and `mutable` variables, and also `shadowing`, may be primitive types next?..
+## Shadow the old binding
+
+Shadowing creates a new binding with the same name:
+
+```rust
+fn main() {
+    let name = "unrahul";
+    println!("name is {}", name);
+
+    let name = "rahul";
+    println!("new name is {}", name);
+}
+```
+
+```text
+name is unrahul
+new name is rahul
+```
+
+That second `let` is not mutating the first binding. It creates a new one and
+shadows the old `name`. The new binding may even have a different type, which
+is one reason shadowing is not the same thing as `mut`.
+
+::: {.flashcard-block .flashcard-block--remember}
+<p class="flashcard-block-label">What I keep in my head</p>
+
+Use `mut` when one binding changes value. Use another `let` when I want a new
+binding that happens to reuse the same name.
+:::
+
+## Related flashcards
+
+::: {.flashcard-related}
+[Build and run with Cargo](2020-03-09-cargo.qmd)
+
+[Handle success and failure with `Result`](2021-01-14-rust-result.qmd)
+:::
+
+:::

@@ -2,65 +2,95 @@
 toc: false
 title: "Flashcard Rust: What type is this variable again?!"
 pagetitle: "Print a Rust Value's Type"
-description: "A tiny Rust helper built with std::any::type_name that prints the concrete type of a value when inference makes it hard to see."
+description: "A tiny Rust flashcard using std::any::type_name to print the concrete type of a value when inference makes it hard to see."
 categories: [coding, rust]
 date: "2021-03-22"
 author: unrahul
+image: /assets/flashcards/rust-flashcards-card.png
+image-alt: "A bright mustard Flashcard Rust card stacked over cyan and pink cards."
 ---
-This is going to be a very short post on a tiny function that can help
-us in figuring out what is the type of a variable.
 
-This is helpful to me personally when learning rust and after some hours of coding,
-I want to know what is the type of a variable quickly, which is not easy always.I need to thank [@timClicks](https://twitter.com/timClicks)
-for showing this in one of his streams on youtube. If you are learning Rust 
-and is looking for a book, let me please recommend [Rust in Action](https://www.manning.com/books/rust-in-action) by Tim, 
-it is an excellent in-depth introduction to Rust.
+::: {.flashcard-page}
 
-## What is it ?
+This is a very short card about a tiny function I still find useful. After a
+few hours of coding, I sometimes want Rust to tell me the concrete type of a
+value without making me hover through an IDE or deliberately provoke the
+compiler.
+
+::: {.flashcard-stage}
+::: {.flashcard-card}
+<div class="flashcard-meta">
+  <span class="flashcard-number">Flashcard 06</span>
+  <span class="flashcard-topic">Rust</span>
+</div>
+
+<div class="flashcard-eyebrow">The question</div>
+
+::: {#flashcard-question .flashcard-question role="heading" aria-level="2"}
+How can I print the concrete type of a Rust value?
+:::
+
+<p class="flashcard-hint">The standard library already knows the type name. A generic helper can expose it.</p>
+
+<details class="flashcard-reveal">
+  <summary>Reveal the answer</summary>
+<div class="flashcard-answer"><p>Pass a reference into a generic function and print <code>std::any::type_name::&lt;T&gt;()</code>.</p></div>
+</details>
+:::
+:::
+
+## The helper
 
 ```rust
 use std::any::type_name;
 
-// what is the type of the passed argument
 fn what_type<T>(_: &T) {
     println!("type is: {}", type_name::<T>());
-
 }
-
 ```
-`type_name` function from the `std` crate returns the name of a type as a string slice.
 
-Before knowing about this function available from the std crate(reminder to self, to read
-the standard library docs!), i tended to use the ide introspection features to 
-confirm what the type of a variable was at times or use a `()` as type and the 
-compiler complains to me that the type is something else, which is what i wanted to known 
-in the first place, but know I have a shiny new function that I can use, lets see how it works.
+The argument gives Rust a concrete `T`. The function does not need the value
+itself, so the parameter is named `_`. `type_name::<T>()` returns the name of
+that type as a string slice.
 
-## How is it used ?
-
-Let's take a simple example,
+## Use it with a few values
 
 ```rust
 fn main() {
     let number = 3232;
     let name = "Rahul".to_string();
-    let list_of_nums = vec![1, 2, ];
+    let list_of_nums = vec![1, 2];
+
     what_type(&number);
     what_type(&name);
     what_type(&list_of_nums);
 }
 ```
-That is it, and it will print the type of the variable passed into the what_type
-function as below:
 
-```python
+```text
 type is: i32
 type is: alloc::string::String
 type is: alloc::vec::Vec<i32>
 ```
-## References
-[type_name](https://doc.rust-lang.org/std/any/fn.type_name.html)
 
-## End
+Before I knew this helper, I sometimes used IDE introspection or deliberately
+assigned a value to `()` so the compiler would complain and reveal the real
+type. This is a little less silly.
 
-Like I said a short post about a really useful(hopefully) function in Rust.
+::: {.flashcard-block .flashcard-block--remember}
+<p class="flashcard-block-label">What I keep in my head</p>
+
+`type_name::<T>()` is useful for debugging and learning. The exact string is
+intended for diagnostics, so I would not build program logic around its
+format.
+:::
+
+## Related flashcards
+
+::: {.flashcard-related}
+[Give a generic function a concrete type](2021-01-17-rust-turbofish.qmd)
+
+[Handle success and failure with `Result`](2021-01-14-rust-result.qmd)
+:::
+
+:::

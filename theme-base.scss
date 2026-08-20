@@ -168,6 +168,96 @@ blockquote {
   color: var(--bs-secondary-color);
 }
 
+// Evidence tables use the same lab-notebook roles as figures: cyan marks the
+// technical object, yellow separates the schema, and mint marks a caption.
+.table-scroll {
+  max-width: 100%;
+  margin: 1.5rem 0 2rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: #00bcd4 var(--blog-table-head-bg);
+}
+
+#quarto-document-content table:not(.gt_table) {
+  --bs-table-bg: transparent;
+  --bs-table-striped-bg: var(--blog-table-stripe-bg);
+  --bs-table-hover-bg: var(--blog-table-hover-bg);
+  width: 100%;
+  margin: 0;
+  color: var(--bs-body-color);
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums lining-nums;
+  background: var(--blog-table-bg);
+  border: 1px solid var(--bs-border-color);
+  border-top: 5px solid #00bcd4;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+#quarto-document-content table:not(.gt_table) caption {
+  caption-side: top;
+  padding: 0.72rem 0.85rem 0.72rem 1rem;
+  color: var(--bs-body-color);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  background: var(--blog-table-head-bg);
+  border: 1px solid var(--bs-border-color);
+  border-bottom: 0;
+  border-left: 7px solid #06d6a0;
+}
+
+#quarto-document-content table:not(.gt_table) > thead > tr > th {
+  padding: 0.72rem 0.78rem;
+  color: var(--bs-body-color);
+  font-family: $font-family-monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.025em;
+  vertical-align: bottom;
+  background: var(--blog-table-head-bg);
+  border: 0;
+  border-bottom: 3px solid #ffc107;
+}
+
+#quarto-document-content table:not(.gt_table) > tbody > tr > :is(td, th) {
+  padding: 0.65rem 0.78rem;
+  color: var(--bs-body-color);
+  line-height: 1.45;
+  vertical-align: top;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+#quarto-document-content table:not(.gt_table) > tbody > tr:nth-child(even) > :is(td, th) {
+  background: var(--blog-table-stripe-bg);
+}
+
+#quarto-document-content table:not(.gt_table) > tbody > tr:hover > :is(td, th) {
+  background: var(--blog-table-hover-bg);
+}
+
+#quarto-document-content table:not(.gt_table) > tbody > tr:last-child > :is(td, th) {
+  border-bottom: 0;
+}
+
+#quarto-document-content table:not(.gt_table) > tbody > tr > th {
+  font-weight: 600;
+}
+
+#quarto-document-content table:not(.gt_table) :is(th, td)[style*="text-align: right"] {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+@media (max-width: 767.98px) {
+  #quarto-document-content .table-scroll table:not(.gt_table) {
+    width: 100%;
+    min-width: 36rem;
+  }
+}
+
 // listing on the home page
 .quarto-listing {
   margin-top: 1.5rem;
@@ -384,4 +474,321 @@ div.quarto-about-trestles .about-entity .about-link {
   height: 1.15em;
   margin-right: 0.4em;
   background: url("/assets/theme/hugging-face.svg") center / contain no-repeat;
+}
+
+// Reusable flashcard pages. The mustard question card is deliberately bright
+// in both site modes, like a physical card laid on top of the lab notebook.
+.flashcard-page {
+  --flashcard-paper: #fffdf7;
+  --flashcard-ink: #243447;
+  --flashcard-mustard: #ffc107;
+  --flashcard-cyan: #00bcd4;
+  --flashcard-mint: #06d6a0;
+  --flashcard-pink: #e91e63;
+  --flashcard-orange: #ff5722;
+  --flashcard-violet: #8e6cff;
+  --flashcard-border: #243447;
+}
+
+.flashcard-page > .flashcard-intro {
+  max-width: 40rem;
+  font-size: 1.06rem;
+}
+
+.flashcard-stage {
+  position: relative;
+  isolation: isolate;
+  margin: 2.4rem 0 3.5rem;
+  padding: 0 1rem 1rem 0;
+}
+
+.flashcard-stage::before,
+.flashcard-stage::after {
+  position: absolute;
+  content: "";
+  border: 2px solid var(--flashcard-border);
+  pointer-events: none;
+}
+
+.flashcard-stage::before {
+  z-index: 0;
+  inset: 1rem 0 0 1rem;
+  background: var(--flashcard-pink);
+  transform: rotate(0.65deg);
+}
+
+.flashcard-stage::after {
+  z-index: 1;
+  inset: 0.48rem 0.48rem 0.48rem 0.48rem;
+  background: var(--flashcard-cyan);
+  transform: rotate(-0.45deg);
+}
+
+.flashcard-card {
+  position: relative;
+  z-index: 2;
+  padding: clamp(1.25rem, 4vw, 2.4rem);
+  color: var(--flashcard-ink);
+  background: var(--flashcard-mustard);
+  border: 2px solid var(--flashcard-border);
+  box-shadow: 5px 5px 0 var(--flashcard-border);
+}
+
+.flashcard-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.85rem;
+  margin-bottom: clamp(1.35rem, 3vw, 2.2rem);
+  font-family: $font-family-monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 2px dashed var(--flashcard-ink);
+}
+
+.flashcard-meta > p {
+  display: contents;
+}
+
+.flashcard-number,
+.flashcard-topic {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.85rem;
+  padding: 0.2rem 0.48rem;
+  border: 2px solid var(--flashcard-ink);
+}
+
+.flashcard-number {
+  background: var(--flashcard-paper);
+}
+
+.flashcard-topic {
+  color: var(--flashcard-ink);
+  background: var(--flashcard-paper);
+  box-shadow: inset 0 -0.38rem 0 var(--flashcard-violet);
+}
+
+.flashcard-eyebrow {
+  margin-bottom: 0.45rem;
+  font-family: $font-family-monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.flashcard-question {
+  max-width: 38rem;
+  margin: 0 0 0.9rem;
+  font-family: $headings-font-family;
+  font-size: clamp(2rem, 7vw, 3.45rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.flashcard-question p {
+  margin: 0;
+}
+
+.flashcard-hint {
+  max-width: 34rem;
+  margin: 0 0 1.6rem;
+  font-size: 0.95rem;
+}
+
+.flashcard-card code:not(pre code),
+.flashcard-answer code:not(pre code) {
+  display: inline-block;
+  color: var(--flashcard-ink);
+  line-height: 1.05;
+  white-space: nowrap;
+  background: var(--flashcard-paper);
+  border-color: var(--flashcard-ink);
+}
+
+.flashcard-reveal {
+  max-width: 38rem;
+  margin-top: 1.4rem;
+}
+
+.flashcard-reveal summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.72rem 0.9rem;
+  color: var(--flashcard-ink);
+  font-family: $font-family-monospace;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  list-style: none;
+  cursor: pointer;
+  background: var(--flashcard-mint);
+  border: 2px solid var(--flashcard-ink);
+  box-shadow: 3px 3px 0 var(--flashcard-ink);
+}
+
+.flashcard-reveal summary::-webkit-details-marker {
+  display: none;
+}
+
+.flashcard-reveal summary::after {
+  content: "+";
+  font-family: $font-family-monospace;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.flashcard-reveal[open] summary {
+  color: var(--flashcard-paper);
+  background: var(--flashcard-ink);
+  box-shadow: none;
+}
+
+.flashcard-reveal[open] summary::after {
+  content: "×";
+}
+
+.flashcard-answer {
+  padding: 1rem;
+  color: var(--flashcard-ink);
+  background: var(--flashcard-mint);
+  border: 2px solid var(--flashcard-ink);
+  border-top: 0;
+}
+
+.flashcard-answer p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.flashcard-block {
+  position: relative;
+  padding: 1rem 1.1rem 1rem 1.25rem;
+  margin: 1.6rem 0;
+  background: var(--bs-code-bg-inline);
+  border: 1px solid var(--bs-border-color);
+  border-left: 8px solid var(--flashcard-cyan);
+}
+
+.flashcard-block--compiler {
+  border-left-color: var(--flashcard-orange);
+}
+
+.flashcard-block--remember {
+  border-left-color: var(--flashcard-mustard);
+}
+
+.flashcard-block--gotcha {
+  border-left-color: var(--flashcard-pink);
+}
+
+.flashcard-block-label {
+  margin: 0 0 0.4rem;
+  font-family: $font-family-monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.flashcard-block > :last-child {
+  margin-bottom: 0;
+}
+
+.flashcard-related {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+#quarto-document-content .flashcard-related a {
+  display: block;
+  padding: 0.85rem 1rem;
+  color: var(--bs-body-color);
+  font-family: $font-family-monospace;
+  font-size: 0.82rem;
+  text-decoration: none;
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-left: 7px solid var(--flashcard-violet);
+}
+
+#quarto-document-content .flashcard-related a:hover {
+  color: var(--bs-link-hover-color);
+  border-color: currentColor;
+  border-left-color: var(--flashcard-violet);
+}
+
+@media (max-width: 575.98px) {
+  .flashcard-stage {
+    margin: 1.8rem 0 2.8rem;
+    padding: 0 0.55rem 0.55rem 0;
+  }
+
+  .flashcard-stage::before {
+    inset: 0.55rem 0 0 0.55rem;
+  }
+
+  .flashcard-stage::after {
+    inset: 0.28rem 0.28rem 0.28rem 0.28rem;
+  }
+
+  .flashcard-card {
+    padding: 1.15rem;
+    box-shadow: 3px 3px 0 var(--flashcard-border);
+  }
+
+  .flashcard-meta {
+    align-items: flex-start;
+    margin-bottom: 1.3rem;
+  }
+
+  .flashcard-number,
+  .flashcard-topic {
+    min-height: 1.65rem;
+    font-size: 0.65rem;
+  }
+
+  .flashcard-question {
+    font-size: clamp(1.85rem, 10vw, 2.65rem);
+  }
+
+  .flashcard-related {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .flashcard-stage {
+    padding: 0;
+  }
+
+  .flashcard-stage::before,
+  .flashcard-stage::after {
+    display: none;
+  }
+
+  .flashcard-card {
+    box-shadow: none;
+  }
+
+  .flashcard-reveal > * {
+    display: block !important;
+  }
+
+  .flashcard-reveal summary {
+    display: none !important;
+  }
 }

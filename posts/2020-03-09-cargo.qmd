@@ -1,154 +1,136 @@
 ---
-toc: true
+toc: false
 title: "Flashcard Rust: Cargo"
-description: "A practical Rust Cargo walkthrough covering project creation, dependency management, builds, runs, and optimized release binaries."
 pagetitle: "Rust Cargo: Build, Run, and Release"
+description: "A practical Rust Cargo flashcard covering project creation, dependencies, builds, checks, runs, and optimized release binaries."
 categories: [coding, rust]
 author: unrahul
 date: "2020-03-09"
+image: /assets/flashcards/rust-flashcards-card.png
+image-alt: "A bright mustard Flashcard Rust card stacked over cyan and pink cards."
 ---
-Cargo is the one ring to rule them all, the one build tool that:
 
-- builds our rust project
-- downloads dependencies
-- build dependencies
-- help release optimized code
+::: {.flashcard-page}
 
-Let's see how cargo helps us in packaging and releasing our code, get it? cargo.. packaging... ah ohkay, not the right time for terrible jokes I guess..
+Cargo is the one ring to rule them all. It creates the project, downloads the
+dependencies, builds the code, and gives the finished binary somewhere sensible
+to live. Cargo, packaging, you get it. Terrible joke, useful tool.
 
-## Using cargo to create Rust projects
+::: {.flashcard-stage}
+::: {.flashcard-card}
+<div class="flashcard-meta">
+  <span class="flashcard-number">Flashcard 02</span>
+  <span class="flashcard-topic">Rust</span>
+</div>
 
-Cargo should be installed as part of rust installation, to ensure cargo is installed run
+<div class="flashcard-eyebrow">The question</div>
 
-```python
-> cargo --version
-cargo 1.41.0
+::: {#flashcard-question .flashcard-question role="heading" aria-level="2"}
+What does Cargo do for a Rust project?
+:::
+
+<p class="flashcard-hint">Think beyond compilation. Cargo owns the ordinary project loop.</p>
+
+<details class="flashcard-reveal">
+  <summary>Reveal the answer</summary>
+<div class="flashcard-answer"><p>Cargo creates projects, manages dependencies, checks and builds the code, runs it, and produces optimized release binaries.</p></div>
+</details>
+:::
+:::
+
+## Create a project
+
+Cargo is installed with Rust. I can confirm it is available with:
+
+```bash
+cargo --version
 ```
 
-you should be able to see something like above... to create a wireframe for a new project `hworld` run:
+Then I can create a binary project named `hworld`:
 
-```python
-> cargo new hworld
+```bash
+cargo new hworld
+cd hworld
 ```
 
-This creates a directory `hworld`, with few files and one directory:
+Cargo gives me the small project skeleton I need:
 
-```python
->
-|-- Cargo.toml
-|-- src
-    |-- main.rs
+```text
+hworld
+├── Cargo.toml
+└── src
+    └── main.rs
 ```
 
-Cargo goes one step ahead and adds versioning to the project, `git` is used by default, so if you do a `ls -la` you can see few more files, but for now let's ignore that and focus on the main files.
+`src/main.rs` contains the code. `Cargo.toml` is the manifest, where the
+project name, version, Rust edition, and dependencies live.
 
-- Cargo.toml - This is called the **manifest** file of our Rust project and is the file where we configure stuff like `name`, `version` of the project, Rust `edition`, the, `author's`, email address, and also there is a section to include the `dependencies` required by the project. 
-
-A sample `Cargo.toml` looks like:
-
-```yaml
+```toml
 [package]
 name = "hworld"
 version = "0.1.0"
-authors = ["rahulunair <rahulunair@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-time = "0.1.12"
 ```
 
-There are a lot more options that can be included in the manifest file, for an extensive list, [see](https://doc.rust-lang.org/cargo/reference/manifest.html). Here I have specified one dependency `time` with version 0.1.12, we wont use it for anything now, but just for kicks eh?
+## Build and run it
 
-- ./src/main.rs - It is a placeholder to add our code, `cargo` has populated it with:
-
-```rust
-fn main() {
-    println!("Hello, world!");
-}
+```bash
+cargo build
 ```
 
-## Building the project with Cargo
+The debug binary lands in `target/debug/hworld`. I can run that file directly,
+but the command I use most often is:
 
-It's just as simple as running the below command from inside `hworld` directory:
-
-```python
-> cargo build
-```
-If you are running it for the first time, you would see something like:
-
-```python
-Updating crates.io index
-  Downloaded time v0.1.42
-  Downloaded libc v0.2.67
-   Compiling libc v0.2.67
-   Compiling time v0.1.42
-   Compiling hworld v0.1.0 (hworld)
-    Finished dev [unoptimized + debuginfo] target(s) in 49.31s
+```bash
+cargo run
 ```
 
-That's it, we have built our first program using `cargo`.
+That builds the project when needed and immediately runs it:
 
-## Running the program
-
-After `cargo` has built the project successfully, it creates a directory `./target/debug/` to save the binary, 
-we can just cd to `./target/debug` and run:
-
-```python
-> ./hworld
+```text
+Compiling hworld v0.1.0
+Finished `dev` profile [unoptimized + debuginfo]
+Running `target/debug/hworld`
 Hello, world!
 ```
 
-Yay! we have run our first Rust program, that was created using Cargo.
+## Check without producing the binary
 
-## Releasing our code
+When I mainly want the compiler to tell me whether the project is valid,
+`cargo check` is usually faster than a full build:
 
-Release version ideally should be an optimized binary, to obtain such a binary, it is as simple as running:
-
-```python
-> cargo build --release
-```
-Running the above command on my system from `hworld` directory, Cargo prints:
-
-```python
-   Compiling libc v0.2.67
-   Compiling time v0.1.42
-   Compiling hworld v0.1.0 (hworld)
-    Finished release [optimized] target(s) in 8.42s
+```bash
+cargo check
 ```
 
-And, lo and behold there is an optimized binary `hworld` in `hworld/target/release/`, in later posts, we can
-see the difference between debug and release versions of binaries generated by Cargo.
+It type-checks and validates the project without doing all the work required to
+write the final executable.
 
-The eligance of Cargo is that, everything is named as we would expect, no gotcha's .. I really like that about Cargo.
+## Build an optimized release
 
-## The end
-
-As a closing note, let's recap Cargo mainly does two things for us,
-
-- builds our project using - cargo build or cargo build --release
-- builds and runs our project using - cargo run
-
-Now, there is a third and final command I use, to check for compilation issues fast, without really building the binary, which can be slow at times.
-
-The command to check if everything is alright is:
-
-```python
-> cargo check
+```bash
+cargo build --release
 ```
 
-On my system it gives me this:
+The optimized binary lands in `target/release/hworld`. I like that Cargo names
+everything roughly where I expect it to be. There are fewer little gotchas to
+remember.
 
-```python
-    Checking libc v0.2.67
-    Checking time v0.1.42
-    Checking hworld v0.1.0 (hworld)
-    Finished dev [unoptimized + debuginfo] target(s) in 3.61s
-```
+::: {.flashcard-block .flashcard-block--remember}
+<p class="flashcard-block-label">What I keep in my head</p>
 
-That's it, so we saw what `cargo` can do, it is a tool that can be used when we are building a Rust project, but if it is a simple file, with no dependencies we can still use `rustc` as we saw earlier in [Flashcard Rust](https://rahul.onl/coding/rust/all/2020/03/07/ahoy-rust.html#ahoy).
+Use `cargo check` while editing, `cargo run` to build and execute, and
+`cargo build --release` when I want the optimized binary.
+:::
 
-<p align="center">
-<a href="https://imgur.com/EboHRWB.png">
-  <img src="https://imgur.com/EboHRWB.png" alt="Rusting cargo shipwreck at sea" />
-</a>
-</p>
+## Related flashcards
+
+::: {.flashcard-related}
+[Compile one file with `rustc`](2020-03-07-ahoy-rust.qmd)
+
+[Why variables are immutable](2020-03-16-vars.qmd)
+:::
+
+:::

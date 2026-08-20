@@ -1,0 +1,74 @@
+---
+title: "Flashcard TOPIC: The question in plain language"
+pagetitle: "Short search title"
+description: "A compact description of the question, the concrete example, and what the reader can remember."
+categories: [coding, topic]
+date: "YYYY-MM-DD"
+draft: true
+toc: false
+image: /assets/flashcards/TOPIC-flashcards-card.png
+image-alt: "Describe the bright flashcard stack and name the topic."
+---
+
+::: {.flashcard-page}
+
+Write one short, personal paragraph about where you ran into this concept and
+why you wanted to write it down.
+
+::: {.flashcard-stage}
+::: {.flashcard-card}
+<div class="flashcard-meta">
+  <span class="flashcard-number">Flashcard 01</span>
+  <span class="flashcard-topic">Topic</span>
+</div>
+
+<div class="flashcard-eyebrow">The question</div>
+
+::: {#flashcard-question .flashcard-question role="heading" aria-level="2"}
+What do I want to remember?
+:::
+
+<p class="flashcard-hint">A small hint can go here. Keep it useful rather than clever.</p>
+
+<details class="flashcard-reveal">
+  <summary>Reveal the answer</summary>
+<div class="flashcard-answer"><p>Write the shortest correct answer here. Inline <code>code</code> works too.</p></div>
+</details>
+:::
+:::
+
+## Where I hit it
+
+Start with the smallest runnable example.
+
+```text
+command or code
+```
+
+::: {.flashcard-block .flashcard-block--compiler}
+<p class="flashcard-block-label">What happened</p>
+
+Explain the output or failure in ordinary language.
+:::
+
+## The working version
+
+```text
+corrected command or code
+```
+
+::: {.flashcard-block .flashcard-block--remember}
+<p class="flashcard-block-label">What I keep in my head</p>
+
+End with one compact rule that is useful the next time this appears.
+:::
+
+## Related flashcards
+
+::: {.flashcard-related}
+[Previous concept](#)
+
+[Next concept](#)
+:::
+
+:::

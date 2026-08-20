@@ -2,31 +2,45 @@
 toc: false
 title: "Flashcard Rust: Colon colon angle bracket or turbofish!"
 pagetitle: "Rust Turbofish Syntax"
-description: "A Rust flashcard explaining the ::<T> turbofish syntax, why type inference sometimes needs help, and how to use it with functions, methods, and enums."
+description: "A Rust flashcard explaining turbofish syntax, why type inference sometimes needs help, and two ways to provide a concrete type."
 categories: [coding, rust]
 author: unrahul
 date: "2021-01-17"
+image: /assets/flashcards/rust-flashcards-card.png
+image-alt: "A bright mustard Flashcard Rust card stacked over cyan and pink cards."
 ---
-This confused me a lot when i started learning rust
-and the heading `colon colon angle braket` is what I searched
-for first when I saw this syntax, but the official name of this
-syntax within the Rust community is **turbofish**.
 
+::: {.flashcard-page}
 
-## What is it ?
+This confused me a lot when I started learning Rust. “Colon colon angle
+bracket” is what I searched for first because I had no idea the syntax had a
+name. It does: **turbofish**.
 
-It is to specify a concrete type, for a function, a struct, a method or an enum.
-The syntax of **turbofish** looks like:
+::: {.flashcard-stage}
+::: {.flashcard-card}
+<div class="flashcard-meta">
+  <span class="flashcard-number">Flashcard 05</span>
+  <span class="flashcard-topic">Rust</span>
+</div>
 
-```rust
-::<T>
-```
-It looks kinda like a fish I guess, the name **turbofish**, check [steve klabnik's](https://twitter.com/steveklabnik/status/659034597062262784)
-official explanation [here](https://github.com/steveklabnik/rust/commit/4f22b4d1dbaa14da92be77434d9c94035f24ca5d#commitcomment-14014176) for more details.
+<div class="flashcard-eyebrow">The question</div>
 
-## How is it used ?
+::: {#flashcard-question .flashcard-question role="heading" aria-level="2"}
+What does `::<T>` tell the Rust compiler?
+:::
 
-Let's take a simple example, to parse a string into float,
+<p class="flashcard-hint">Think about what <code>parse</code> knows before the result has a concrete type.</p>
+
+<details class="flashcard-reveal">
+  <summary>Reveal the answer</summary>
+<div class="flashcard-answer"><p>It supplies a concrete generic type when Rust cannot infer one from the surrounding code.</p></div>
+</details>
+:::
+:::
+
+## Where I hit it
+
+I had a string containing pi and wanted to parse it into a number:
 
 ```rust
 fn main() {
@@ -35,22 +49,29 @@ fn main() {
     println!("{}", pi_float);
 }
 ```
-This program will not compile as `parse` function is too generic, and
-the rust compiler being helpful as always tell us to give a time annotation
-to the variable `pi_float`:
 
-```python
- Compiling turbofish v0.1.0 (/Users/unrahul/Coding/rust/learn/turbofish)
-error[E0282]: type annotations needed
+It looks reasonable, but `parse` can produce many different types. At this
+point Rust has no way to know whether I want an `f32`, an `f64`, or something
+else.
+
+```text
+error[E0284]: type annotations needed
  --> src/main.rs:3:9
   |
 3 |     let pi_float = pi_string.parse().unwrap();
   |         ^^^^^^^^ consider giving `pi_float` a type
-
 ```
 
-This can be solved in two ways, either we use a `turbofish` notation for `parse`
-function or use type annotation, let's see how we can use `turbofish` to solve this.
+::: {.flashcard-block .flashcard-block--compiler}
+<p class="flashcard-block-label">What the compiler is asking for</p>
+
+The call to `parse` is generic. I need to provide the missing concrete type
+either on the function call or on the variable receiving the result.
+:::
+
+## Fix it with the turbofish
+
+The `::<f32>` after `parse` gives the compiler the type directly:
 
 ```rust
 fn main() {
@@ -59,40 +80,39 @@ fn main() {
     println!("{}", pi_float);
 }
 ```
-We tell the compile, which **concrete** type is being parsed using `parse`, and the
-code compiles:
 
-```python
-Compiling turbofish v0.1.0 (/Users/unrahul/Coding/rust/learn/turbofish)
-Finished dev [unoptimized + debuginfo] target(s) in 0.21s
-Running `target/debug/turbofish`
+```text
 3.1415
 ```
-Lastly, let's try the compiler suggested fix, that is to use type annotation:
 
+## Or use a type annotation
+
+The same information can come from the variable:
 
 ```rust
 fn main() {
     let pi_string = "3.1415";
-    let pi_float : f32 = pi_string.parse().unwrap();
+    let pi_float: f32 = pi_string.parse().unwrap();
     println!("{}", pi_float);
 }
 ```
-Yup, that works too!, as shown below:
 
-```python
-Compiling turbofish v0.1.0 (/Users/unrahul/Coding/rust/learn/turbofish)
-Finished dev [unoptimized + debuginfo] target(s) in 0.21s
-Running `target/debug/turbofish`
-3.1415
-```
+Both versions compile. I tend to use the form that makes the type easiest to
+see where I am reading the code.
 
+::: {.flashcard-block .flashcard-block--remember}
+<p class="flashcard-block-label">What I keep in my head</p>
 
-## References
+`::<T>` fills in a generic type explicitly. With `parse::<f32>()`, the `f32`
+is the concrete type that Rust could not infer on its own.
+:::
 
-[Where to put turbofish](https://matematikaadit.github.io/posts/rust-turbofish.html)<br/>
-[What is Rust's turbofish](https://techblog.tonsser.com/posts/what-is-rusts-turbofish)
+## Related flashcards
 
-## End
+::: {.flashcard-related}
+[Handle `Result` without panicking](2021-01-14-rust-result.qmd)
 
-This was a quick introduction to the **turbofish** notation and how it is used.
+[Print the concrete type of a value](2021-03-22-rust-type.qmd)
+:::
+
+:::

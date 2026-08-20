@@ -1,58 +1,98 @@
 ---
-toc: true
+toc: false
 title: "Flashcard Rust: First steps"
-description: "A first Rust flashcard: install Rust with rustup, compile a tiny program with rustc, and meet the language from the command line."
+pagetitle: "Rust First Steps with rustc"
+description: "A first Rust flashcard: install Rust, compile a tiny program with rustc, and run the resulting binary from the command line."
 categories: [coding, rust]
 date: "2020-03-07"
+image: /assets/flashcards/rust-flashcards-card.png
+image-alt: "A bright mustard Flashcard Rust card stacked over cyan and pink cards."
 ---
-Rust is one of the coolest systems programming lanugage on the block, let's dip our feet in it.
 
-## Setup
+::: {.flashcard-page}
 
-Hopefully, you are using Linux. To install Rust, use:
+Rust was one of the coolest systems programming languages on the block when I
+started this series. I wanted the first card to contain the smallest useful
+loop: write a Rust file, compile it, and run it.
 
-```python
-> curl https://sh.rustup.rs -sSf | sh
+::: {.flashcard-stage}
+::: {.flashcard-card}
+<div class="flashcard-meta">
+  <span class="flashcard-number">Flashcard 01</span>
+  <span class="flashcard-topic">Rust</span>
+</div>
+
+<div class="flashcard-eyebrow">The question</div>
+
+::: {#flashcard-question .flashcard-question role="heading" aria-level="2"}
+What is the smallest way to compile and run Rust?
+:::
+
+<p class="flashcard-hint">One source file is enough. Cargo can wait for the next card.</p>
+
+<details class="flashcard-reveal">
+  <summary>Reveal the answer</summary>
+<div class="flashcard-answer"><p>Write <code>main.rs</code>, compile it with <code>rustc main.rs</code>, then run the generated <code>./main</code> binary.</p></div>
+</details>
+:::
+:::
+
+## Set up Rust
+
+Hopefully, you are using Linux. I installed Rust using `rustup`:
+
+```bash
+curl https://sh.rustup.rs -sSf | sh
 ```
 
-Rustup is a tool that is used to install Rust, the above script downloads and installs `rustup` first and then installs Rust.
+`rustup` installs and manages Rust toolchains. Once it finishes, `rustc` is the
+compiler I need for this first small program.
 
+## Write one tiny program
 
-## Ahoy!
+I created a directory and a file named `main.rs`:
 
-Let's create a directory to keep our source files:
-
-```python
-> mkdir ~/rust_sources
-> cd ~/rust_sources
+```bash
+mkdir -p ~/rust_sources/ahoy
+cd ~/rust_sources/ahoy
+touch main.rs
 ```
 
-Our first program, to say `ahoy!`
-
-
-```python
-> mkdir ahoy; cd ahoy
-> touch main.rs
-```
-
-Open `main.rs` and add the following line:
+The whole program is two lines:
 
 ```rust
 fn main() {
-    println!("ahoy ahoy!");  
+    println!("ahoy ahoy!");
 }
 ```
 
-Save the file and run `rustc main.rs`, thats it! We have compiled our first rust program.
+## Compile and run it
 
-There should be a file named `main` in the same directory main.rs is in, execute it using:
-
-```python
+```bash
+rustc main.rs
 ./main
+```
+
+```text
 ahoy ahoy!
 ```
 
-Now that you have written 2 lines of rust, do [read](https://doc.rust-lang.org/stable/book/ch01-02-hello-world.html)
+`rustc` reads `main.rs` and writes an executable named `main` in the same
+directory. Running that executable prints the message.
 
-## The end
-<a href="https://imgur.com/LZ6VxZR.png"><img src="https://imgur.com/LZ6VxZR.png" alt="Orange Rust crab logo"></a>
+::: {.flashcard-block .flashcard-block--remember}
+<p class="flashcard-block-label">What I keep in my head</p>
+
+For one small Rust file, the loop is simply `rustc file.rs` followed by running
+the generated binary.
+:::
+
+## Related flashcards
+
+::: {.flashcard-related}
+[Let Cargo manage the project](2020-03-09-cargo.qmd)
+
+[Why variables are immutable](2020-03-16-vars.qmd)
+:::
+
+:::
