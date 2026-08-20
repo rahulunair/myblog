@@ -22,6 +22,11 @@ Along the way the same build reaches **37.8 tok/s on two B65 cards**, against
 care about most, because it is the one that changed what I can actually run at
 my desk.
 
+**Follow-up:** Speculative decoding takes the same AWQ target to **109.2 tok/s
+at 32K** and **82.3 tok/s at 128K** on four B70s with MTP, while DFlash2 leads
+at 512K. The full crossover and the commands to reproduce it are in
+[Speculative decoding at 512K on Intel Arc Pro](/posts/2026-08-19-qwen38-speculative-decoding-arc-pro.html).
+
 I wanted [Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B) as the local
 backend for coding agents: good at code, useful at long context, small enough to
 run on a few GPUs. Local agents make latency personal. A slow token is not a
@@ -347,6 +352,14 @@ Per-group scales and zero points bring the stored cost of those weights to 4.16
 bits per parameter. Another 3.45 billion parameters stay BF16: embeddings, output
 head, norms, small DeltaNet gates, vision tower, and MTP head. Across the full
 checkpoint that averages 5.63 bits per parameter, or 18.2 GiB.
+
+I built it with
+[`llm-compressor`](https://github.com/vllm-project/llm-compressor), using its AWQ
+modifier with an MSE observer and `duo_scaling=False`. Calibration ran
+sequentially by `Qwen3_5DecoderLayer` over 512 chat-templated sequences of 1,024
+tokens: 60% code instructions from `codeparrot/self-instruct-starcoder` and 40%
+general instructions from `HuggingFaceH4/ultrachat_200k`. W4A16 keeps the
+activations in BF16; only the selected weights are packed to asymmetric INT4.
 
 I did not arrive at group 128 immediately. The first all-four-bit build used group
 32. It had finer quantization groups and fewer total model bytes than the
