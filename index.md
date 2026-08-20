@@ -44,6 +44,7 @@ Written by [Rahul Nair](about.qmd), usually `unrahul` online and
     <a class="topic-tag" href="/#category=quantization">quantization</a>
     <a class="topic-tag" href="/#category=rust">rust</a>
     <a class="topic-tag" href="/#category=sglang">sglang</a>
+    <a class="topic-tag" href="/#category=speculative-decoding">speculative-decoding</a>
     <a class="topic-tag" href="/#category=tensorflow">tensorflow</a>
     <a class="topic-tag" href="/#category=xe2">xe2</a>
     <a class="topic-tag" href="/#category=xpu">xpu</a>
