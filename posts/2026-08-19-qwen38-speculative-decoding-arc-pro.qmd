@@ -9,47 +9,49 @@ image: qwen38-spec-decode/card.png
 image-alt: "MTP leads DFlash2 at 32K and 128K, the two meet at 256K, and DFlash2 leads at 512K on a shared one-million-token target pool."
 ---
 
-<!--
-authoring-contract:
-  primary: performance case study (multi-bottleneck detective arc)
-  secondary: mechanism-heavy launch deep-dive
-  audience: inference engineers who need to reproduce or audit the serving result
-  depth: (R1 stakes, R3-R5 measurement and implementation with R3 remeasurement, R3 shipping-status close, staircase braided with spiral)
-  evidence-plan: final matched table; historical tables labelled by protocol; executed correctness; device phases; physical pool accounting; graph-ready CSV appendix
-  publication-status: local draft only; do not publish until the new figures and social card are rendered and reviewed
--->
+I was already deep into making Qwen3.8's MTP head useful on Arc Pro when
+[DFlash2 landed](https://inco.ai/blog/dflash2/). It had been public for barely
+two days. I wanted to know if I could get this brand-new draft model running on
+four B70s without giving up the 1,048,576-token target pool I had built the
+server around.
 
-A long-running coding agent does not care that speculative decoding is fast for
-the first eight thousand tokens if it falls apart after the repository, tool
-history, and working notes fill the prompt. That was the constraint in this
-work: both speculative modes had to keep working while the target server held a
-real 1,048,576-token pool.
+I got it working, including the ugly parts: XPU support, tensor parallel
+candidate selection, a compact draft KV cache, radix reuse, graph lifecycle,
+and long-context verification. Then I ran it against MTP all the way to a 512K
+prompt. That is the part of this result I am most excited about. This was not an
+old speculative path that happened to start on XPU. DFlash2 had just been
+released, and I had the real checkpoint serving long-context requests on Arc
+Pro.
 
-The final curve has a crossover rather than a universal winner. On four Intel
-Arc Pro B70s at tensor parallel four, MTP reaches **109.2 tok/s at 32K** and
+I wanted the comparison to match how I use this model: long coding
+sessions where the repository, tool history, and working notes keep filling the
+prompt. A speedup at 8K is not much use to me if it disappears later in the same
+session.
+
+What I ended up with is a crossover rather than one mode winning everywhere.
+On four Intel Arc Pro B70s at tensor parallel four, MTP reaches **109.2 tok/s at 32K** and
 **82.3 tok/s at 128K**. DFlash2 catches it at 256K, then leads **42.2 to 37.2
 tok/s at 512K**. Both runs use the same AWQ W4A16 target, exact prompt lengths,
 one warm-up per shape, a cold radix cache, and median streaming decode. Their
 greedy completions are byte-identical at every matched shape.
 
-Getting there required more than enabling two server flags. The MTP head was
-being constructed from uninitialized packed tensors. An eight-query verify
-kernel was 46 times slower than one query over the same KV. The MTP draft path
-needed a native XPU multi-step backend. DFlash2 needed a pinned source identity,
-a physical sliding-window KV ring, target-only graph capture, and a request
-validation guard. Several plausible fixes either did nothing or made the server
-slower.
+It took much more than two server flags. I found an MTP head built from
+uninitialized packed tensors. I found an eight-query verify kernel that was 46
+times slower than the one-query shape over the same KV. I added a native XPU
+multi-step backend for the MTP draft. For DFlash2, I pinned the source, built a
+physical sliding-window KV ring, kept graph capture on the target only, and
+stopped unsupported requests before they reached the worker. Some fixes did
+nothing. A few made the server slower.
 
-This work was measured and implemented independently. The DFlash2 checkpoint
-and mechanism come from Inco, while the SGLang XPU integration, memory
-accounting, lifecycle fixes, and Arc Pro qualification described here are the
-paths exercised by this release.
+This is independent work I did on my own setup. The DFlash2 checkpoint and
+mechanism come from Inco. The SGLang XPU integration, memory accounting,
+lifecycle fixes, and Arc Pro measurements are mine.
 
-## Part I: Run the qualified system and define the number
+## Part I: The setup and the number I use
 
-### Running the qualified configuration
+### Running it
 
-The reproducible image is:
+This is the image I used:
 
 ```bash
 docker pull rahulunair/sglang-xpu:qwen3.8-27b-20260819
@@ -112,7 +114,7 @@ DFlash2 uses one external five-layer draft checkpoint:
 --speculative-draft-window-size 2048
 ```
 
-Here is the complete qualified DFlash2 launch. The render group expression lets
+Here is the complete DFlash2 command I used. The render group expression lets
 the container open the Intel device nodes without assuming one host-specific
 group id:
 
@@ -150,19 +152,19 @@ docker run -d --name qwen38-dflash2 --restart unless-stopped \
 For MTP, remove the `/draft` mount and replace the five DFlash2 flags at the end
 with the four MTP flags shown above. No external MTP checkpoint is needed.
 
-The image supplies the XPU environment defaults that were part of the
-measurement: decode INT8 up to M=8, symmetric all-reduce up to 131,072 bytes,
+The image supplies the XPU defaults I measured: decode INT8 up to M=8,
+symmetric all-reduce up to 131,072 bytes,
 single-query speculative verify, target decode graphs for batch sizes
 `[1,2,4,8]`, and eager DFlash2 draft execution. Radix prefix caching stays on.
 
 Use `/health` for process readiness. The first ordinary request at a new shape
 may compile kernels and needs a long client timeout. A cold `/health_generate`
-probe became part of the last release failure described later, so the public
-recipe deliberately avoids it.
+probe became part of the last release failure described later, so I left it out
+of the public recipe.
 
-### Defining the number before comparing the arms
+### What I mean by decode speed
 
-Every headline decode number here is:
+Every decode number in this post is:
 
 ```text
 median streaming decode = 1000 / median TPOT in milliseconds
@@ -179,7 +181,7 @@ Multiplying it by concurrency gives a derived number, not an observed server
 throughput. The table therefore keeps actual aggregate output throughput in a
 separate column.
 
-The final long-context campaign used these controls:
+For the final long-context sweep I used:
 
 - four Arc Pro B70 cards, TP4;
 - AWQ W4A16 target, YaRN factor four, exact 1,048,576-token target pool;
@@ -189,13 +191,17 @@ The final long-context campaign used these controls:
 - concurrency one, one unreported warm-up, one reported exact-length prompt;
 - greedy generation, with output text retained for coherence comparison.
 
-One sample per long cell is a rough serving curve, not a latency distribution.
-The shorter DFlash2 qualification used ten reported prompts per cell and is
-shown separately.
+One sample per long-context point gives me a rough serving curve, not a latency
+distribution. I used ten reported prompts per point for the shorter 8K and 16K
+comparison, which I show separately.
 
-## Part II: Follow one speculative iteration through the real workers
+## Part II: What I had enabled
 
-### Following one speculative step
+### The loop both modes use
+
+Before changing the XPU code, I needed a clean picture of what each worker was
+doing. MTP and DFlash2 both end at target verification, but they arrive there
+in very different ways.
 
 Ordinary autoregressive decoding runs the target once for each next token.
 Speculative decoding adds a cheaper proposal path:
@@ -217,7 +223,7 @@ five-layer sliding-attention backbone once for the block, obtains the target
 LM-head top-16 candidates, and walks a learned predecessor-successor lattice to
 choose a path.
 
-| product arm | SGLang algorithm | proposal mechanism | production draft width |
+| mode | SGLang algorithm | proposal mechanism | draft width I used |
 |---|---|---|---:|
 | MTP | `EAGLE` | seven sequential forwards through the in-checkpoint MTP head | 8 |
 | DFlash2 | `DFLASH` | one five-layer block draft plus learned candidate selector | 8 |
@@ -235,7 +241,7 @@ An average accepted length of 4 therefore means that one target verification
 committed about four output tokens, not four correct draft guesses plus another
 unreported token. That convention matters when dividing cost by useful work.
 
-### Keeping greedy verification exact
+### Why the target output stayed the same
 
 Consider a draft block `[d1, d2, d3, d4]`. The target evaluates all four rows
 with a causal mask. Row one sees the committed prefix, row two also sees `d1`,
@@ -244,13 +250,12 @@ runtime commits `d1`, `d2`, and the target token `x`; `d3` and `d4` never enter
 the target KV cache. The next iteration begins after `x`.
 
 This is why the method can change speed without changing greedy output. Draft
-tokens are proposals, and the target selects every committed token. The
-headline campaign uses temperature zero, so equality means exact token equality
-at each position. Sampling requires rejection sampling against target and draft
-probabilities. SGLang has that broader machinery, but it is outside the measured
-greedy envelope in this post.
+tokens are proposals, and the target selects every committed token. I ran these
+tests at temperature zero, so equality means exact token equality at each
+position. Sampling requires rejection sampling against target and draft
+probabilities. SGLang has that machinery too, but I did not measure it here.
 
-### Producing one MTP proposal from two 5,120-wide rows
+### What Qwen's MTP head does
 
 The Qwen3.8 checkpoint contains one multi-token prediction module. SGLang loads
 it through `Qwen3_5ForCausalLMMTP`, while `EAGLEWorkerV2` owns the speculative
@@ -271,18 +276,18 @@ the target vocabulary head. Top-k one selects the next proposed token.
 The worker repeats this dependency seven times. Each call consumes the hidden
 state produced by the previous draft call, so the seven proposals are
 sequential. The target then verifies eight positions: the already available
-boundary position plus seven new proposals. This is the precise reason that the
-production flags say seven steps and eight draft tokens.
+boundary position plus seven new proposals. That is why the command uses seven
+steps and eight draft tokens.
 
 The auxiliary module remains BF16 even though the target transformer is AWQ
 W4A16. Its parameter names must therefore be excluded from compressed-tensors
 quantization. Missing that exclusion caused the silent all-zero draft failure
 described in Part III.
 
-### Producing a DFlash2 block in one draft forward
+### What arrived with DFlash2
 
-The external DFlash2 checkpoint declares `DFlash2DraftModel` and the following
-production shape:
+The external DFlash2 checkpoint declares `DFlash2DraftModel`. This is the
+configuration I used:
 
 | component | Qwen3.8-27B DFlash2 value |
 |---|---:|
@@ -318,7 +323,7 @@ rank first selects its local top 16 vocabulary entries. SGLang gathers the 64
 rank-local candidates and performs a global top 16 selection, preserving the
 same candidate set a non-sharded vocabulary head would expose.
 
-### Walking the DFlash2 candidate lattice
+### The part that makes DFlash2 different
 
 DFlash2 does not independently choose the highest-logit token in every row.
 Its selector scores transitions between adjacent candidate sets. The research
@@ -333,7 +338,7 @@ S_t(a, b) = U_t(b) + dot(A(a) * H(h_t), B(b))
 
 `U_t(b)` is the ordinary unary score for candidate `b`. `A(a)` and `B(b)` are
 learned predecessor and successor codebook rows. `H(h_t)` projects the draft
-hidden state, and the elementwise product gates the predecessor representation.
+hidden state, and the elementwise product scales the predecessor representation.
 The interaction lives in rank 256 rather than the 5,120-wide model space.
 
 For top 16, every adjacent pair contributes a 16 by 16 score matrix. Those
@@ -343,21 +348,21 @@ The selector improves path consistency, but it never authorizes a token. The
 target still verifies the resulting chain and rejects the invalid suffix.
 
 The XPU port uses `torch.topk` when FlashInfer's radix top-k operator is absent.
-That fallback is correct and was the path present in this image. It is also a
-clear optimization boundary for future XPU work, so the release asserts model
-identity and candidate shape separately from any backend-specific top-k kernel.
+That fallback is correct and is the path in this image. A shape-matched XPU
+top-k kernel is something I still want to test, so I check the model type and
+candidate shape separately from the kernel used for top-k.
 
 ![](qwen38-spec-decode/mtp-vs-dflash2.svg){fig-alt="Side-by-side mechanism comparison. MTP normalizes and fuses one token embedding with one target hidden row, then runs one auxiliary layer seven times. DFlash2 projects five target feature rows, runs a five-layer sliding-window block once, scores a top-16 transition lattice, and sends one eight-position chain to the same target verifier."}
 
-*MTP spends seven small sequential forwards to build its chain; DFlash2 spends one block forward plus a learned path selection. Both pay the same target-verification contract.*
+*MTP spends seven small sequential forwards to build its chain; DFlash2 spends one block forward plus a learned path selection. Both still run the same target verification step.*
 
-### Mapping the mechanisms to SGLang's worker loop
+### Where this lives in SGLang
 
-Both workers begin with a normal target prefill. After that, their control flow
-is deliberately similar: prepare draft inputs, produce candidates, call target
-verify, accept a prefix, commit recurrent state, and prepare the next draft
-boundary. Sharing that contract lets both arms use the same target scheduler,
-KV pool, request batching, and output path.
+Both workers begin with a normal target prefill. After that, the control flow is
+similar: prepare draft inputs, produce candidates, call target verify, accept a
+prefix, commit recurrent state, and prepare the next draft boundary. The shared
+worker interface lets both modes use the same target scheduler, KV pool,
+request batching, and output path.
 
 The state details differ. MTP's worker carries one auxiliary hidden row through
 seven draft forwards. DFlash2's worker carries a compact sliding-window KV ring
@@ -366,9 +371,9 @@ committed target hidden rows back into the correct physical ring slots so the
 next block begins from verified state. Rejected draft rows are never allowed to
 become committed history.
 
-The exact release tree is pinned at commit `7a65e2e`. These are the useful
-repository-relative entry points when reading the implementation beside this
-walkthrough:
+I kept losing track of which worker owned which piece of state. The release tree
+is pinned at commit `7a65e2e`, and these are the five files I kept open while
+working through it:
 
 | concern | release source |
 |---|---|
@@ -376,19 +381,19 @@ walkthrough:
 | MTP worker loop | `overlay/sglang/srt/speculative/eagle_worker_v2.py` |
 | DFlash2 model and selector | `overlay/sglang/srt/models/dflash.py` |
 | DFlash2 worker loop | `overlay/sglang/srt/speculative/dflash_worker_v2.py` |
-| XPU ring and lifecycle policy | `20-patches/spec/post/0008-xpu-dflash2-production.patch` |
+| XPU ring and lifecycle behavior | `20-patches/spec/post/0008-xpu-dflash2-production.patch` |
 
-## Part III: Make MTP correct, then make its XPU path scale
+## Part III: MTP looked fixed until the context grew
 
 ### Repairing the MTP checkpoint before tuning it
 
-The first MTP server generated readable text and reported an average accepted
+My first MTP server generated readable text and reported an average accepted
 length near **1.008** across code, arithmetic, and prose. That workload-invariant
 value was the clue. A merely weak drafter should have varied with the prompt.
 
-Candidate logging found token id zero in every draft slot. The draft seed was
-NaN, and the NaN began inside the MTP layer. Its projection modules had shape
-metadata but no loaded weight tensor.
+When I logged the candidates, I found token id zero in every draft slot. The
+draft seed was NaN, and the NaN began inside the MTP layer. Its projection
+modules had shape metadata but no loaded weight tensor.
 
 The checkpoint stores the MTP head in BF16. Its `quantization_config.ignore`
 list excluded vision modules but omitted `mtp.*`, so SGLang constructed the
@@ -396,15 +401,15 @@ head as compressed-tensors W4A16. The corresponding packed tensors do not exist
 because the weights are plain BF16. No load exception surfaced; the
 uninitialized path produced NaNs and `argmax` selected zero.
 
-The repair changed configuration rather than weight bytes. The ignore list now
+I fixed the configuration rather than changing any weight bytes. The ignore list now
 contains the eight checkpoint-facing MTP module names plus the fused
 `qkv_proj` and `gate_up_proj` module names SGLang constructs. Acceptance moved
 from approximately 1.0 to a useful range. Both Hugging Face publication paths
 now reject a card or config whose MTP exclusions are missing.
 
-This failure established the first qualification rule: coherent target output
-does not prove that a speculative draft works. Acceptance and loaded module
-identity have to be checked beside text.
+This is where I learned that coherent target output says very little about the
+draft. I now check acceptance and the modules that loaded beside the
+generated text.
 
 ### Finding the useful MTP window at short context
 
@@ -431,10 +436,10 @@ XPU dense int8: declined because M=8 exceeded a cap of 4
 SYMM AR: declined because 81,920 bytes exceeded a cap of 65,536
 ```
 
-Raising the decode caps to M=8 and 131,072 bytes moved the same development
-point from 102.6 to 105.5 tok/s. It was a real improvement, but the long-context
-curve remained broken. A flag being accepted at startup had not shown that its
-kernel served the request.
+I raised the decode caps to M=8 and 131,072 bytes. The same point moved from
+102.6 to 105.5 tok/s, but the long-context curve remained broken. Once again, a
+server accepting a flag at startup did not mean that the request used the
+kernel I expected.
 
 ### Reducing an eight-query verify that was 46 times slower
 
@@ -448,12 +453,12 @@ Before the long-context fixes, MTP looked good at 8K and collapsed at 16K:
 | 131,072 | **48.9 tok/s** | 8.3 tok/s |
 | 262,144 | **41.6 tok/s** | 4.3 tok/s |
 
-The first diagnosis came from the Python stack. All 25 `py-spy` samples sat in
+I first blamed the Python stack. All 25 `py-spy` samples sat in
 `resolve_seq_lens_cpu`. Turning overlap off produced a 1,073.02 ms step against
 1,072.90 ms with overlap on. Python was waiting for device work there; the host
 function did not own the cost.
 
-The decisive probe removed the model and held the KV bytes constant. At the
+I then removed the model and held the KV bytes constant. At the
 TP4 attention shape and 262,144 cached tokens, one and eight queries both read
 268 MB:
 
@@ -483,8 +488,9 @@ independent one-query rows with a separate cache length for each position:
 Patch 0006 applies the batched single-query formulation to target verify. The
 accepted length and output stayed unchanged. At 8K, the development point moved
 from 105.5 to **126.2 tok/s**; at 262K it moved from about 4.2 to 6.8 tok/s.
-The second number made the partial victory clear. Verify attention was a large
-bottleneck, but the draft path still grew with context.
+The second number showed that I had fixed only part of the problem. Verify
+attention was expensive, but the draft path was still getting slower with
+context.
 
 ### Adding the XPU multi-step draft backend
 
@@ -492,10 +498,10 @@ After the verify rewrite, fitting the 262K speculative step attributed about
 298.5 ms to target verify and roughly 410 ms to seven draft forwards. The MTP
 draft model was still using a generic Triton attention backend.
 
-Patch 0007 adds native XPU metadata and attention for draft decode and draft
+In patch 0007 I added native XPU metadata and attention for draft decode and draft
 extend. Each linear draft position receives the committed prefix plus the
 earlier proposed positions. Tree drafting is rejected because the metadata
-contract is specific to a linear top-k-one chain.
+layout only describes a linear top-k-one chain.
 
 Graph capture exposed another context assumption. Decode graph buckets
 `[1,2,4,8]` describe batch sizes, but every bucket still needs page-table and
@@ -504,8 +510,8 @@ retained a lazily allocated 262K-shaped buffer and failed on a later bucket.
 The repaired backend allocates one max-context buffer set with stable views for
 each captured batch size.
 
-Historical diagnostic rows after patch 0007 showed the improvement before the
-final matched campaign:
+These were my first useful long-context rows after patch 0007, before I ran the
+final matched sweep:
 
 | exact input / output | draft width | sample | median decode | acceptance |
 |---:|---:|---|---:|---:|
@@ -521,8 +527,8 @@ diagnostics and cannot substitute for the matched table later in the post.
 
 ### Timing the 524K step after the draft fix
 
-The natural next hypothesis was that MTP's auxiliary head remained too slow.
-Device phase timers disproved it.
+I still suspected the MTP auxiliary head, so I added device phase timers. I was
+wrong.
 
 One 524,288-input, 64-output request with width three produced 23 verification
 steps. The timers add enough overhead that their throughput never enters a
@@ -540,44 +546,43 @@ performance table. Their phase split does:
 
 *After the native XPU draft backend landed, target verification owned 80.1 percent of categorized MTP step time at 524K.*
 
-The categories close within 0.75 ms. The timer-free request ran at 68.580 tok/s
+The measured parts close within 0.75 ms. The timer-free request ran at 68.580 tok/s
 with a 39.934 ms median step. The timer-enabled request fell to 58.206 tok/s, a
-useful reminder that attribution instrumentation changes the number it is
-measuring.
+reminder that the timer itself changes the result.
 
-The Gated Delta recurrent commit was not the memory wall we suspected. Focused
-probes put the Mamba commit near 0.215 ms and hidden-state materialization near
-2.2 ms. The dominant current category was target verification. Gated Delta
-state capacity still affects how many requests fit, but it did not explain the
-decode slowdown.
+I had also suspected the Gated Delta recurrent commit. Small probes put the
+Mamba commit near 0.215 ms and hidden-state materialization near 2.2 ms. Target
+verification was taking most of the measured time. Gated Delta state capacity
+still affects how many requests fit, but it did not explain this decode
+slowdown.
 
-Two more target-attention ideas lost under measurement. Folding two query
+I tried two more target-attention ideas. Folding two query
 positions into the head dimension was bit-exact with a contiguous page table,
 but it took 3.373 ms versus 1.377 ms for three single-query rows at 524K. Near
 1M it took 6.580 versus 2.212 ms. Forcing 20 KV splits also lost to automatic
 selection, 1.026 versus 0.990 ms at 524K and 2.088 versus 1.954 ms near 1M.
 
-## Part IV: Make DFlash2 reproducible and production-stable
+## Part IV: DFlash2 needed more than an XPU flag
 
-### Making the DFlash2 identity reproducible
+### Pinning the DFlash2 source I used
 
-DFlash2 arrived from an unmerged SGLang development line. A generated overlay
-once contained the newer DFlash worker but the release image's older
-`dflash.py`, which exported classic DFlash only. Looking at the worker suggested
-the port was current; checking the model registry exposed the mixed tree.
+DFlash2 arrived from an unmerged SGLang development line. At one point my
+generated overlay contained the newer DFlash worker and the release image's
+older `dflash.py`, which exported classic DFlash only. The worker looked right.
+The model registry showed that I had mixed two source trees.
 
 The release process now pins DFlash2 source commit
 `e5a3e4d30fa7abda95bafd2d697f9f9c48566114`. A deterministic port writes an
-overlay manifest, and the build imports the result before asserting that
+overlay manifest, and the build imports the result before checking that
 `DFlash2DraftModel` is registered. The launch reads the draft checkpoint's
 declared architecture, block size, and sliding window. A classic DFlash model
-cannot pass those gates under a DFlash2 name.
+cannot start under a DFlash2 name.
 
 The active patch order is 0001, 0003, 0005, 0006, 0007, the pinned DFlash2
-port, then production patch 0008. The first five additions enable the XPU
+port, then patch 0008. The first five additions enable the XPU
 algorithm, select the available draft backend, repair state indexing, rewrite
 linear-chain verify, and supply native multi-step MTP attention. Patch 0008
-contains the physical DFlash2 ring, radix-tail repopulation, graph policy, cache
+contains the physical DFlash2 ring, radix-tail repopulation, graph settings, cache
 flush hooks, and request validation.
 
 ### Turning a logical window into a physical KV ring
@@ -592,14 +597,14 @@ That distinction mattered immediately:
 |---|---:|
 | BF16 full-context draft KV | 789,312 tokens |
 | draft-only FP8 diagnostic at memory fraction 0.95 | 948,544 tokens |
-| required production target | **1,048,576 tokens** |
+| target pool I wanted to preserve | **1,048,576 tokens** |
 
 The FP8 diagnostic also hit a oneCCL out-of-resources error on its first 4,096
 token prefill despite 2.91 GiB reported free after graphs. Raising the memory
 fraction could improve the startup banner while removing the workspace needed
 by a real request.
 
-The production design allocates a private, page-aligned ring for each live
+I replaced it with a private, page-aligned ring for each live
 request. With a 2,048-token window, page size 64, and eight-token verify block,
 the aligned stride is 2,176 slots. Eight effective requests therefore need:
 
@@ -618,11 +623,11 @@ visible draft tail, recomputes its hidden states, and repopulates the new
 request's ring. This is why a logical sliding-window flag alone could not solve
 the capacity problem.
 
-Target and draft graph capture together still reduced the target pool to
+Capturing both target and draft graphs still reduced the target pool to
 1,029,184 tokens and had shown unstable long-tail steps. Keeping the target
 decode graph and running the much smaller DFlash2 draft eagerly preserved the
-exact **1,048,576-token target pool**. The final image sets that policy by
-default.
+exact **1,048,576-token target pool**. I therefore kept target graphs and ran
+the small DFlash2 draft eagerly.
 
 ### Surviving cache and graph lifecycle failures
 
@@ -632,7 +637,7 @@ the next generation. Client disconnects and a 12-turn shifting-prefix session
 passed; the defect belonged to the administrative allocator and graph
 lifecycle rather than the normal OpenAI-compatible agent path.
 
-Several candidate fixes did not establish a graph-on solution:
+I tried all of the following with draft graphs still enabled:
 
 - clearing or zeroing the compact request table;
 - synchronizing before the scheduler cleared pools;
@@ -644,18 +649,18 @@ Several candidate fixes did not establish a graph-on solution:
 Graph-off passed but gave up too much throughput. A graph teardown and
 post-flush recapture hook passed small lifecycle probes, then the recaptured 8K
 path regressed to 62.407 and 46.230 tok/s with severe p90 and p99 step tails.
-Process survival alone was therefore insufficient.
+The process survived, but the serving result was worse.
 
-The final policy avoids DFlash2 draft graphs entirely while retaining target
-graphs. The draft is small enough that this is the stable side of the trade.
-The cache hooks remain defensive if that policy is overridden. DFlash2 also
+The image disables DFlash2 draft graphs and retains target graphs. The draft is
+small enough that eager execution works well here. The cache hooks remain in
+case someone overrides that setting. DFlash2 also
 rejects logprob-returning requests before scheduling because its chain-stride
 logprob path is not implemented; the older behavior allowed such a request to
 reach a crash-prone path.
 
-## Part V: Measure the complete serving path
+## Part V: Then I measured the whole server
 
-### Keeping prefill separate from decode
+### Prefill was still prefill
 
 Speculative decoding changes output-token generation. It does not make a
 524K-token prompt cheap to ingest.
@@ -667,7 +672,7 @@ shape visible across its 128 chunks of 4,096 tokens: early chunks ran around
 seconds to first token. Each new full-attention chunk scans a larger committed
 prefix.
 
-One isolated full-attention layer at the TP4 production shape measured:
+One isolated full-attention layer at the TP4 server shape measured:
 
 | context after a 4,096-token chunk | time per full-attention layer |
 |---:|---:|
@@ -679,7 +684,7 @@ One isolated full-attention layer at the TP4 production shape measured:
 Qwen3.8-27B has 16 full-attention layers. At 524K, those layers alone account
 for roughly 3.23 seconds of the approximately five-second final chunk.
 
-Several bounded prefill experiments were rejected:
+I also tried several prefill changes:
 
 - chunk sizes from 1K through 16K did not change the per-token attention rate;
 - `pack_gqa` was not consumed by this paged Xe prefill path;
@@ -693,12 +698,12 @@ Several bounded prefill experiments were rejected:
 The image keeps KV tile 64 and applies the larger symmetric bound only where
 the decode and verify shapes benefit.
 
-### Reading the final matched curve
+### The final comparison
 
-The final campaign uses the same 1M target pool and the same width of eight for
-both arms. Each row below is one reported exact-length prompt after one warm-up.
+For the final sweep I used the same 1M target pool and a draft width of eight
+for both modes. Each row below is one exact-length prompt after one warm-up.
 
-| exact input / output | arm | TTFT | prefill | median TPOT | median decode | raw output | acceptance |
+| exact input / output | mode | TTFT | prefill | median TPOT | median decode | raw output | acceptance |
 |---:|---|---:|---:|---:|---:|---:|---:|
 | 32,768 / 1,024 | DFlash2 | 10.097 s | 3,245 tok/s | 14.01 ms | **71.4 tok/s** | 41.9 tok/s | 2.837 |
 | 32,768 / 1,024 | MTP | 9.924 s | 3,302 tok/s | 9.15 ms | **109.2 tok/s** | 53.0 tok/s | 3.885 |
@@ -709,32 +714,31 @@ both arms. Each row below is one reported exact-length prompt after one warm-up.
 | 524,288 / 1,024 | DFlash2 | 370.282 s | 1,416 tok/s | 23.71 ms | **42.2 tok/s** | 2.6 tok/s | 4.410 |
 | 524,288 / 1,024 | MTP | 379.295 s | 1,382 tok/s | 26.88 ms | **37.2 tok/s** | 2.5 tok/s | 4.133 |
 
-![](qwen38-spec-decode/long-context-crossover.svg){fig-alt="Matched long-context decode on four Arc Pro B70 cards. MTP leads 109.2 to 71.4 tokens per second at 32K and 82.3 to 58.1 at 128K, the arms nearly meet at 256K, and DFlash2 leads 42.2 to 37.2 at 512K."}
+![](qwen38-spec-decode/long-context-crossover.svg){fig-alt="Matched long-context decode on four Arc Pro B70 cards. MTP leads 109.2 to 71.4 tokens per second at 32K and 82.3 to 58.1 at 128K, the modes nearly meet at 256K, and DFlash2 leads 42.2 to 37.2 at 512K."}
 
-*MTP wins the measured 32K and 128K cells, the two arms meet at 256K, and DFlash2 wins the 512K cell on the same target pool.*
+*MTP wins the measured 32K and 128K points, the two modes meet at 256K, and DFlash2 wins at 512K on the same target pool.*
 
 MTP leads DFlash2 by **52.9% at 32K** and **41.7% at 128K**. The difference is
 **1.8% at 256K**, inside what a one-sample row should treat as a tie. DFlash2
 leads by **13.4% at 512K**.
 
-The curve also corrects an appealing but incomplete story. DFlash2 can propose
-a whole block in one learned forward, yet proposal cost alone does not set
-throughput. At 32K and 128K, MTP accepts enough more tokens to win. At 512K,
-DFlash2 accepts a slightly longer block and finishes each streamed token in
-less time. Draft architecture, acceptance, target verification, and state
-commit all participate in the result.
+I initially expected DFlash2's one-forward block proposal to win everywhere.
+The measurements did not agree. At 32K and 128K, MTP accepts enough more tokens
+to be faster. At 512K, DFlash2 accepts a slightly longer block and finishes each
+streamed token in less time. Proposal cost is only one part of the step. Target
+verification, acceptance, and state updates matter too.
 
-The two arms produced byte-identical greedy output at 32K, 128K, 256K, and
-512K. This coherence check does not replace a broad correctness suite, but it
-does prove that the matched performance rows describe the same completion.
+The two modes produced byte-identical greedy output at 32K, 128K, 256K, and
+512K. That is not a broad correctness test, but it confirms that each pair of
+performance rows generated the same completion.
 
-### Checking the shorter matched distribution
+### Ten-prompt results at 8K and 16K
 
-Both arms also ran ten reported prompts after a ten-prompt warm-up at 8K and
-16K. The MTP arm came from the final pushed image; both arms used the same
+I also ran ten reported prompts after a ten-prompt warm-up at 8K and 16K. The
+MTP numbers came from the final pushed image; both modes used the same
 exact cached datasets, a cold radix cache, and the 1M target-pool settings:
 
-| exact input / output | arm | concurrency | TTFT | prefill | median TPOT | median decode | actual output | acceptance |
+| exact input / output | mode | concurrency | TTFT | prefill | median TPOT | median decode | actual output | acceptance |
 |---:|---|---:|---:|---:|---:|---:|---:|---:|
 | 8,192 / 1,024 | DFlash2 | 1 | 2.384 s | 3,437 tok/s | 9.53 ms | **105.0 tok/s** | 81.9 tok/s | 3.767 |
 | 8,192 / 1,024 | MTP | 1 | 2.310 s | 3,547 tok/s | 9.44 ms | **106.0 tok/s** | 84.0 tok/s | 3.758 |
@@ -745,37 +749,37 @@ exact cached datasets, a cold radix cache, and the 1M target-pool settings:
 
 The ten-prompt distributions show where the 16K difference comes from:
 
-| exact input | arm | TPOT p50 | TPOT p90 | TPOT p99 |
+| exact input | mode | TPOT p50 | TPOT p90 | TPOT p99 |
 |---:|---|---:|---:|---:|
 | 8,192 | DFlash2 | 9.527 ms | 11.973 ms | 12.714 ms |
 | 8,192 | MTP | 9.437 ms | 11.836 ms | 12.464 ms |
 | 16,384 | DFlash2 | 10.694 ms | 17.607 ms | 19.201 ms |
 | 16,384 | MTP | 9.363 ms | 10.852 ms | 11.091 ms |
 
-![](qwen38-spec-decode/short-tpot-percentiles.svg){fig-alt="TPOT percentile ranges for ten prompts per arm. At 8K, MTP and DFlash2 nearly overlap from p50 through p99. At 16K, MTP remains between 9.363 and 11.091 milliseconds while DFlash2 widens from 10.694 to 19.201 milliseconds."}
+![](qwen38-spec-decode/short-tpot-percentiles.svg){fig-alt="TPOT percentile ranges for ten prompts per mode. At 8K, MTP and DFlash2 nearly overlap from p50 through p99. At 16K, MTP remains between 9.363 and 11.091 milliseconds while DFlash2 widens from 10.694 to 19.201 milliseconds."}
 
 *The 8K distributions nearly overlap; at 16K, DFlash2 develops a wider TPOT tail while MTP remains below 11.1 milliseconds through p99.*
 
-MTP is within **0.95% at 8K**, which this campaign treats as a tie, and leads
+MTP is within **0.95% at 8K**, which I treat as a tie, and leads
 DFlash2 by **14.2% at 16K**. All twenty concurrency-one completions were
 byte-identical between modes. The short result agrees with the longer curve:
 MTP is the stronger default before the eventual crossover, while DFlash2's
 advantage appears only at the far end of the measured range.
 
-At concurrency four, `57.4 × 4` gives 229.8 tok/s, but the server actually
+At concurrency four, `57.4 × 4` gives 229.8 tok/s, but the server
 delivered 162.1 output tok/s. At concurrency eight, the derived product is
 374.1 tok/s while observed output throughput is 189.7 tok/s. Per-user TPOT and
 aggregate completion throughput answer different questions; publishing only
 the larger multiplication would hide admission, TTFT, and synchronization
 costs.
 
-The reproducible older MTP results remain useful historical controls:
+I still keep two older MTP results around as references:
 **136.7 tok/s at 256/1K** with acceptance 5.476 and **102.6 tok/s at 8K/1K**
 with acceptance 7.262. The 126.2 tok/s MTP point came from the intermediate
-verify-optimization protocol and stays labelled as a development result. None
+verify-optimization setup and stays labelled as a development result. None
 of those older rows replaces the matched ten-prompt result above.
 
-### Separating historical controls from the matched campaign
+### Older results I did not mix into the final sweep
 
 The non-speculative baseline was measured before the final matched sweep and
 uses a different output length at 262K:
@@ -790,15 +794,15 @@ range for that configuration is 58.5 to 59.9 tok/s. The 1M allocation itself
 did not slow the short request relative to the native 262K pool within the
 measured restart variation.
 
-The correctly ported historical DFlash2 arm reached 121.0 tok/s at 8K with a
+An older DFlash2 run reached 121.0 tok/s at 8K with a
 2,048-token window, acceptance 6.282, and a 51.28 ms speculative step. That run
-predated the final physical ring and matched long-context protocol. It remains
+predated the final physical ring and matched long-context setup. It remains
 useful implementation history and does not belong on the same curve as the
-current 105.0 tok/s ten-prompt result.
+final 105.0 tok/s ten-prompt result.
 
-### Executing correctness rather than reading outputs
+### Did the generated code still run?
 
-The broad executed-code gate predates the final matched campaign:
+I ran HumanEval and MBPP before the final matched sweep:
 
 | dataset | no speculation pass@1 | MTP pass@1 | MTP regressions | DFlash2 pass@1 | DFlash2 regressions |
 |---|---:|---:|---:|---:|---:|
@@ -807,25 +811,25 @@ The broad executed-code gate predates the final matched campaign:
 
 Across HumanEval and MBPP, MTP produced zero cases that passed without
 speculation and failed with it. A total of 379 of 421 completions were
-byte-identical. DFlash2 passed the HumanEval regression gate, while its MBPP
-row remains outside the completed evidence.
+byte-identical. DFlash2 had zero HumanEval regressions. I did not complete its
+MBPP run.
 
-This is why the post avoids the word “lossless.” Verification remains
+This is why I avoid the word "lossless." Verification remains
 target-controlled, but Qwen's recurrent state can travel through a different
 batched path than strictly sequential decode. Executed behavior and
 task-specific quality matter more than a label.
 
-## Part VI: Ship the qualified envelope and leave an audit trail
+## Part VI: What I shipped and what I did not
 
 ### Shipping the clean image without the diagnostics
 
-The release overlay is rebuilt from the pinned `qwen3.8-27b-20260816` base and
-the reproducible patch series. Production patch 0008 is generated separately
+I rebuild the release overlay from the pinned `qwen3.8-27b-20260816` base and
+the fixed patch series. Patch 0008 is generated separately
 after the DFlash2 port so it cannot be silently overwritten by another port.
 
 The final image removes the temporary phase profiler, diagnostic environment
 switches, experimental draft-KV dtype plumbing, backup files, bytecode, and
-qualification logs. CPU-only image gates assert:
+test logs. CPU-only image checks cover:
 
 - the XPU W4A16 oneDNN path and compressed-tensors capability branch;
 - the block-FP8-to-BF16 path used by the FP8 target option;
@@ -833,7 +837,7 @@ qualification logs. CPU-only image gates assert:
 - the pinned `DFlash2DraftModel` class and source manifest;
 - the compact draft-ring implementation and logprob validation;
 - the absence of the DFlash phase profiler and generated artifacts;
-- all qualified environment defaults.
+- all environment defaults used for these measurements.
 
 The resulting model-scoped tags are
 `rahulunair/sglang-xpu:qwen3.8-27b-20260819` and the moving
@@ -845,20 +849,19 @@ draft slots, eight effective requests, target graphs captured, and DFlash2
 draft graphs disabled. A subsequent one-token cold `/health_generate` request
 left ranks inside first-use compilation and draft-state materialization. The
 server was restarted while that work was in flight, and the host rebooted
-during the following mode switch. The evidence does not identify a card defect
-or a specific runtime root cause, so the public instructions avoid the cold
-generation probe. The image was first verified offline against the already
-qualified overlay. After the release image and documentation were prepared, a
-single guarded MTP-only server was started from the pushed tag, allowed to warm
-normally through `/health`, and used for the 8K and 16K results above. It
+while I was switching modes. I could not tie that incident to a card defect or
+one runtime failure, so I left the cold generation probe out of the public
+instructions. I first checked the image offline against the same overlay I had
+already measured. I then started one MTP-only server from the pushed tag, let it
+warm normally through `/health`, and used it for the 8K and 16K results above. It
 completed all 40 requests, stopped gracefully without a mode switch, and left
 all four devices in their normal state.
 
-That incident belongs in the record because it changes operational guidance:
+I am keeping that incident here because it changed how I run the server:
 do not restart a TP server merely because the first compiled request has not
 returned, and do not use a generated-token health endpoint as cold readiness.
 
-### Cataloguing the experiments that did not become defaults
+### Things I tried and rejected
 
 | experiment | observation | disposition |
 |---|---|---|
@@ -868,8 +871,8 @@ returned, and do not use a generated-token health endpoint as cold readiness.
 | target and draft graphs | smaller 1,029,184 target pool and unstable tails | keep target graph, disable DFlash2 draft graph |
 | `SGLANG_ENABLE_WAR_BARRIER=1` | roughly 65 tok/s | rejected as over-serialized |
 | fixed GPU clocks | no useful change | restored defaults |
-| skip `empty_cache` during flush | small lifecycle probe passed, 8K gate failed | rejected |
-| graph teardown and recapture | process survived probes, 8K fell to 62.407 and 46.230 tok/s | not the production policy |
+| skip `empty_cache` during flush | small lifecycle probe passed, 8K test failed | rejected |
+| graph teardown and recapture | process survived probes, 8K fell to 62.407 and 46.230 tok/s | not the default |
 | draft-only FP8 KV | pool reached 948,544, then first 4K prefill ran out of resources | rejected |
 | fold query rows into heads | correct but 2.4 to 3.0 times slower | rejected |
 | force 20 KV splits | slower than automatic selection at 524K and near 1M | rejected |
@@ -877,10 +880,9 @@ returned, and do not use a generated-token health endpoint as cold readiness.
 | naive INT8 prefill | 1.9 to 4.6 times slower end to end | rejected |
 | larger prefill symmetric collective | TTFT 64 percent worse | rejected |
 
-Keeping these failures prevents the next investigation from repeating a
-plausible idea whose end-to-end gate already failed.
+I keep these failures because otherwise I will eventually repeat one of them.
 
-### Stating what 1M support means
+### What I mean by 1M support
 
 The server and target pool support 1,048,576 total resident target tokens. That
 capacity does not make `1M input + 1K output` a valid request. Input plus
@@ -892,18 +894,18 @@ active capacity queue. Eight users can run concurrently only when their
 combined resident target tokens fit the shared pool; eight simultaneous 512K
 sessions cannot.
 
-The largest measured prompt in the final matched campaign is 524,288 tokens.
+The largest prompt I measured in the final sweep is 524,288 tokens.
 Earlier needle probes retrieved exactly at prompt positions 109,057, 300,076,
 and 500,093, which establishes that the YaRN extension functions beyond the
 native 262,144 tokens. It is not a graded 1M quality evaluation. No 1M prompt
-throughput row is claimed.
+throughput row appears in this post.
 
-Radix prefix caching is enabled in the product configuration. The matched
-campaign deliberately flushed it and checked for zero cached prompt tokens so
-each row measured full prefill. A separate radix-positive agentic workload was
-not completed, so there is no cache-hit throughput claim in this post.
+Radix prefix caching is enabled in the server. I flushed it and checked for zero
+cached prompt tokens before every matched row so that each one measured full
+prefill. I did not complete a separate agent workload with radix hits, so I do
+not report cache-hit throughput.
 
-### Graph-ready data
+### Data behind the figures
 
 The following blocks contain every number needed to redraw the final figures
 without scraping prose. Times are in the units named by each header.
@@ -911,7 +913,7 @@ without scraping prose. Times are in the units named by each header.
 #### Final matched long-context sweep
 
 ```csv
-arm,input_tokens,output_tokens,concurrency,samples_after_warmup,ttft_ms,prefill_tok_s,median_tpot_ms,median_decode_tok_s,raw_output_tok_s,acceptance
+mode,input_tokens,output_tokens,concurrency,samples_after_warmup,ttft_ms,prefill_tok_s,median_tpot_ms,median_decode_tok_s,raw_output_tok_s,acceptance
 dflash2,32768,1024,1,1,10096.5,3245,14.01,71.4,41.9,2.837
 mtp,32768,1024,1,1,9923.7,3302,9.15,109.2,53.0,3.885
 dflash2,131072,1024,1,1,48796.4,2686,17.21,58.1,15.4,3.106
@@ -932,13 +934,13 @@ input_tokens,mtp_decode_tok_s,dflash2_decode_tok_s,leader,leader_margin_pct
 524288,37.2,42.2,dflash2,13.4
 ```
 
-The leader margin uses the trailing arm as its denominator. The 1.8 percent
+The leader margin uses the trailing mode as its denominator. The 1.8 percent
 256K margin is reported for completeness and treated as a tie in the prose.
 
-#### Short matched qualification
+#### Short matched sweep
 
 ```csv
-arm,input_tokens,output_tokens,concurrency,samples_after_warmup,ttft_ms,prefill_tok_s,median_tpot_ms,median_decode_per_user_tok_s,derived_median_times_c,actual_output_tok_s,acceptance
+mode,input_tokens,output_tokens,concurrency,samples_after_warmup,ttft_ms,prefill_tok_s,median_tpot_ms,median_decode_per_user_tok_s,derived_median_times_c,actual_output_tok_s,acceptance
 dflash2,8192,1024,1,10,2383.5,3437,9.53,105.0,105.0,81.9,3.767
 mtp,8192,1024,1,10,2309.9,3547,9.44,106.0,106.0,84.0,3.758
 dflash2,16384,2048,1,10,4810.6,3406,10.69,93.5,93.5,71.5,3.295
@@ -950,7 +952,7 @@ dflash2,8192,1024,8,10,9360,,,46.8,374.1,189.7,3.865
 #### Historical no-spec and lower-context controls
 
 ```csv
-protocol,arm,input_tokens,output_tokens,decode_tok_s,acceptance,step_ms,notes
+run,mode,input_tokens,output_tokens,decode_tok_s,acceptance,step_ms,notes
 historical_native_pool,no_spec,256,1024,60.2,,,matched_to_historical_mtp
 historical_native_pool,mtp,256,1024,136.7,5.476,,window_8
 historical_native_pool,no_spec,8192,1024,59.1,,,matched_to_historical_spec
@@ -976,26 +978,25 @@ phase_524k,categorized_total,45.579,100_pct
 phase_524k,observed_timer_step,46.327,
 ```
 
-### Leaving the next bottleneck visible
+### What I want to try next
 
-The result is a production-capable serving configuration with a full target
-pool and two useful speculative modes. It does not turn 512K decode into a
-short-context experience. At 512K, target verification still owns the largest
-measured MTP phase, and prefill remains hundreds of seconds for a fully cold
-half-million-token prompt.
+I now have a full target pool and two speculative modes I can use. A 512K
+request is still nowhere near the short-context experience. Target verification
+is the largest MTP phase I measured at 512K, and a fully cold half-million-token
+prefill still takes hundreds of seconds.
 
-The next bounded decode experiment is to split the 36.5 ms target verification
-phase into full attention, Gated Delta recurrence, dense projections,
-collectives, and state commit, then optimize the largest measured component.
-For DFlash2, a shape-matched XPU top-16 implementation could remove the current
-generic `torch.topk` selector fallback only if it preserves exact candidate ids
-and scores. Radix-positive agent traffic and a graded long-context quality suite
-remain separate qualification projects.
+My next decode experiment is to split the 36.5 ms target verification phase
+into full attention, Gated Delta recurrence, dense projections, collectives,
+and state commit. I will work on whichever part is largest. For DFlash2, I want
+to replace the generic `torch.topk` fallback with a shape-matched XPU top-16
+implementation, but only if it returns the same candidate ids and scores. I
+also want a real agent workload with radix hits and a longer-context quality
+run. Those are separate pieces of work.
 
-The transferable lesson is smaller than either algorithm. Measure the narrowest
-operation that can disprove the current story. A module registry disproved the
-claimed DFlash2 source. One fixed-byte attention probe disproved the scheduler
-hypothesis. Device phases disproved the draft-head hypothesis. Physical slot
-accounting disproved the idea that a logical sliding window had solved memory.
-Those checks produced the flags and limits in the release; another round of
-guessing would not have.
+The small tests saved me the most time in this project. The model registry
+showed that I had mixed DFlash source files. A fixed-byte attention test showed
+that the scheduler was not causing the 46x slowdown. Device timers showed that
+the MTP draft head was no longer the largest part at 524K. Counting physical KV
+slots showed that a logical sliding window had not saved the memory I thought
+it had. Each time, one small measurement gave me a better next step than another
+round of tuning flags.
