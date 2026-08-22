@@ -21,6 +21,9 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 OUT = Path(__file__).resolve().parent
 DATA = json.loads((OUT / "capacity-data.json").read_text(encoding="utf-8"))
+PROFILE_DATA = json.loads(
+    (OUT / "short-profile-data.json").read_text(encoding="utf-8")
+)
 
 PAPER = "#fffdf7"
 INK = "#243447"
@@ -210,6 +213,88 @@ def capacity_envelope() -> None:
         finish(fig, "capacity-envelope.svg", title, description)
 
 
+def profile_shaping() -> None:
+    title = "Resident-state capacity, not the context ceiling, moved the short-request boundary"
+    description = (
+        "The left panel shows the highest tested passing concurrency for the same "
+        "2K-input and 512-output workload. Lowering only the context ceiling from "
+        "256K to 8K leaves the confirmed boundary at eleven. Increasing the Mamba "
+        "resident-state budget with matching decode graph tiers produces passing "
+        "steps at sixteen and twenty, followed by a confirmed maximum of twenty-three. "
+        "The right panel shows all three C=23 p95 TTFT trials below ten seconds and "
+        "the mixed C=24 trials, including one failure above the SLO."
+    )
+    cells = {cell["label"]: cell for cell in PROFILE_DATA["cells"]}
+    steps = [
+        ("native\n256K", "native256k-m48-g8-c11", 11, "C=11 max"),
+        ("8K\nonly", "ctx8k-m48-g8-c11", 11, "C=11 max"),
+        ("Mamba 80\n+ graphs 16", "ctx8k-m80-g16-c16", 16, "C≥16"),
+        ("Mamba 120\n+ graphs 24", "ctx8k-m120-g24-c20", 20, "C≥20"),
+        ("Mamba 128\n+ graphs 25", "ctx8k-m128-g25-c23", 23, "C=23 max"),
+    ]
+    colors = [YELLOW, CYAN, VIOLET, ORANGE, MINT]
+    with plt.xkcd(scale=0.62, length=100, randomness=2), style():
+        fig, (left, right) = plt.subplots(
+            1, 2, figsize=(13.2, 6.1), dpi=160,
+            gridspec_kw={"width_ratios": [1.55, 1]},
+        )
+        bars = left.bar(
+            range(len(steps)), [step[2] for step in steps], color=colors,
+            edgecolor=INK, linewidth=1.7, width=0.68,
+        )
+        left.set_xticks(range(len(steps)), [step[0] for step in steps])
+        left.tick_params(axis="x", labelsize=10)
+        left.set_ylim(0, 26)
+        left.set_ylabel("highest tested passing concurrency")
+        left.set_title("which profile knob moved C?", loc="left", fontsize=15)
+        clean_axes(left)
+        for bar, step in zip(bars, steps):
+            left.text(
+                bar.get_x() + bar.get_width() / 2, step[2] + 0.55, step[3],
+                ha="center", fontsize=10.5, fontweight="bold",
+            )
+        left.annotate(
+            "context-only A/B:\nno boundary change",
+            xy=(1, 11), xytext=(0.45, 18.3),
+            arrowprops={"arrowstyle": "->", "color": INK, "linewidth": 1.6},
+            ha="center", color=INK, fontsize=10,
+        )
+        left.text(
+            0.02, 0.97, "C≥16 and C≥20 are passing locators",
+            transform=left.transAxes, va="top", color=MUTED, fontsize=9.2,
+            bbox={"facecolor": PAPER, "edgecolor": "none", "pad": 1.5},
+        )
+
+        final_cells = [
+            cells["ctx8k-m128-g25-c23"],
+            cells["ctx8k-m128-g25-c24"],
+        ]
+        for x, cell in enumerate(final_cells):
+            for offset, trial in zip((-0.08, 0, 0.08), cell["trials"]):
+                passed = trial["strict_slo_pass"]
+                right.scatter(
+                    x + offset, ttft_p95_s(trial), s=115,
+                    marker="o" if passed else "X",
+                    color=MINT if passed else PINK,
+                    edgecolor=INK, linewidth=1.35, zorder=4,
+                )
+        right.axhline(10, color=INK, linewidth=2.1, linestyle=":")
+        right.text(1.25, 10.04, "10 s SLO", va="bottom", ha="right",
+                   fontsize=9.5, fontweight="bold")
+        right.set_xticks([0, 1], ["C=23\n3 pass", "C=24\n2 pass, 1 fail"])
+        right.set_xlim(-0.35, 1.35)
+        right.set_ylim(8.8, 11.15)
+        right.set_ylabel("p95 time to first token, seconds")
+        right.set_title("the adjacent decision", loc="left", fontsize=15)
+        clean_axes(right)
+        fig.suptitle(
+            "same 2K / 512 workload, a different serving envelope",
+            x=0.055, ha="left", fontsize=19, fontweight="bold",
+        )
+        fig.subplots_adjust(top=0.82, wspace=0.32)
+        finish(fig, "profile-shaping.svg", title, description)
+
+
 def protocol() -> None:
     title = "A four-stage protocol turns a latency SLO into a capacity limit"
     description = (
@@ -254,25 +339,25 @@ def protocol() -> None:
 
 
 def social_card() -> None:
-    title = "Qwen3.8 capacity under a ten-second first-token SLO"
+    title = "Qwen3.8 native and short-profile capacity under a ten-second first-token SLO"
     description = (
-        "Social card showing maximum closed-loop concurrency of eleven, seven, and five "
-        "for short, reference, and heavy request shapes on four Intel Arc Pro B70 GPUs."
+        "Social card comparing the same 2K-input and 512-output workload on four "
+        "Intel Arc Pro B70 GPUs: concurrency eleven for the native 256K profile "
+        "and twenty-three for the separately qualified 8K profile."
     )
-    workloads = DATA["workloads"]
-    values = [item["maximum_passing_concurrency"] for item in workloads]
-    labels = ["2K / 512", "8K / 1K", "16K / 2K"]
-    colors = [CYAN, VIOLET, ORANGE]
+    values = [11, 23]
+    labels = ["native 256K\n2K / 512", "short 8K\n2K / 512"]
+    colors = [CYAN, MINT]
     with plt.xkcd(scale=0.55, length=100, randomness=2), style():
         fig, ax = plt.subplots(figsize=(12, 6.3), dpi=100)
-        bars = ax.bar(range(3), values, color=colors, edgecolor=INK, linewidth=2,
-                      width=0.62)
+        bars = ax.bar(range(2), values, color=colors, edgecolor=INK, linewidth=2,
+                      width=0.58)
         clean_axes(ax)
-        ax.set_xticks(range(3), labels)
+        ax.set_xticks(range(2), labels)
         ax.set_ylabel("maximum concurrency")
-        ax.set_ylim(0, 13)
+        ax.set_ylim(0, 27)
         ax.set_title("capacity planning Qwen3.8 on four B70s", loc="left", fontsize=24)
-        ax.text(0.01, 0.91, "p95 time to first token below 10 seconds | MTP | native 256K",
+        ax.text(0.01, 0.91, "same workload and SLO | two separately qualified profiles",
                 transform=ax.transAxes, color=MUTED, fontsize=12)
         for bar, value in zip(bars, values):
             ax.text(bar.get_x() + bar.get_width() / 2, value + 0.45, f"C={value}",
@@ -284,5 +369,6 @@ if __name__ == "__main__":
     boundary_trials()
     throughput_vs_slo()
     capacity_envelope()
+    profile_shaping()
     protocol()
     social_card()
