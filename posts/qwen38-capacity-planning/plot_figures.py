@@ -179,7 +179,7 @@ def throughput_vs_slo() -> None:
         ax.set_ylim(8.35, 10.95)
         ax.set_xlabel("aggregate output throughput, tok/s")
         ax.set_ylabel("p95 time to first token, seconds")
-        ax.set_title("the decoder stayed busy while admission latency failed", loc="left")
+        ax.set_title("the decoder stayed busy after first-token latency failed", loc="left")
         clean_axes(ax, grid_axis="both")
         ax.legend(frameon=False, loc="lower right")
         ax.text(0.01, 0.02, "numbers beside points are independent trial IDs",
@@ -188,7 +188,7 @@ def throughput_vs_slo() -> None:
 
 
 def capacity_envelope() -> None:
-    title = "Maximum concurrency falls as the request shape grows"
+    title = "Maximum concurrency falls as requests grow longer"
     description = (
         "Horizontal bars show maximum passing closed-loop concurrency under p95 TTFT "
         "below ten seconds: eleven for 2K input and 512 output, seven for 8K and 1K, "
@@ -207,7 +207,7 @@ def capacity_envelope() -> None:
         ax.set_xlim(0, 12.6)
         ax.set_xticks(range(0, 13, 2))
         ax.set_xlabel("maximum closed-loop concurrency")
-        ax.set_title("capacity belongs to the workload row", loc="left")
+        ax.set_title("capacity depends on the request size", loc="left")
         clean_axes(ax, grid_axis="x")
         for bar, value in zip(bars, values):
             ax.text(value - 0.35, bar.get_y() + bar.get_height() / 2, str(value),
@@ -220,24 +220,25 @@ def capacity_envelope() -> None:
 
 
 def profile_shaping() -> None:
-    title = "Resident-state capacity, not the context ceiling, moved the short-request boundary"
+    title = "Recurrent-state capacity, not maximum context alone, moved the short-request boundary"
     description = (
         "The left panel shows the highest tested passing concurrency for the same "
-        "2K-input and 512-output workload. Lowering only the context ceiling from "
-        "256K to 8K leaves the confirmed boundary at eleven. Increasing the Mamba "
-        "resident-state budget with matching decode graph tiers produces passing "
-        "steps at sixteen and twenty, followed by a diagnostic 8K maximum of twenty-three. "
-        "The deployable 12K profile accepts twenty-two. The right panel shows all three "
-        "12K C=22 p95 TTFT trials below ten seconds and the mixed C=23 trials."
+        "2K-input and 512-output workload. Lowering only the server maximum context "
+        "from 262K to 8K leaves the confirmed boundary at eleven. Increasing the "
+        "recurrent-state entry pool with matching decode graph batches produces "
+        "passing steps at sixteen and twenty. With maximum context at 8K, the final "
+        "passing concurrency is twenty-three; with maximum context at 12K, it is "
+        "twenty-two. The right panel shows all three 12K C=22 p95 TTFT trials below "
+        "ten seconds and the mixed C=23 trials."
     )
     cells = {cell["label"]: cell for cell in PROFILE_DATA["cells"]}
     steps = [
-        ("native\n256K", "native256k-m48-g8-c11", 11, "C=11 max"),
-        ("8K context\nonly", "ctx8k-m48-g8-c11", 11, "C=11 max"),
-        ("M80\ngraph 16", "ctx8k-m80-g16-c16", 16, "C≥16"),
-        ("M120\ngraph 24", "ctx8k-m120-g24-c20", 20, "C≥20"),
-        ("8K diagnostic\nM128 / g25", "ctx8k-m128-g25-c23", 23, "C=23"),
-        ("12K shared\nM128 / g25", None, 22, "C=22"),
+        ("262K\n48 entries\ngraph 8", "native256k-m48-g8-c11", 11, "C=11 max"),
+        ("8K\n48 entries\ngraph 8", "ctx8k-m48-g8-c11", 11, "C=11 max"),
+        ("8K\n80 entries\ngraph 16", "ctx8k-m80-g16-c16", 16, "C≥16"),
+        ("8K\n120 entries\ngraph 24", "ctx8k-m120-g24-c20", 20, "C≥20"),
+        ("8K\n128 entries\ngraph 25", "ctx8k-m128-g25-c23", 23, "C=23"),
+        ("12K\n128 entries\ngraph 25", None, 22, "C=22"),
     ]
     colors = [YELLOW, CYAN, VIOLET, ORANGE, PINK, MINT]
     with plt.xkcd(scale=0.62, length=100, randomness=2), style():
@@ -251,9 +252,13 @@ def profile_shaping() -> None:
         )
         left.set_xticks(range(len(steps)), [step[0] for step in steps])
         left.tick_params(axis="x", labelsize=8.7)
+        left.set_xlabel(
+            "maximum context / recurrent-state entries / largest decode graph batch",
+            fontsize=9.5,
+        )
         left.set_ylim(0, 27)
         left.set_ylabel("highest tested passing concurrency")
-        left.set_title("which profile knob moved C?", loc="left", fontsize=15)
+        left.set_title("which server limit moved concurrency?", loc="left", fontsize=15)
         clean_axes(left)
         for bar, step in zip(bars, steps):
             left.text(
@@ -261,13 +266,13 @@ def profile_shaping() -> None:
                 ha="center", fontsize=10.5, fontweight="bold",
             )
         left.annotate(
-            "context-only A/B:\nno boundary change",
+            "lower maximum context only:\nno capacity change",
             xy=(1, 11), xytext=(0.45, 18.3),
             arrowprops={"arrowstyle": "->", "color": INK, "linewidth": 1.6},
             ha="center", color=INK, fontsize=10,
         )
         left.text(
-            0.02, 0.97, "C≥16 and C≥20 are passing locators",
+            0.02, 0.97, "C≥16 and C≥20 were intermediate passing tests",
             transform=left.transAxes, va="top", color=MUTED, fontsize=9.2,
             bbox={"facecolor": PAPER, "edgecolor": "none", "pad": 1.5},
         )
@@ -304,7 +309,7 @@ def model_state_map() -> None:
     description = (
         "A schematic follows one request through Qwen3.8. Full-attention layers add "
         "token-indexed KV pages, while Gated DeltaNet layers retain a fixed recurrent "
-        "state per active sequence. Decode graph capture supplies compiled batch shapes "
+        "state per active sequence. Decode graph capture supplies fast paths for listed batch sizes "
         "but does not allocate request slots or reduce long-prompt prefill work."
     )
     with plt.xkcd(scale=0.55, length=100, randomness=2), style():
@@ -350,7 +355,7 @@ def model_state_map() -> None:
                                      mutation_scale=15, linewidth=1.8, color=INK))
         ax.add_patch(FancyArrowPatch((6.98, 1.9), (8.08, 2.48), arrowstyle="-|>",
                                      mutation_scale=15, linewidth=1.8, color=INK))
-        ax.text(10.05, 1.73, "graphs speed execution; they are not an admission counter",
+        ax.text(10.05, 1.73, "graphs speed execution; they do not set the active-request limit",
                 ha="center", color=MUTED, fontsize=10)
         ax.text(0.3, 0.28,
                 "schematic: color separates resource classes; box area carries no quantity",
@@ -359,11 +364,12 @@ def model_state_map() -> None:
 
 
 def shared_profile() -> None:
-    title = "The 12K profile doubles short-turn capacity and preserves the reference boundary"
+    title = "A 12K server maximum doubles short-turn capacity and preserves the reference boundary"
     description = (
-        "Grouped bars compare maximum passing concurrency on the native 256K profile "
-        "and the shared 12K profile. The 2K-input 512-output workload rises from eleven "
-        "to twenty-two, while the 8K-input 1K-output workload stays at seven."
+        "Grouped bars compare maximum passing concurrency when server maximum context "
+        "is Qwen3.8's native 262K tokens and when it is 12K tokens. The 2K-input "
+        "512-output workload rises from eleven to twenty-two, while the 8K-input "
+        "1K-output workload stays at seven."
     )
     labels = ["2K / 512", "8K / 1K"]
     native = [11, 7]
@@ -373,13 +379,13 @@ def shared_profile() -> None:
         x = [0, 1]
         width = 0.34
         left = ax.bar([v - width / 2 for v in x], native, width, color=CYAN,
-                      edgecolor=INK, linewidth=1.8, label="native 256K")
+                      edgecolor=INK, linewidth=1.8, label="max context 262K")
         right = ax.bar([v + width / 2 for v in x], shared, width, color=MINT,
-                       edgecolor=INK, linewidth=1.8, hatch="//", label="shared 12K")
+                       edgecolor=INK, linewidth=1.8, hatch="//", label="max context 12K")
         ax.set_xticks(x, labels)
         ax.set_ylabel("maximum passing concurrency")
         ax.set_ylim(0, 25)
-        ax.set_title("one profile helps only the workload it was state-limited on", loc="left")
+        ax.set_title("more state helps only the request that ran out of state", loc="left")
         clean_axes(ax)
         for bars in (left, right):
             for bar in bars:
@@ -391,18 +397,19 @@ def shared_profile() -> None:
 
 
 def matched_reference() -> None:
-    title = "Native 256K and tuned 12K have the same 8K-input boundary"
+    title = "Maximum context at 262K and 12K gives the same 8K-input boundary"
     description = (
         "Four groups show three p95 time-to-first-token trials each for the 8K-input "
-        "1K-output workload. Both profiles pass concurrency seven near 8.7 seconds "
-        "and fail concurrency eight near 10.67 seconds, with the ten-second SLO marked."
+        "1K-output workload. The server maximum-context settings of 262K and 12K both "
+        "pass concurrency seven near 8.7 seconds and fail concurrency eight near "
+        "10.67 seconds, with the ten-second SLO marked."
     )
     native_workload = next(item for item in DATA["workloads"] if item["configured_isl"] == 8192)
     groups = [
-        ("native\nC=7", native_workload["passing_trials"]),
-        ("native\nC=8", native_workload["failing_trials"]),
-        ("12K\nC=7", SHARED_REFERENCE["cells"][0]["trials"]),
-        ("12K\nC=8", SHARED_REFERENCE["cells"][1]["trials"]),
+        ("max context 262K\nC=7", native_workload["passing_trials"]),
+        ("max context 262K\nC=8", native_workload["failing_trials"]),
+        ("max context 12K\nC=7", SHARED_REFERENCE["cells"][0]["trials"]),
+        ("max context 12K\nC=8", SHARED_REFERENCE["cells"][1]["trials"]),
     ]
     with plt.xkcd(scale=0.58, length=100, randomness=2), style():
         fig, ax = plt.subplots(figsize=(11.8, 6.1), dpi=160)
@@ -420,7 +427,7 @@ def matched_reference() -> None:
         ax.set_xticks(range(4), [g[0] for g in groups])
         ax.set_ylabel("p95 time to first token, seconds")
         ax.set_ylim(8.2, 11.15)
-        ax.set_title("the long prompt reaches the compute limit before the state limit", loc="left")
+        ax.set_title("the long prompt reaches its compute limit before its state limit", loc="left")
         clean_axes(ax)
         ax.text(0.01, 0.02, "each marker is an independent 64-request cold-cache trial",
                 transform=ax.transAxes, color=MUTED, fontsize=9.5)
@@ -430,13 +437,13 @@ def matched_reference() -> None:
 def protocol() -> None:
     title = "A four-stage protocol turns a latency SLO into a capacity limit"
     description = (
-        "A left-to-right flow pins the serving identity and workload, locates a cheap "
-        "concurrency neighborhood, confirms the adjacent pass and fail points three "
+        "A left-to-right flow fixes the serving identity and workload, finds the range "
+        "between passing and failing concurrency, confirms the adjacent integers three "
         "times from cold cache, then validates raw generated text and server token usage."
     )
     boxes = [
-        ("pin the row", "digest, model,\nshape, SLO", YELLOW),
-        ("locate", "exponential +\nbisection", CYAN),
+        ("fix the test", "image, model,\nrequest size, SLO", YELLOW),
+        ("find the edge", "large steps, then\nadjacent integers", CYAN),
         ("confirm", "3 x pass and\n3 x next fail", VIOLET),
         ("prove work", "raw SSE +\nserver usage", MINT),
     ]
@@ -465,20 +472,21 @@ def protocol() -> None:
                 )
                 ax.add_patch(arrow)
         ax.text(0.4, 0.55,
-                "publish Cmax only when latency and generation correctness pass together",
+                "publish maximum C only when latency and generation correctness pass together",
                 fontsize=11.5, fontweight="bold")
         finish(fig, "capacity-protocol.svg", title, description)
 
 
 def social_card() -> None:
-    title = "Qwen3.8 native and shared-profile capacity under a ten-second first-token SLO"
+    title = "Qwen3.8 capacity at two server maximum-context settings"
     description = (
         "Social card comparing the same 2K-input and 512-output workload on four "
-        "Intel Arc Pro B70 GPUs: concurrency eleven for the native 256K profile "
-        "and twenty-two for a shared 12K profile that still serves the 8K-input workload."
+        "Intel Arc Pro B70 GPUs: concurrency eleven when server maximum context is "
+        "262K tokens and twenty-two when it is 12K tokens. The 12K setting still "
+        "serves the 8K-input workload."
     )
     values = [11, 22]
-    labels = ["native 256K\n2K / 512", "shared 12K\n2K / 512"]
+    labels = ["max context 262K\n2K / 512", "max context 12K\n2K / 512"]
     colors = [CYAN, MINT]
     with plt.xkcd(scale=0.55, length=100, randomness=2), style():
         fig, ax = plt.subplots(figsize=(12, 6.3), dpi=100)
@@ -488,8 +496,8 @@ def social_card() -> None:
         ax.set_xticks(range(2), labels)
         ax.set_ylabel("maximum concurrency")
         ax.set_ylim(0, 27)
-        ax.set_title("capacity planning Qwen3.8 on four B70s", loc="left", fontsize=24)
-        ax.text(0.01, 0.91, "same workload and SLO | 8K / 1K remains C=7 on both",
+        ax.set_title("Qwen3.8 capacity on four B70s", loc="left", fontsize=24)
+        ax.text(0.01, 0.91, "2K / 512 | p95 first token < 10 s | 8K / 1K remains C=7 on both",
                 transform=ax.transAxes, color=MUTED, fontsize=12)
         for bar, value in zip(bars, values):
             ax.text(bar.get_x() + bar.get_width() / 2, value + 0.45, f"C={value}",
