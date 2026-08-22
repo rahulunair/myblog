@@ -1,0 +1,692 @@
+---
+title: "Capacity planning Qwen3.8 on four Arc Pro B70s under a 10-second TTFT SLO"
+subtitle: "Cold-cache AIPerf, adjacent pass/fail boundaries, and proof that every counted token was generated"
+pagetitle: "Qwen3.8 capacity on 4 Arc Pro B70s"
+date: "2026-08-21"
+description: "A cold-cache AIPerf method finds Qwen3.8-27B MTP capacity on four Arc Pro B70s under a p95 TTFT below 10 seconds."
+categories: [intel, arc, arc-pro, xe2, xpu, sglang, llm-inference, speculative-decoding, agentic-coding]
+image: qwen38-capacity-planning/card.png
+image-alt: "Three Qwen3.8 workload shapes stop at different concurrency boundaries under the same 10-second p95 TTFT SLO."
+resources:
+  - qwen38-capacity-planning/capacity-data.json
+---
+
+A model server can finish every request, keep aggregate output throughput
+climbing, and still have no capacity left to sell. The failure appears in the
+part a user feels first: a queued prompt waits too long before the first token.
+
+I had four Intel Arc Pro B70s serving Qwen3.8-27B with its MTP head. The native
+context and physical token pool were both 262,144 tokens. Single-user prefill
+was close to 4,000 tok/s, and decode sat near the number I had already published
+for the image. I still could not answer the capacity question I cared about:
+
+> How many simultaneous 8K-input, 1K-output agent turns can this exact machine
+> admit while p95 time to first token stays below ten seconds?
+
+The answer is **seven concurrent requests** for that workload and SLO. Across
+three independent cold-cache trials at concurrency seven, p95 TTFT landed at
+8.705, 8.709, and 8.724 seconds. The three concurrency-eight trials landed at
+10.667, 10.669, and 10.674 seconds. Every one of those 384 measured requests
+returned HTTP 200, finished because it reached the requested length, and
+contained exactly 1,024 server-counted completion tokens.
+
+Seven belongs to that workload row, not to the GPU box. I repeated the boundary
+search with a shorter 2K/512 turn and a heavier 16K/2K turn because input
+length, output length, arrival pattern, cache state, and sampling policy all
+change how work accumulates in front of the first token.
+
+The method mattered more than the first number. A few plausible shortcuts gave
+me measurements that looked useful but could not support an admission limit:
+a throughput maximum with an SLO violation, a warm-up set that leaked into the
+measured set, a client tokenizer disagreeing with the server's generated-token
+count, and a single lucky prompt seed near the boundary. This post works
+through those failures and ends with the protocol I would use to size another
+model.
+
+## Part I: Running the exact server
+
+### Pinning what I measured
+
+I used the current `latest` image because that is the deployment tag in use on
+this machine. The tag had been retargeted to the Qwen3.8 release, so I resolved
+it before measuring:
+
+```bash
+docker pull rahulunair/sglang-xpu:latest
+docker image inspect rahulunair/sglang-xpu:latest \
+  --format '{{index .RepoDigests 0}}'
+```
+
+The run resolved to:
+
+```text
+rahulunair/sglang-xpu@sha256:feb7b9130eff2fa26dfa09ab1a8b9a8423db013ad7d18f804f8b55a57cb2c175
+```
+
+That digest is the experimental identity. `latest` is only a convenient way to
+pull it. A later retag must trigger a new qualification rather than inherit
+these numbers.
+
+The target was
+[`ulkaa/Qwen3.8-27B-AWQ-INT4`](https://huggingface.co/ulkaa/Qwen3.8-27B-AWQ-INT4)
+at snapshot `2bf7f1646dc0875cff4404fdfef976cfb0ff2199`. It is the native-context
+AWQ W4A16 checkpoint. MTP uses the auxiliary BF16 head stored in that target,
+so there is no second draft checkpoint.
+
+The public
+[`rahulunair/sglang-xpu` Docker Hub README](https://hub.docker.com/r/rahulunair/sglang-xpu#qwen38-27b)
+carries the release recipe. This is the complete measured launch with the
+moving tag replaced by its resolved digest. `MODEL_DIR` points at the pinned
+snapshot above, and `CONTAINER` is any local name the reader chooses:
+
+```bash
+export IMAGE='rahulunair/sglang-xpu@sha256:feb7b9130eff2fa26dfa09ab1a8b9a8423db013ad7d18f804f8b55a57cb2c175'
+: "${MODEL_DIR:?set MODEL_DIR to the pinned checkpoint snapshot}"
+: "${CONTAINER:?choose a local container name}"
+
+SERVER_ARGS=(
+  python -m sglang.launch_server
+  --model-path /model --served-model-name Qwen3.8-27B
+  --device xpu --tp-size 4 --host 0.0.0.0 --port 30000
+  --trust-remote-code --nccl-port 41130
+  --attention-backend intel_xpu --page-size 64
+  --context-length 262144 --max-total-tokens 262144
+  --chunked-prefill-size 4096 --mem-fraction-static 0.85
+  --max-running-requests 64 --max-mamba-cache-size 48
+  --disable-custom-all-reduce --watchdog-timeout 1800
+  --cuda-graph-config
+    '{"decode":{"backend":"full","bs":[1,2,4,8]},"prefill":{"backend":"disabled"}}'
+  --skip-server-warmup --language-only
+  --reasoning-parser qwen3-thinking --tool-call-parser qwen3_coder
+  --strip-thinking-cache --enable-strict-thinking --enable-cache-report
+  --speculative-algorithm EAGLE --speculative-num-steps 7
+  --speculative-eagle-topk 1 --speculative-num-draft-tokens 8
+)
+```
+
+```bash
+docker run -d --name "$CONTAINER" \
+  --device=/dev/dri -v /dev/dri:/dev/dri \
+  --group-add video --group-add "$(getent group render | cut -d: -f3)" \
+  --ipc=host --shm-size=64g \
+  --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+  --ulimit memlock=-1 --ulimit stack=67108864 \
+  -p 30000:30000 \
+  -e ONEAPI_DEVICE_SELECTOR=level_zero:gpu \
+  -e XPU_REPO=/opt/xpu \
+  -e XPU_DENSE_INT8_MAX_M=8 \
+  -e XPU_SYMM_AR_MAX_BYTES=131072 \
+  -v "$MODEL_DIR:/model:ro" \
+  "$IMAGE" "${SERVER_ARGS[@]}"
+```
+
+The machine ran a CachyOS 7.2.0 kernel and Intel driver 17012946. Each B70
+reported 32,656 MiB of physical memory. After model allocation and graph
+capture, SGLang reported 18.09 GB available per card for the token pool.
+
+I asked for a 64-request ceiling, but SGLang reduced the physical active limit
+to nine requests from the available KV capacity:
+
+```text
+max_running_requests was reduced from the requested 64 to 9
+max_total_num_tokens=262144, max_running_requests=9, context_len=262144
+```
+
+That distinction will matter later. A launch argument is a requested ceiling.
+The allocator decides the active ceiling, and the latency distribution decides
+how much of it satisfies the service contract.
+
+### Checking readiness without changing the workload
+
+I checked `/health`, the advertised model, the server arguments, and the final
+token-pool line before sending load:
+
+```bash
+curl -fsS http://127.0.0.1:30000/health
+curl -fsS http://127.0.0.1:30000/v1/models | jq
+docker logs "$CONTAINER" 2>&1 | rg -m1 'server_args=ServerArgs'
+docker logs "$CONTAINER" 2>&1 | rg 'max_total_num_tokens' | tail -1
+```
+
+I did not use `/health_generate`. A generation probe has a prompt, output
+length, graph shape, and cache effect. It is workload unless the protocol
+accounts for it. The ordinary health endpoint establishes process readiness
+without quietly compiling or caching a request before the benchmark begins.
+
+## Part II: Turning an SLO into a capacity question
+
+### Defining the row before searching it
+
+"Capacity" needs a row of conditions. Mine was:
+
+| dimension | fixed value for the reference row |
+|---|---|
+| hardware | 4 x Intel Arc Pro B70 |
+| model | Qwen3.8-27B AWQ W4A16, native 262,144 context |
+| serving mode | MTP/EAGLE 7 steps, top-k 1, width 8, TP4 |
+| synthetic input length | 8,192 tokens, zero variance |
+| requested output length | 1,024 tokens, zero variance |
+| sampling | temperature 0, `ignore_eos=true` |
+| arrival model | AIPerf closed-loop concurrency burst |
+| cache policy | radix enabled, flushed before every independent trial |
+| warm-up | 8 requests at concurrency one, excluded from metrics |
+| measured sample | 64 unique requests per trial |
+| latency SLO | p95 TTFT strictly below 10,000 ms |
+| correctness gate | zero errors or cancellations, exact server output count |
+
+AIPerf's concurrency-burst pattern keeps up to `C` requests in flight and
+replaces a completed request until the measured count is exhausted. The result
+describes a closed-loop concurrent-session limit. An open-loop
+requests-per-second limit requires a different arrival experiment.
+
+For a workload row `w`, I define the measured limit as:
+
+```text
+Cmax(w) = max C such that every confirmation trial has
+          p95(TTFT) < 10,000 ms
+          and every correctness gate passes
+```
+
+The strict inequality is deliberate. A p95 of exactly 10,000 ms does not pass
+an SLO written as "below ten seconds."
+
+### Separating the four numbers people call speed
+
+I kept four quantities separate throughout the run:
+
+| metric | what it answers |
+|---|---|
+| TTFT | how long a request waits for its first streamed token |
+| inter-token latency | spacing between streamed output tokens for one user |
+| aggregate output throughput | completion tokens the whole server emits per second |
+| request throughput | completed fixed-shape requests per second |
+
+The Docker Hub table defines prefill as `input tokens / median TTFT` and decode
+as `1000 / median inter-token latency`. Those are useful single-user rates.
+Neither one says how many concurrent requests meet a tail-latency SLO.
+
+Output length also belongs in a TTFT capacity experiment. It has little effect
+on the first token of an isolated request, but at concurrency it determines how
+long older requests occupy decode slots before queued prompts can prefill.
+There is no generally "ideal" ISL/OSL pair. There is a representative traffic
+shape, followed by a capacity result for that shape.
+
+## Part III: Finding a boundary I could defend
+
+### Reproducing the single-user baseline first
+
+I used [NVIDIA AIPerf 0.10.0](https://github.com/ai-dynamo/aiperf). The Docker
+Hub recipe calls for 8,192 input tokens, 1,024 output tokens, concurrency one,
+two warm-ups, ten measured requests, greedy sampling, and seed 42. This is the
+equivalent command with AIPerf 0.10's short option names:
+
+```bash
+aiperf profile \
+  --model Qwen3.8-27B --url http://127.0.0.1:30000 \
+  --endpoint-type chat --streaming \
+  --tokenizer "$MODEL_DIR" --tokenizer-trust-remote-code \
+  --isl 8192 --isl-stddev 0 --osl 1024 --osl-stddev 0 \
+  --extra-inputs '{"temperature":0,"ignore_eos":true}' \
+  --random-seed 42 --warmup-request-count 2 \
+  --request-count 10 --concurrency 1 --export-level raw
+```
+
+The rerun stayed close to the published image result:
+
+| C=1 metric | published image row | AIPerf rerun |
+|---|---:|---:|
+| TTFT p50 | 2.310 s | 2.133 s |
+| derived prefill | 3,546 tok/s | 3,840 tok/s |
+| inter-token latency p50 | 9.03 ms | 9.619 ms |
+| derived per-user decode | 110.7 tok/s | 104.0 tok/s |
+| aggregate output throughput | 87.4 tok/s | 90.2 tok/s |
+
+The rerun was about eight percent faster in median prefill and six percent
+slower in median decode. That is close enough to establish that I had loaded
+the expected performance path before asking a different, concurrent question.
+
+The first baseline also exposed a cache trap. I had ten synthetic dataset
+entries for two warm-ups plus ten measured requests. AIPerf exhausted the ten
+unique entries and wrapped, so the first two measured prompts reused warm-up
+prefixes. The minimum TTFT fell to roughly 161 ms. The median remained useful,
+but that artifact could not support a tail-capacity claim.
+
+Every capacity trial therefore used 72 entries: eight for warm-up and 64 used
+once for measurement. Radix caching remained enabled because it is part of the
+server configuration, but I flushed it before each invocation and never reused
+a measured prompt within that invocation.
+
+### Using automatic search only as a locator
+
+AIPerf has a purpose-built `max-concurrency-under-sla` search recipe. There is
+no separate `tune` command in 0.10.0. The search is useful for locating a
+neighborhood, but it is a poor place to stop. Search points can inherit cached
+prefixes from earlier points, and the monotonic planner performs its own
+stability repetitions.
+
+This is the locator form for the reference row:
+
+```bash
+aiperf profile \
+  --model Qwen3.8-27B --url http://127.0.0.1:30000 \
+  --endpoint-type chat --streaming --use-server-token-count \
+  --tokenizer "$MODEL_DIR" --tokenizer-trust-remote-code \
+  --request-timeout-seconds 21600 \
+  --isl 8192 --isl-stddev 0 --osl 1024 --osl-stddev 0 \
+  --extra-inputs '{"temperature":0,"ignore_eos":true}' \
+  --random-seed 42 --num-dataset-entries 72 \
+  --warmup-request-count 8 --warmup-concurrency 1 \
+  --request-count 64 \
+  --search-recipe max-concurrency-under-sla \
+  --ttft-sla-ms 10000 \
+  --concurrency-min 1 --concurrency-max 64 \
+  --search-style monotonic --num-profile-runs 1 \
+  --export-level records --artifact-dir "$SEARCH_OUT" \
+  --ui simple --max-workers 64
+```
+
+I used the search to establish that concurrency one and two were comfortable,
+then switched to explicit cold-cache probes at 4, 8, 6, and 7. That sequence
+located an adjacent pair: seven passed and eight failed.
+
+| locator C | TTFT p50 | TTFT p95 | TTFT p99 | output tok/s | next move |
+|---:|---:|---:|---:|---:|:---|
+| 4 | 2.161 s | 4.101 s | 7.862 s | 178.5 | double |
+| 8 | 2.135 s | 10.660 s | 15.583 s | 217.0 | bisect 4..8 |
+| 6 | 2.126 s | 6.737 s | 11.409 s | 197.5 | test upper half |
+| 7 | 2.131 s | 8.694 s | 13.399 s | 218.5 | adjacent pair found |
+
+The four probes already contain the main warning. Median TTFT stayed near 2.1
+seconds from C=4 through C=8 while p95 climbed by 6.6 seconds. A chart of p50
+would have looked flat precisely while capacity was disappearing in the tail.
+The p99 column also shows why I named the percentile in the contract before
+running the search. C=6 passes my p95 objective and fails a p99 version of it.
+
+For a reusable search I would still start with exponential steps, then bisect
+the last passing and first failing values. The locator can be cheap. The final
+claim cannot.
+
+### Confirming both sides independently
+
+At the candidate maximum and the next integer, I ran three separate AIPerf
+processes. Each one received a fresh cache flush, a different random seed,
+eight serial warm-ups, 64 unique measured prompts, and a 15-second quiet period
+before the next invocation. For larger concurrency I use at least
+`max(64, 4 * C)` measured requests.
+
+The important additions are `--use-server-token-count` and a raw export:
+
+```bash
+aiperf profile \
+  --model Qwen3.8-27B --url http://127.0.0.1:30000 \
+  --endpoint-type chat --streaming --use-server-token-count \
+  --tokenizer "$MODEL_DIR" --tokenizer-trust-remote-code \
+  --isl 8192 --isl-stddev 0 --osl 1024 --osl-stddev 0 \
+  --extra-inputs '{"temperature":0,"ignore_eos":true}' \
+  --num-dataset-entries 72 --warmup-request-count 8 \
+  --warmup-concurrency 1 --request-count 64 --concurrency 7 \
+  --export-level raw --artifact-dir "$OUT" --ui None
+```
+
+Sixty-four requests make p95 sensitive to roughly the slowest four responses,
+which is exactly the queued cohort I need the test to expose. Three separate
+runs give that cohort three chances to move with prompt order, speculative
+acceptance, and scheduler timing. This is an operational acceptance rule, not
+a confidence interval: every pass-side run must remain below the line.
+
+The process boundary matters. `--num-profile-runs 3` inside one AIPerf process
+would be convenient, but it also keeps more client and server history adjacent.
+I wanted each trial to own its flush, readiness check, prompt corpus, random
+seed, export, and verdict. That made a trial independently inspectable and
+made it impossible for one aggregate report to hide a failed repetition.
+
+Greedy sampling and `ignore_eos=true` serve a similar purpose. Natural early
+stops would turn the requested 1,024-token row into a distribution of shorter
+decode occupancies. That may be the correct production workload, but it is not
+the fixed-shape experiment defined here. Forcing the requested length lets me
+compare concurrency without output-length drift.
+
+The server-token flag matters. In an early concurrency-eight probe, client
+retokenization reported one output as 979 tokens even though the stream ended
+with `finish_reason="length"`. The client was tokenizing reconstructed text,
+which need not invert the server's token stream exactly. Streaming usage gave
+the authoritative count: 1,024 generated tokens.
+
+The input has a similar naming wrinkle. `--isl 8192` controls AIPerf's
+synthetic message length. After the chat template, the server reported 8,243 to
+8,246 prompt tokens. I report the workload by its configured AIPerf shape and
+retain the server range beside it.
+
+### Proving that token counters represented text
+
+Exact usage alone would still leave an unpleasant loophole: a broken endpoint
+could return usage fields without meaningful streamed deltas. I wrote a raw
+evidence validator that parses every SSE packet from the measured phase and
+requires all of the following:
+
+1. The raw export contains the expected number of profiling records.
+2. All eight warm-up prompts are unique and absent from the measured set.
+3. Every measured record has HTTP status 200 and is not cancelled.
+4. Every measured prompt is unique.
+5. Every stream contains non-empty `reasoning_content` or `content` deltas.
+6. Every output is unique for this synthetic corpus.
+7. Every final usage object reports the requested completion length.
+8. Every request ends with `finish_reason="length"`.
+9. The aggregate metrics report zero errors and zero length mismatches.
+
+For one 8K/1K concurrency-seven trial, the validator found 15,838 non-empty
+generation chunks, 255,705 UTF-8 output bytes, 64 unique output hashes, and
+65,536 server-counted completion tokens. I also decoded the streams and read
+them. The first was a continuous analysis of the synthetic *Richard II*
+excerpt, including its scene, speakers, and truncated final clause, and it ran
+to the 1,024-token limit. The other 63 outputs produced different hashes. These
+were real model streams rather than acknowledgements manufactured by the load
+generator.
+
+## Part IV: The capacity boundary
+
+### The reference 8K/1K row
+
+The cleanest view of the result is the adjacent pair. Concurrency seven passed
+three times. Concurrency eight failed three times.
+
+| concurrency | trial | TTFT p50 | TTFT p95 | TTFT p99 | ITL p50 | ITL p95 | output tok/s | verdict |
+|---:|---:|---:|---:|---:|---:|---:|---:|:---|
+| 7 | 1 | 2.130 s | 8.709 s | 13.342 s | 27.972 ms | 43.853 ms | 216.7 | pass |
+| 7 | 2 | 2.131 s | 8.705 s | 13.345 s | 31.975 ms | 42.788 ms | 206.1 | pass |
+| 7 | 3 | 2.130 s | 8.724 s | 13.357 s | 30.848 ms | 38.319 ms | 216.2 | pass |
+| 8 | 1 | 2.135 s | 10.674 s | 15.326 s | 33.201 ms | 47.041 ms | 215.6 | fail |
+| 8 | 2 | 2.132 s | 10.667 s | 15.319 s | 34.208 ms | 47.426 ms | 221.2 | fail |
+| 8 | 3 | 2.133 s | 10.669 s | 15.313 s | 34.729 ms | 46.054 ms | 218.9 | fail |
+
+The median TTFT barely moved. The tail did. At concurrency eight, most prompts
+still entered prefill immediately and a smaller queued cohort waited through
+enough decode work to push p95 over the line. A median-only report would have
+called both settings equally healthy.
+
+Aggregate output throughput is just as misleading here. The C=7 trials emitted
+206.1 to 216.7 tok/s. The C=8 trials emitted 215.6 to 221.2 tok/s. The server
+kept doing useful work after the first-token SLO had failed.
+
+![](qwen38-capacity-planning/throughput-vs-slo.svg){fig-alt="Six 8K-input, 1K-output trials compare aggregate output throughput with p95 TTFT. Throughput overlaps at concurrency seven and eight, while all concurrency-seven trials stay below the 10-second SLO and all concurrency-eight trials cross it."}
+
+*Figure 1. Output throughput overlaps across the adjacent boundary, while p95 TTFT gives the pass/fail decision.*
+
+This is why I will not infer capacity from peak tokens per second. Throughput
+describes completed work. TTFT describes whether new work is admitted quickly
+enough. A busy decoder can look excellent by the first measure while the queue
+is already unacceptable by the second.
+
+### Two more workload shapes
+
+One ISL/OSL pair answers one question. I added a short 2K/512 turn and a heavy
+16K/2K turn to test whether seven carried across request shapes. The two new
+boundaries landed elsewhere.
+
+| AIPerf shape | server prompt range | maximum passing C | passing p95 TTFT, three trials | first failing C | failing p95 TTFT, three trials |
+|:---|:---|---:|:---|---:|:---|
+| 2,048 / 512 | 2,099 to 2,102 | **11** | 7.095, 8.751, 7.530 s | 12 | 11.402, 10.323, 12.015 s |
+| 8,192 / 1,024 | 8,243 to 8,246 | **7** | 8.709, 8.705, 8.724 s | 8 | 10.674, 10.667, 10.669 s |
+| 16,384 / 2,048 | 16,435 to 16,438 | **5** | 9.077, 8.617, 9.086 s | 6 | 12.656, 12.655, 12.660 s |
+
+![](qwen38-capacity-planning/boundary-trials.svg){fig-alt="For each of three fixed Qwen3.8 workload shapes, three cold-cache trials at the maximum passing concurrency are below the 10-second p95 TTFT SLO and three trials at the next integer are above it."}
+
+*Figure 2. Three independent trials preserve the same verdict on both sides of every workload boundary.*
+
+The repetitions were not ceremonial. The short C=11 p95 moved from 7.095 to
+8.751 seconds across seeds, a 1.656-second span, even though every trial made
+the same pass decision. Reference C=7 happened to be extremely tight, within
+19 ms across all three runs. I did not assume that repeatability would transfer
+to another shape. The useful evidence is that the verdict remained stable on
+both sides of every boundary.
+
+The shorter row admits eleven closed-loop sessions. That is higher than the
+server's nine-request physical active limit because client concurrency counts
+in-flight sessions, including requests waiting at the scheduler. Two can wait
+briefly and still keep p95 below ten seconds. The physical limit constrains how
+many requests run at once; it does not directly state how many client sessions
+meet a latency objective.
+
+The heavy row goes the other way. A 16K prompt consumes more prefill work, and
+its 2K completion keeps decode slots occupied twice as long as the reference
+row. Five sessions pass. Six do not. The result is a small capacity surface,
+not one magic number attached to the machine.
+
+![](qwen38-capacity-planning/capacity-envelope.svg){fig-alt="Maximum passing closed-loop concurrency under the same 10-second p95 TTFT SLO is eleven for a 2K-input and 512-output workload, seven for 8K and 1K, and five for 16K and 2K."}
+
+*Figure 3. Capacity falls from eleven to seven to five as the fixed request shape grows.*
+
+The maximum-passing rows had the following ranges across their three trials:
+
+| shape at Cmax | request/s | aggregate output tok/s | ITL p50 | ITL p95 | ITL p99 | request-latency p95 |
+|:---|:---|:---|:---|:---|:---|:---|
+| 2K/512 at C=11 | 0.499 to 0.516 | 255.3 to 264.0 | 30.919 to 33.708 ms | 45.458 to 47.833 ms | 49.889 to 54.122 ms | 29.142 to 32.217 s |
+| 8K/1K at C=7 | 0.201 to 0.212 | 206.1 to 216.7 | 27.972 to 31.975 ms | 38.319 to 43.853 ms | 41.655 to 47.811 ms | 42.198 to 48.107 s |
+| 16K/2K at C=5 | 0.084 to 0.089 | 171.9 to 181.5 | 24.365 to 26.307 ms | 35.820 to 37.211 ms | 38.667 to 44.705 ms | 77.575 to 80.412 s |
+
+Here ITL is AIPerf's measured inter-token latency, the time spacing a streaming
+user sees between output tokens. I do not compute it as `1000 / aggregate
+output throughput`. The latter divides the whole server's work across all
+active users and answers a different question.
+
+For the reference capacity row, the reported TPOT is therefore 27.972 to
+31.975 ms at p50 and 38.319 to 43.853 ms at p95 across the three trials. Median
+token spacing corresponds to roughly 31.3 to 35.8 output tok/s for one active
+stream, far below the C=1 decode rate because seven users share the server. The
+aggregate 206.1 to 216.7 tok/s number must not be presented as per-user speed.
+
+The heavy row is a useful example. Its per-user token spacing is lower than the
+short row because only five sessions are admitted, yet a 2,048-token answer
+still puts p95 total request latency near 80 seconds. A TTFT-only contract can
+be satisfied while complete answers take much longer because the contract says
+nothing about completion time. The product must gate every metric it actually
+owes.
+
+### The tail metric is part of the product
+
+The result changes if the percentile changes. At the maximum p95-passing
+concurrency, p99 TTFT reached 11.215 to 13.231 seconds for 2K/512, 13.342 to
+13.357 seconds for 8K/1K, and 18.438 to 18.443 seconds for 16K/2K. None of these
+rows has been qualified for a p99-below-ten-seconds contract. That would be a
+new search with a lower boundary, not a footnote added to this one.
+
+The same applies to inter-token latency. I recorded ITL so the capacity result
+does not hide the experience after the first token, but TTFT was the only
+latency gate in this experiment. Adding an ITL or end-to-end latency SLO can
+only keep or lower the admitted concurrency.
+
+Across all 18 boundary confirmations, the validator checked 1,152 measured
+streams and 1,376,256 server-counted completion tokens. It found zero HTTP
+failures, cancellations, length mismatches, or duplicate
+outputs within a trial. It also proved that all 144 warm-up prompts were absent
+from the measured sets. The raw streams contained 338,824 non-empty
+generated-text chunks and 5,281,875 UTF-8 bytes. Latency did not get to pass
+unless generation correctness passed with it.
+
+## Part V: What the shape changes
+
+### Input length spends the first-token budget directly
+
+Longer input is the obvious prefill cost. The less obvious effect is
+contention: several long prefills arrive while older requests are decoding,
+and the scheduler must divide compute and token-pool space across both phases.
+Single-user prefill near 4K tok/s proves that one 8K prompt is feasible. It
+does not predict the queued cohort that determines p95 at C=7 or C=8.
+
+### Output length spends the next request's budget
+
+OSL does not materially delay the first token of an isolated request. Under
+concurrency it controls residency. A request that generates 2,048 tokens holds
+its decode state and scheduling share longer than one that generates 512.
+Those resident decodes become the background against which a new prompt tries
+to prefill. That is why an ISL-only capacity model is incomplete.
+
+### Cache policy can answer a different question by accident
+
+Repeated system prompts are real in production, and radix hits can be a useful
+capacity feature. They need their own workload distribution. I used unique
+synthetic prompts and a cache flush before each confirmation so this result is
+a cold-prefix floor, not a claim about a particular prefix-hit ratio.
+
+For a prefix-aware row I would define the shared-prefix lengths and hit ratio,
+warm the cache deliberately, then validate the same pass/fail boundary. I would
+not mix warm and cold samples and average the distinction away.
+
+### Closed-loop concurrency and arrival rate answer different questions
+
+At the reference C=7 boundary, fixed-shape request throughput was 0.201 to
+0.212 requests/s while aggregate output throughput was 206.1 to 216.7 tok/s.
+Those are consequences of 8K/1K closed-loop sessions. They do not establish
+that an open-loop service can accept that many arrivals per second without an
+ever-growing queue.
+
+If the product contract is expressed in requests per second, I would take the
+concurrency boundary as an admission-control clue and run an open-loop rate
+sweep next. The required evidence is stable latency over a sustained interval,
+a bounded queue, and a pass/fail rate boundary under the actual arrival
+distribution.
+
+### Turning several rows into admission control
+
+The three maxima are alternatives, not quantities to add. This host can admit
+eleven short sessions under the tested short-only workload, seven reference
+sessions under the reference-only workload, or five heavy sessions under the
+heavy-only workload. It has not been shown to admit 11 + 7 + 5 sessions at
+once. A mixed queue creates interference between the classes and needs a mixed
+experiment.
+
+I would build that experiment from the joint traffic distribution:
+
+1. Export paired input and output lengths from completed requests.
+2. Retain important categorical features such as prefix-hit class, tool use,
+   language, and sampling policy.
+3. Define a small number of traffic classes whose members have similar serving
+   cost.
+4. Replay the observed class proportions while searching total admission.
+5. Check the TTFT SLO globally and per class so a short majority cannot hide a
+   heavy-class tail.
+
+The isolated rows remain valuable. They act as unit tests for the capacity
+surface and make regressions easy to localize. The mixed replay is the
+integration test.
+
+For an online controller, I would not assign every request a weight from ISL
+alone. A useful first cost estimate includes prompt tokens, requested or
+predicted output tokens, prefix-reusable tokens, and the current decode
+residency on the host. The fixed rows provide calibration points for that
+estimate. The mixed replay tells me whether the controller's weighted budget
+actually preserves the tail.
+
+This also explains when one ISL/OSL pair is enough. If the product really sells
+one fixed request shape, the reference row answers the question. If the
+service carries varied agent turns, a single row is only one SKU. The three
+anchors here establish a first envelope; the production number should come
+from the measured request mix.
+
+## Part VI: A capacity protocol I can reuse
+
+The process fits into four stages:
+
+![](qwen38-capacity-planning/capacity-protocol.svg){fig-alt="A four-stage capacity protocol pins the serving identity and workload, locates a concurrency neighborhood cheaply, confirms the adjacent passing and failing points with three independent cold-cache trials each, then verifies raw generated text and server token usage before publishing a limit."}
+
+*Figure 4. The locator saves test time; the adjacent confirmations and raw generation checks carry the claim.*
+
+### 1. Freeze the identity and the contract
+
+Resolve the image digest and model snapshot. Record hardware, driver, tensor
+parallel degree, context, physical token pool, graph policy, speculative
+settings, cache policy, sampling, arrival pattern, warm-up, sample size, and
+all SLO percentiles. If any capacity-sensitive field is missing, the row is not
+portable evidence.
+
+Choose workload shapes from traffic, not from whatever command is easiest to
+type. For a new service I would start with at least three fixed anchors similar
+to the short, reference, and heavy rows here, then add a replay of the real
+joint ISL/OSL distribution. Percentiles chosen independently from separate ISL
+and OSL histograms can create combinations that never occur, so paired request
+samples are better.
+
+### 2. Establish C=1 and locate the neighborhood
+
+Run the documented single-user case first. It catches the wrong image,
+checkpoint, attention backend, graph path, or speculative configuration before
+the expensive search begins.
+
+Then locate the boundary with exponential concurrency steps and bisection, or
+with AIPerf's `max-concurrency-under-sla` recipe. Treat those points as
+navigation. Their job is to find the adjacent integers worth confirming.
+
+### 3. Confirm the adjacent integers from clean state
+
+Run the candidate maximum and the next integer in separate benchmark
+processes. For every process:
+
+1. Flush the prefix cache.
+2. Check ordinary health.
+3. Use disjoint warm-up and measured prompts.
+4. Run at least `max(64, 4 * C)` measured requests.
+5. Export raw request and SSE records.
+6. Leave a short quiet interval before the next trial.
+
+Require all confirmation trials at `Cmax` to pass and all trials at `Cmax + 1`
+to fail the gating percentile. If the outcomes overlap, the system is noisy at
+that boundary. Collect more trials or lower the operating point rather than
+rounding the ambiguity toward more traffic.
+
+### 4. Make the counter prove the work
+
+Use server-reported streaming usage for completion counts. Independently parse
+the raw stream for non-empty text deltas, final reasons, status codes, unique
+prompts, and output hashes. Keep aggregate metrics, the raw records, the exact
+command, and checksums together.
+
+The machine-readable trial data for every final boundary in this post is
+available as [capacity-data.json](qwen38-capacity-planning/capacity-data.json).
+It includes the latency, ITL, throughput, request rate, server prompt range,
+and correctness totals behind the rounded tables.
+
+### Reading the row at its actual scope
+
+This is a result for one four-card host, one pinned image and checkpoint, MTP,
+fixed greedy lengths, synthetic AIPerf text, cold unique prefixes, and a
+closed-loop arrival pattern. Agent traces with tool JSON, code, repeated system
+prompts, natural early stops, or a different language mix can change prefill,
+MTP acceptance, decode residence, and therefore the boundary.
+
+The three fixed shapes show a curved capacity surface. I would preserve those
+rows as regression anchors, then add a production replay built from paired
+requests sampled from the real service. The replay should retain the
+relationship between input and output length and should model whatever prefix
+reuse the application actually creates.
+
+This experiment does not qualify p99 TTFT, ITL, end-to-end latency, or
+open-loop RPS. Those are valuable contracts, but each adds its own gate and may
+select a lower operating point. A capacity report gets stronger when it says
+exactly what passed, not when it stretches one experiment across every possible
+definition of service quality.
+
+## Part VII: The number I would operate
+
+Seven is the measured maximum for 8K/1K closed-loop sessions under this exact
+p95 TTFT contract, and therefore the defensible benchmark answer. I would not
+automatically ship it unchanged as the admission-control setting.
+
+An operating limit needs room for prompt-shape drift, prefix-hit changes,
+background telemetry, driver and runtime variance, rolling deployments, and
+the difference between a 64-request laboratory sample and a week of traffic.
+I would begin one step below the measured boundary, watch the live p95 and
+queue depth, and promote only after a production replay demonstrates the same
+margin. That is a policy choice layered on top of the measured maximum, not an
+attempt to rename a conservative guess as benchmark capacity.
+
+The result must also be requalified when the image digest, checkpoint, runtime,
+driver, graph policy, speculative settings, or workload distribution changes.
+Capacity belongs to the complete row of conditions.
+
+A server that finishes every request can still have no capacity left to sell.
+Throughput earns the name only after the serving identity is pinned, the
+latency contract is written, both sides of the boundary are measured, and the
+raw stream proves that the server did the work. On this machine, that turns
+“roughly 4K prefill tok/s” into something I can actually use: eleven short
+sessions, seven reference sessions, or five heavy sessions under the same
+ten-second p95 first-token budget.
