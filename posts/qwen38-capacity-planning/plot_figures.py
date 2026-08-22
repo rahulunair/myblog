@@ -179,7 +179,7 @@ def throughput_vs_slo() -> None:
         ax.set_ylim(8.35, 10.95)
         ax.set_xlabel("aggregate output throughput, tok/s")
         ax.set_ylabel("p95 time to first token, seconds")
-        ax.set_title("the decoder stayed busy after first-token latency failed", loc="left")
+        ax.set_title("output throughput overlaps while p95 TTFT crosses the SLO", loc="left")
         clean_axes(ax, grid_axis="both")
         ax.legend(frameon=False, loc="lower right")
         ax.text(0.01, 0.02, "numbers beside points are independent trial IDs",
@@ -220,7 +220,7 @@ def capacity_envelope() -> None:
 
 
 def profile_shaping() -> None:
-    title = "Recurrent-state capacity, not maximum context alone, moved the short-request boundary"
+    title = "Recurrent-state capacity and decode graphs change short-request concurrency"
     description = (
         "The left panel shows the highest tested passing concurrency for the same "
         "2K-input and 512-output workload. Lowering only the server maximum context "
@@ -258,7 +258,7 @@ def profile_shaping() -> None:
         )
         left.set_ylim(0, 27)
         left.set_ylabel("highest tested passing concurrency")
-        left.set_title("which server limit moved concurrency?", loc="left", fontsize=15)
+        left.set_title("short-workload server configurations", loc="left", fontsize=15)
         clean_axes(left)
         for bar, step in zip(bars, steps):
             left.text(
@@ -294,10 +294,10 @@ def profile_shaping() -> None:
         right.set_xlim(-0.35, 1.35)
         right.set_ylim(8.8, 11.15)
         right.set_ylabel("p95 time to first token, seconds")
-        right.set_title("the adjacent decision", loc="left", fontsize=15)
+        right.set_title("adjacent pass and fail trials", loc="left", fontsize=15)
         clean_axes(right)
         fig.suptitle(
-            "the short workload finds the recurrent-state ceiling",
+            "recurrent-state capacity limits the short workload",
             x=0.055, ha="left", fontsize=19, fontweight="bold",
         )
         fig.subplots_adjust(top=0.82, wspace=0.32)
@@ -317,7 +317,7 @@ def model_state_map() -> None:
         ax.set_xlim(0, 12.4)
         ax.set_ylim(0, 6.2)
         ax.axis("off")
-        ax.set_title("one request leaves two kinds of memory behind", loc="left")
+        ax.set_title("one request allocates token pages and recurrent state", loc="left")
 
         prompt = FancyBboxPatch((0.25, 2.25), 2.15, 1.35,
                                 boxstyle="round,pad=0.06,rounding_size=0.08",
@@ -364,7 +364,7 @@ def model_state_map() -> None:
 
 
 def shared_profile() -> None:
-    title = "The complete tuned 12K configuration doubles short-request capacity"
+    title = "The tuned configuration raises 2K/512 from 11 to 22 and leaves 8K/1K at 7"
     description = (
         "Grouped bars compare the native configuration, with 262K maximum context, "
         "48 recurrent-state entries, and a largest captured decode batch of eight, against "
@@ -389,7 +389,7 @@ def shared_profile() -> None:
         ax.set_xticks(x, labels)
         ax.set_ylabel("maximum passing concurrency")
         ax.set_ylim(0, 25)
-        ax.set_title("more state helps only the request that ran out of state", loc="left")
+        ax.set_title("the tuned configuration changes 2K / 512, not 8K / 1K", loc="left")
         clean_axes(ax)
         for bars in (left, right):
             for bar in bars:
@@ -431,7 +431,7 @@ def matched_reference() -> None:
         ax.set_xticks(range(4), [g[0] for g in groups])
         ax.set_ylabel("p95 time to first token, seconds")
         ax.set_ylim(8.2, 11.15)
-        ax.set_title("the long prompt reaches its compute limit before its state limit", loc="left")
+        ax.set_title("8K / 1K reaches the TTFT limit before state capacity", loc="left")
         clean_axes(ax)
         ax.text(0.01, 0.02, "each marker is an independent 64-request cold-cache trial",
                 transform=ax.transAxes, color=MUTED, fontsize=9.5)
@@ -439,7 +439,7 @@ def matched_reference() -> None:
 
 
 def protocol() -> None:
-    title = "A four-stage protocol turns a latency SLO into a capacity limit"
+    title = "AIPerf search and confirmation protocol for a latency SLO"
     description = (
         "A left-to-right flow fixes the serving identity and workload, finds the range "
         "between passing and failing concurrency, confirms the adjacent integers three "
@@ -447,16 +447,16 @@ def protocol() -> None:
     )
     boxes = [
         ("fix the test", "image, model,\nrequest size, SLO", YELLOW),
-        ("find the edge", "large steps, then\nadjacent integers", CYAN),
+        ("find the range", "large steps, then\nadjacent integers", CYAN),
         ("confirm", "3 x pass and\n3 x next fail", VIOLET),
-        ("prove work", "raw SSE +\nserver usage", MINT),
+        ("validate output", "raw SSE +\nserver usage", MINT),
     ]
     with plt.xkcd(scale=0.6, length=100, randomness=2), style():
         fig, ax = plt.subplots(figsize=(12, 4.8), dpi=160)
         ax.set_xlim(0, 12)
         ax.set_ylim(0, 4.8)
         ax.axis("off")
-        ax.set_title("from a service contract to two capacity numbers", loc="left")
+        ax.set_title("from latency SLO to measured concurrency", loc="left")
         for index, (label, detail, color) in enumerate(boxes):
             x = 0.35 + index * 3.0
             patch = FancyBboxPatch(
@@ -476,7 +476,7 @@ def protocol() -> None:
                 )
                 ax.add_patch(arrow)
         ax.text(0.4, 0.55,
-                "publish maximum C only when latency and generation correctness pass together",
+                "report maximum C only when latency and generation correctness pass together",
                 fontsize=11.5, fontweight="bold")
         finish(fig, "capacity-protocol.svg", title, description)
 
