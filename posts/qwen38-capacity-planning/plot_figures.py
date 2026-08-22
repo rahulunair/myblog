@@ -24,6 +24,12 @@ DATA = json.loads((OUT / "capacity-data.json").read_text(encoding="utf-8"))
 PROFILE_DATA = json.loads(
     (OUT / "short-profile-data.json").read_text(encoding="utf-8")
 )
+SHARED_SHORT = json.loads(
+    (OUT / "shared12k-short-data.json").read_text(encoding="utf-8")
+)
+SHARED_REFERENCE = json.loads(
+    (OUT / "shared12k-reference-data.json").read_text(encoding="utf-8")
+)
 
 PAPER = "#fffdf7"
 INK = "#243447"
@@ -68,7 +74,7 @@ def finish(fig, name: str, title: str, description: str, *, pad: float = 0.18) -
         pad_inches=pad,
         metadata={
             "Creator": "posts/qwen38-capacity-planning/plot_figures.py",
-            "Date": "2026-08-21",
+            "Date": "2026-08-22",
         },
     )
     plt.close(fig)
@@ -220,31 +226,32 @@ def profile_shaping() -> None:
         "2K-input and 512-output workload. Lowering only the context ceiling from "
         "256K to 8K leaves the confirmed boundary at eleven. Increasing the Mamba "
         "resident-state budget with matching decode graph tiers produces passing "
-        "steps at sixteen and twenty, followed by a confirmed maximum of twenty-three. "
-        "The right panel shows all three C=23 p95 TTFT trials below ten seconds and "
-        "the mixed C=24 trials, including one failure above the SLO."
+        "steps at sixteen and twenty, followed by a diagnostic 8K maximum of twenty-three. "
+        "The deployable 12K profile accepts twenty-two. The right panel shows all three "
+        "12K C=22 p95 TTFT trials below ten seconds and the mixed C=23 trials."
     )
     cells = {cell["label"]: cell for cell in PROFILE_DATA["cells"]}
     steps = [
         ("native\n256K", "native256k-m48-g8-c11", 11, "C=11 max"),
-        ("8K\nonly", "ctx8k-m48-g8-c11", 11, "C=11 max"),
-        ("Mamba 80\n+ graphs 16", "ctx8k-m80-g16-c16", 16, "C≥16"),
-        ("Mamba 120\n+ graphs 24", "ctx8k-m120-g24-c20", 20, "C≥20"),
-        ("Mamba 128\n+ graphs 25", "ctx8k-m128-g25-c23", 23, "C=23 max"),
+        ("8K context\nonly", "ctx8k-m48-g8-c11", 11, "C=11 max"),
+        ("M80\ngraph 16", "ctx8k-m80-g16-c16", 16, "C≥16"),
+        ("M120\ngraph 24", "ctx8k-m120-g24-c20", 20, "C≥20"),
+        ("8K diagnostic\nM128 / g25", "ctx8k-m128-g25-c23", 23, "C=23"),
+        ("12K shared\nM128 / g25", None, 22, "C=22"),
     ]
-    colors = [YELLOW, CYAN, VIOLET, ORANGE, MINT]
+    colors = [YELLOW, CYAN, VIOLET, ORANGE, PINK, MINT]
     with plt.xkcd(scale=0.62, length=100, randomness=2), style():
         fig, (left, right) = plt.subplots(
-            1, 2, figsize=(13.2, 6.1), dpi=160,
-            gridspec_kw={"width_ratios": [1.55, 1]},
+            1, 2, figsize=(14.6, 6.1), dpi=160,
+            gridspec_kw={"width_ratios": [1.8, 1]},
         )
         bars = left.bar(
             range(len(steps)), [step[2] for step in steps], color=colors,
             edgecolor=INK, linewidth=1.7, width=0.68,
         )
         left.set_xticks(range(len(steps)), [step[0] for step in steps])
-        left.tick_params(axis="x", labelsize=10)
-        left.set_ylim(0, 26)
+        left.tick_params(axis="x", labelsize=8.7)
+        left.set_ylim(0, 27)
         left.set_ylabel("highest tested passing concurrency")
         left.set_title("which profile knob moved C?", loc="left", fontsize=15)
         clean_axes(left)
@@ -265,10 +272,7 @@ def profile_shaping() -> None:
             bbox={"facecolor": PAPER, "edgecolor": "none", "pad": 1.5},
         )
 
-        final_cells = [
-            cells["ctx8k-m128-g25-c23"],
-            cells["ctx8k-m128-g25-c24"],
-        ]
+        final_cells = SHARED_SHORT["cells"]
         for x, cell in enumerate(final_cells):
             for offset, trial in zip((-0.08, 0, 0.08), cell["trials"]):
                 passed = trial["strict_slo_pass"]
@@ -281,18 +285,146 @@ def profile_shaping() -> None:
         right.axhline(10, color=INK, linewidth=2.1, linestyle=":")
         right.text(1.25, 10.04, "10 s SLO", va="bottom", ha="right",
                    fontsize=9.5, fontweight="bold")
-        right.set_xticks([0, 1], ["C=23\n3 pass", "C=24\n2 pass, 1 fail"])
+        right.set_xticks([0, 1], ["C=22\n3 pass", "C=23\n2 pass, 1 fail"])
         right.set_xlim(-0.35, 1.35)
         right.set_ylim(8.8, 11.15)
         right.set_ylabel("p95 time to first token, seconds")
         right.set_title("the adjacent decision", loc="left", fontsize=15)
         clean_axes(right)
         fig.suptitle(
-            "same 2K / 512 workload, a different serving envelope",
+            "the short workload finds the recurrent-state ceiling",
             x=0.055, ha="left", fontsize=19, fontweight="bold",
         )
         fig.subplots_adjust(top=0.82, wspace=0.32)
         finish(fig, "profile-shaping.svg", title, description)
+
+
+def model_state_map() -> None:
+    title = "Attention pages and recurrent state grow along different axes"
+    description = (
+        "A schematic follows one request through Qwen3.8. Full-attention layers add "
+        "token-indexed KV pages, while Gated DeltaNet layers retain a fixed recurrent "
+        "state per active sequence. Decode graph capture supplies compiled batch shapes "
+        "but does not allocate request slots or reduce long-prompt prefill work."
+    )
+    with plt.xkcd(scale=0.55, length=100, randomness=2), style():
+        fig, ax = plt.subplots(figsize=(12.4, 6.2), dpi=160)
+        ax.set_xlim(0, 12.4)
+        ax.set_ylim(0, 6.2)
+        ax.axis("off")
+        ax.set_title("one request leaves two kinds of memory behind", loc="left")
+
+        prompt = FancyBboxPatch((0.25, 2.25), 2.15, 1.35,
+                                boxstyle="round,pad=0.06,rounding_size=0.08",
+                                facecolor=YELLOW, edgecolor=INK, linewidth=2)
+        ax.add_patch(prompt)
+        ax.text(1.325, 3.08, "one sequence", ha="center", fontweight="bold", fontsize=14)
+        ax.text(1.325, 2.62, "prompt + output", ha="center", fontsize=10.5)
+
+        branches = [
+            (3.4, 3.55, 3.55, 1.55, CYAN, "16 full-attention layers",
+             "KV pages grow with tokens", "max-total-tokens"),
+            (3.4, 1.15, 3.55, 1.55, MINT, "48 Gated DeltaNet layers",
+             "fixed state per active request", "max-mamba-cache-size"),
+        ]
+        for x, y, w, h, color, heading, body, flag in branches:
+            patch = FancyBboxPatch((x, y), w, h,
+                                   boxstyle="round,pad=0.06,rounding_size=0.08",
+                                   facecolor=color, edgecolor=INK, linewidth=2)
+            ax.add_patch(patch)
+            ax.text(x + w / 2, y + 1.08, heading, ha="center", fontweight="bold", fontsize=12)
+            ax.text(x + w / 2, y + 0.66, body, ha="center", fontsize=10.2)
+            ax.text(x + w / 2, y + 0.25, flag, ha="center", fontsize=9.4,
+                    family="monospace")
+            ax.add_patch(FancyArrowPatch((2.42, 2.92), (x - 0.08, y + h / 2),
+                                         arrowstyle="-|>", mutation_scale=15,
+                                         linewidth=1.8, color=INK))
+
+        graph = FancyBboxPatch((8.15, 2.25), 3.75, 1.35,
+                               boxstyle="round,pad=0.06,rounding_size=0.08",
+                               facecolor=VIOLET, edgecolor=INK, linewidth=2)
+        ax.add_patch(graph)
+        ax.text(10.025, 3.08, "decode graph replay", ha="center", fontweight="bold", fontsize=13)
+        ax.text(10.025, 2.62, "compiled fast paths for named batches", ha="center", fontsize=10.3)
+        ax.add_patch(FancyArrowPatch((6.98, 4.3), (8.08, 3.38), arrowstyle="-|>",
+                                     mutation_scale=15, linewidth=1.8, color=INK))
+        ax.add_patch(FancyArrowPatch((6.98, 1.9), (8.08, 2.48), arrowstyle="-|>",
+                                     mutation_scale=15, linewidth=1.8, color=INK))
+        ax.text(10.05, 1.73, "graphs speed execution; they are not an admission counter",
+                ha="center", color=MUTED, fontsize=10)
+        ax.text(0.3, 0.28,
+                "schematic: color separates resource classes; box area carries no quantity",
+                color=MUTED, fontsize=9.5)
+        finish(fig, "model-state-map.svg", title, description)
+
+
+def shared_profile() -> None:
+    title = "The 12K profile doubles short-turn capacity and preserves the reference boundary"
+    description = (
+        "Grouped bars compare maximum passing concurrency on the native 256K profile "
+        "and the shared 12K profile. The 2K-input 512-output workload rises from eleven "
+        "to twenty-two, while the 8K-input 1K-output workload stays at seven."
+    )
+    labels = ["2K / 512", "8K / 1K"]
+    native = [11, 7]
+    shared = [22, 7]
+    with plt.xkcd(scale=0.6, length=100, randomness=2), style():
+        fig, ax = plt.subplots(figsize=(11.8, 6.2), dpi=160)
+        x = [0, 1]
+        width = 0.34
+        left = ax.bar([v - width / 2 for v in x], native, width, color=CYAN,
+                      edgecolor=INK, linewidth=1.8, label="native 256K")
+        right = ax.bar([v + width / 2 for v in x], shared, width, color=MINT,
+                       edgecolor=INK, linewidth=1.8, hatch="//", label="shared 12K")
+        ax.set_xticks(x, labels)
+        ax.set_ylabel("maximum passing concurrency")
+        ax.set_ylim(0, 25)
+        ax.set_title("one profile helps only the workload it was state-limited on", loc="left")
+        clean_axes(ax)
+        for bars in (left, right):
+            for bar in bars:
+                value = int(bar.get_height())
+                ax.text(bar.get_x() + bar.get_width() / 2, value + 0.5, f"C={value}",
+                        ha="center", fontweight="bold", fontsize=12)
+        ax.legend(frameon=False, loc="upper right")
+        finish(fig, "shared-profile.svg", title, description)
+
+
+def matched_reference() -> None:
+    title = "Native 256K and tuned 12K have the same 8K-input boundary"
+    description = (
+        "Four groups show three p95 time-to-first-token trials each for the 8K-input "
+        "1K-output workload. Both profiles pass concurrency seven near 8.7 seconds "
+        "and fail concurrency eight near 10.67 seconds, with the ten-second SLO marked."
+    )
+    native_workload = next(item for item in DATA["workloads"] if item["configured_isl"] == 8192)
+    groups = [
+        ("native\nC=7", native_workload["passing_trials"]),
+        ("native\nC=8", native_workload["failing_trials"]),
+        ("12K\nC=7", SHARED_REFERENCE["cells"][0]["trials"]),
+        ("12K\nC=8", SHARED_REFERENCE["cells"][1]["trials"]),
+    ]
+    with plt.xkcd(scale=0.58, length=100, randomness=2), style():
+        fig, ax = plt.subplots(figsize=(11.8, 6.1), dpi=160)
+        for x, (label, trials) in enumerate(groups):
+            passed = "C=7" in label
+            values = [ttft_p95_s(t) for t in trials]
+            for offset, value in zip((-0.07, 0, 0.07), values):
+                ax.scatter(x + offset, value, s=120, marker="o" if passed else "X",
+                           color=MINT if passed else PINK, edgecolor=INK,
+                           linewidth=1.35, zorder=4)
+            ax.plot([x - 0.12, x + 0.12], [sum(values) / 3] * 2,
+                    color=INK, linewidth=2)
+        ax.axhline(10, color=INK, linewidth=2.1, linestyle=":")
+        ax.text(3.42, 10.04, "10 s SLO", ha="right", va="bottom", fontweight="bold")
+        ax.set_xticks(range(4), [g[0] for g in groups])
+        ax.set_ylabel("p95 time to first token, seconds")
+        ax.set_ylim(8.2, 11.15)
+        ax.set_title("the long prompt reaches the compute limit before the state limit", loc="left")
+        clean_axes(ax)
+        ax.text(0.01, 0.02, "each marker is an independent 64-request cold-cache trial",
+                transform=ax.transAxes, color=MUTED, fontsize=9.5)
+        finish(fig, "matched-reference.svg", title, description)
 
 
 def protocol() -> None:
@@ -313,7 +445,7 @@ def protocol() -> None:
         ax.set_xlim(0, 12)
         ax.set_ylim(0, 4.8)
         ax.axis("off")
-        ax.set_title("from a service contract to a number I can defend", loc="left")
+        ax.set_title("from a service contract to two capacity numbers", loc="left")
         for index, (label, detail, color) in enumerate(boxes):
             x = 0.35 + index * 3.0
             patch = FancyBboxPatch(
@@ -324,7 +456,7 @@ def protocol() -> None:
             ax.text(x + 1.175, 2.55, label, ha="center", va="center",
                     fontsize=13, fontweight="bold")
             ax.text(x + 1.175, 1.92, detail, ha="center", va="center",
-                    fontsize=10, color=INK)
+                    fontsize=10.8, color=INK)
             ax.text(x + 0.15, 3.35, str(index + 1), fontsize=14, fontweight="bold")
             if index < len(boxes) - 1:
                 arrow = FancyArrowPatch(
@@ -339,14 +471,14 @@ def protocol() -> None:
 
 
 def social_card() -> None:
-    title = "Qwen3.8 native and short-profile capacity under a ten-second first-token SLO"
+    title = "Qwen3.8 native and shared-profile capacity under a ten-second first-token SLO"
     description = (
         "Social card comparing the same 2K-input and 512-output workload on four "
         "Intel Arc Pro B70 GPUs: concurrency eleven for the native 256K profile "
-        "and twenty-three for the separately qualified 8K profile."
+        "and twenty-two for a shared 12K profile that still serves the 8K-input workload."
     )
-    values = [11, 23]
-    labels = ["native 256K\n2K / 512", "short 8K\n2K / 512"]
+    values = [11, 22]
+    labels = ["native 256K\n2K / 512", "shared 12K\n2K / 512"]
     colors = [CYAN, MINT]
     with plt.xkcd(scale=0.55, length=100, randomness=2), style():
         fig, ax = plt.subplots(figsize=(12, 6.3), dpi=100)
@@ -357,7 +489,7 @@ def social_card() -> None:
         ax.set_ylabel("maximum concurrency")
         ax.set_ylim(0, 27)
         ax.set_title("capacity planning Qwen3.8 on four B70s", loc="left", fontsize=24)
-        ax.text(0.01, 0.91, "same workload and SLO | two separately qualified profiles",
+        ax.text(0.01, 0.91, "same workload and SLO | 8K / 1K remains C=7 on both",
                 transform=ax.transAxes, color=MUTED, fontsize=12)
         for bar, value in zip(bars, values):
             ax.text(bar.get_x() + bar.get_width() / 2, value + 0.45, f"C={value}",
@@ -369,6 +501,9 @@ if __name__ == "__main__":
     boundary_trials()
     throughput_vs_slo()
     capacity_envelope()
+    model_state_map()
     profile_shaping()
+    shared_profile()
+    matched_reference()
     protocol()
     social_card()

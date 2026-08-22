@@ -341,6 +341,12 @@ blockquote {
 }
 
 @media (max-width: 767.98px) {
+  // Wide tables and unbroken code tokens own their horizontal scroll. Keep
+  // that internal overflow from widening the article viewport on mobile.
+  #quarto-document-content {
+    overflow-x: hidden;
+  }
+
   #quarto-document-content .table-scroll table:not(.gt_table) {
     width: 100%;
     min-width: 36rem;
