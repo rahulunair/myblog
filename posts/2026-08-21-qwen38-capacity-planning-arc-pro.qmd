@@ -15,6 +15,18 @@ resources:
   - qwen38-capacity-planning/shared12k-reference-data.json
 ---
 
+::: {.follow-up-note .capacity-summary}
+> **Capacity at a glance:** On four B70s, the native 256K profile supports 11
+> simultaneous 2K/512 sessions, seven 8K/1K sessions, or five 16K/2K sessions.
+> The shared 12K profile supports 22 simultaneous 2K/512 sessions and the same
+> seven 8K/1K sessions.
+>
+> Each number is the largest tested session count for one request size while at
+> least ninety-five out of every hundred requests received their first token
+> within ten seconds. The request sizes were tested separately, so the numbers
+> are not meant to be added together.
+:::
+
 The awkward moment in capacity planning comes while the server still looks
 healthy. All four GPUs are busy, aggregate token throughput is climbing, every
 request eventually finishes, and the next user has already waited too long for
