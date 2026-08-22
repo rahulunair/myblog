@@ -364,12 +364,14 @@ def model_state_map() -> None:
 
 
 def shared_profile() -> None:
-    title = "A 12K server maximum doubles short-turn capacity and preserves the reference boundary"
+    title = "The complete tuned 12K configuration doubles short-request capacity"
     description = (
-        "Grouped bars compare maximum passing concurrency when server maximum context "
-        "is Qwen3.8's native 262K tokens and when it is 12K tokens. The 2K-input "
-        "512-output workload rises from eleven to twenty-two, while the 8K-input "
-        "1K-output workload stays at seven."
+        "Grouped bars compare the native configuration, with 262K maximum context, "
+        "48 recurrent-state entries, and a largest captured decode batch of eight, against "
+        "the tuned configuration, with 12K maximum context, 128 recurrent-state "
+        "entries, and a largest captured batch of twenty-five. The 2K-input 512-output "
+        "workload rises from eleven to twenty-two, while the 8K-input 1K-output "
+        "workload stays at seven."
     )
     labels = ["2K / 512", "8K / 1K"]
     native = [11, 7]
@@ -379,9 +381,11 @@ def shared_profile() -> None:
         x = [0, 1]
         width = 0.34
         left = ax.bar([v - width / 2 for v in x], native, width, color=CYAN,
-                      edgecolor=INK, linewidth=1.8, label="max context 262K")
+                      edgecolor=INK, linewidth=1.8,
+                      label="native: context 262K | state 48 | max graph 8")
         right = ax.bar([v + width / 2 for v in x], shared, width, color=MINT,
-                       edgecolor=INK, linewidth=1.8, hatch="//", label="max context 12K")
+                       edgecolor=INK, linewidth=1.8, hatch="//",
+                       label="tuned: context 12K | state 128 | max graph 25")
         ax.set_xticks(x, labels)
         ax.set_ylabel("maximum passing concurrency")
         ax.set_ylim(0, 25)
@@ -397,19 +401,19 @@ def shared_profile() -> None:
 
 
 def matched_reference() -> None:
-    title = "Maximum context at 262K and 12K gives the same 8K-input boundary"
+    title = "The native and tuned configurations give the same 8K-input limit"
     description = (
         "Four groups show three p95 time-to-first-token trials each for the 8K-input "
-        "1K-output workload. The server maximum-context settings of 262K and 12K both "
-        "pass concurrency seven near 8.7 seconds and fail concurrency eight near "
-        "10.67 seconds, with the ten-second SLO marked."
+        "1K-output workload. The native 262K-context configuration and tuned "
+        "12K-context configuration both pass concurrency seven near 8.7 seconds "
+        "and fail concurrency eight near 10.67 seconds, with the ten-second SLO marked."
     )
     native_workload = next(item for item in DATA["workloads"] if item["configured_isl"] == 8192)
     groups = [
-        ("max context 262K\nC=7", native_workload["passing_trials"]),
-        ("max context 262K\nC=8", native_workload["failing_trials"]),
-        ("max context 12K\nC=7", SHARED_REFERENCE["cells"][0]["trials"]),
-        ("max context 12K\nC=8", SHARED_REFERENCE["cells"][1]["trials"]),
+        ("native config\nC=7", native_workload["passing_trials"]),
+        ("native config\nC=8", native_workload["failing_trials"]),
+        ("tuned 12K config\nC=7", SHARED_REFERENCE["cells"][0]["trials"]),
+        ("tuned 12K config\nC=8", SHARED_REFERENCE["cells"][1]["trials"]),
     ]
     with plt.xkcd(scale=0.58, length=100, randomness=2), style():
         fig, ax = plt.subplots(figsize=(11.8, 6.1), dpi=160)
@@ -478,15 +482,20 @@ def protocol() -> None:
 
 
 def social_card() -> None:
-    title = "Qwen3.8 capacity at two server maximum-context settings"
+    title = "Qwen3.8 capacity on the native and tuned server configurations"
     description = (
         "Social card comparing the same 2K-input and 512-output workload on four "
-        "Intel Arc Pro B70 GPUs: concurrency eleven when server maximum context is "
-        "262K tokens and twenty-two when it is 12K tokens. The 12K setting still "
-        "serves the 8K-input workload."
+        "Intel Arc Pro B70 GPUs: concurrency eleven on the native configuration, "
+        "with 262K context, 48 recurrent-state entries, and a largest graph batch of "
+        "eight; and concurrency twenty-two on the tuned configuration, with 12K "
+        "context, 128 entries, and a largest graph batch of twenty-five. Both serve "
+        "seven concurrent 8K-input 1K-output requests."
     )
     values = [11, 22]
-    labels = ["max context 262K\n2K / 512", "max context 12K\n2K / 512"]
+    labels = [
+        "native config\ncontext 262K | state 48 | max graph 8",
+        "tuned 12K config\ncontext 12K | state 128 | max graph 25",
+    ]
     colors = [CYAN, MINT]
     with plt.xkcd(scale=0.55, length=100, randomness=2), style():
         fig, ax = plt.subplots(figsize=(12, 6.3), dpi=100)

@@ -1,13 +1,13 @@
 ---
-title: "How many Qwen3.8 sessions fit on four Arc Pro B70s?"
-subtitle: "Four GPUs, three request sizes, one ten-second first-token limit, and why setting the server's maximum context to 12,288 tokens doubles only short-request capacity"
+title: "How many concurrent Qwen3.8 requests fit on four Arc Pro B70s?"
+subtitle: "Four GPUs, three request sizes, one ten-second first-token limit, and why a tuned 12,288-token server configuration doubles only short-request capacity"
 pagetitle: "Qwen3.8 capacity on 4 Arc Pro B70s"
 date: "2026-08-21"
 date-modified: "2026-08-22"
-description: "AIPerf measures Qwen3.8-27B capacity on four Arc Pro B70s: up to 22 short requests or seven 8K requests with 95th-percentile first-token latency below ten seconds."
+description: "AIPerf measures Qwen3.8-27B on four Arc Pro B70s: up to 22 short requests or seven 8K requests below a ten-second p95 first-token limit."
 categories: [intel, arc, arc-pro, xe2, xpu, sglang, llm-inference, speculative-decoding, agentic-coding]
 image: qwen38-capacity-planning/card.png
-image-alt: "For Qwen3.8 requests with 2K input and 512 output tokens, maximum concurrency rises from 11 when server maximum context is 262,144 tokens to 22 when it is 12,288 tokens. Both settings serve seven requests with 8K input and 1K output tokens."
+image-alt: "For Qwen3.8 requests with 2K input and 512 output tokens, maximum concurrency rises from 11 on the native server configuration to 22 after limiting each request to 12,288 tokens, enlarging the recurrent-state pool, and capturing larger decode batches. Both configurations serve seven requests with 8K input and 1K output tokens."
 resources:
   - qwen38-capacity-planning/capacity-data.json
   - qwen38-capacity-planning/short-profile-data.json
@@ -19,17 +19,25 @@ resources:
 > **Capacity at a glance:** I write request sizes as input/output tokens, so
 > 2K/512 means 2,048 input tokens followed by 512 generated tokens.
 >
-> With the server's maximum context set to Qwen3.8's native 262,144 tokens,
-> four B70s support 11 simultaneous 2K/512 sessions, seven 8K/1K sessions, or
-> five 16K/2K sessions. Setting maximum context to 12,288 tokens raises the
-> 2K/512 result to 22 sessions while the 8K/1K result stays at seven. A 16K/2K
-> request is longer than that 12,288-token server limit and does not fit.
+> Maximum context is the largest prompt-plus-completion sequence the server
+> accepts for one request. The native configuration used Qwen3.8's 262,144-token
+> maximum, 48 recurrent-state entries for active hybrid-model sequences, and
+> decode fast paths captured for batches 1, 2, 4, and 8. Four B70s supported 11
+> concurrent 2K/512 requests, seven 8K/1K requests, or five 16K/2K requests.
 >
-> Each number is the largest tested session count for one request size while at
-> least ninety-five out of every hundred requests received their first token
-> within ten seconds. The request sizes were tested separately, so the numbers
-> are not meant to be added together. Below, I shorten the two server settings
-> to the native 256K setting and the 12K setting.
+> The tuned configuration kept storage for 262,144 active or cached tokens
+> across requests, limited each request to 12,288 tokens, raised the
+> recurrent-state pool to 128 entries, and captured nine decode fast paths,
+> ending at batch 25. It supported 22 concurrent 2K/512 requests while the
+> 8K/1K result stayed at seven. A 16K/2K request is longer than the
+> 12,288-token per-request limit
+> and does not fit.
+>
+> Each number is the largest tested concurrency whose 95th-percentile time to
+> first token remained below ten seconds in all three confirmation trials. I
+> also tested the next integer. The request sizes were measured separately, so
+> the numbers are not meant to be added together. Below, I call the two setups
+> the native configuration and the tuned 12K configuration.
 :::
 
 The awkward moment in capacity planning comes while the server still looks
@@ -47,37 +55,36 @@ requests in flight, the server emitted more output tokens per second than it
 did with seven, but 95th-percentile time to first token (p95 TTFT) crossed ten
 seconds.
 
-So the capacity number for my reference agent turn is **seven simultaneous
-8K-input, 1K-output sessions** under a service-level objective (SLO) of p95
-TTFT below ten seconds. I use `C` for client concurrency, the number of requests
-AIPerf keeps in flight. Three independent C=7 trials landed at 8.695, 8.697,
-and 8.702 seconds. Three C=8 trials landed at 10.656, 10.665, and 10.671
-seconds.
+On the tuned 12K configuration, the capacity for my reference agent turn is
+**seven concurrent 8K-input, 1K-output requests** under a service-level
+objective (SLO) of p95 TTFT below ten seconds. I use `C` for client concurrency,
+the number of requests AIPerf keeps in flight. Three independent C=7 trials
+landed at 8.695, 8.697, and 8.702 seconds. Three C=8 trials landed at 10.656,
+10.665, and 10.671 seconds.
 
-When I set the server's maximum context to 12,288 tokens, the same machine
-carried **22 simultaneous 2K-input, 512-output turns**. C=22 passed three times
-near 9.0 seconds. C=23 was mixed, with one trial at 10.232 seconds, so I
-rejected it. The 12K setting also fits the complete 8K/1K request. It doubles
-short-turn capacity over the native 256K setting without changing that
-seven-session result.
+For the shorter 2K/512 workload, the same server carried **22 concurrent
+requests**. C=22 passed three times near 9.0 seconds. C=23 was mixed, with one
+trial at 10.232 seconds, so I rejected it. The tuned server doubles
+short-request capacity over the native configuration without changing the
+seven-request 8K/1K result.
 
-The two boundaries fail for different reasons. Short requests first run out of
-room for active sequences. Long prompts spend the ten-second budget while the
-GPUs are still reading their input. Increasing the active-sequence limit
-therefore doubles one result and leaves the other almost perfectly still.
+The 2K/512 and 8K/1K limits fail for different reasons. Short requests first
+run out of active-sequence room, so the tuned configuration's larger
+recurrent-state pool and larger captured decode batches let concurrency rise.
+Long prompts spend the ten-second budget while the GPUs are still reading
+their input, so the same configuration leaves their limit at seven.
 
-The trail from a Docker tag and a one-request AIPerf result to those session
-counts includes the dead ends, the model architecture behind the allocator
-warning, what each serving flag controls, and the raw-stream checks that made
-sure the benchmark was counting generated text.
+The interesting question is why request twelve waited when eleven short
+requests came nowhere near filling the token pool. The answer runs through the
+model's recurrent state, four serving limits that sound deceptively similar,
+and a raw-stream check to make sure AIPerf was counting real generated text.
 
 ## Part I: Run the exact server
 
 ### Resolve `latest` into an experimental identity
 
-The deployment tag on this machine is `latest`, which had been retagged to the
-Qwen3.8 image. Tags can move, so the first benchmark command turns the tag into
-an immutable digest:
+At the time of measurement, `latest` pointed to the Qwen3.8 build. Tags can
+move, so the first command turns that tag into an immutable digest:
 
 ```bash
 docker pull rahulunair/sglang-xpu:latest
@@ -177,8 +184,8 @@ process is ready without warming the path I am about to measure.
 ### A fast single stream is only the starting point
 
 The Docker Hub recipe begins with one request in flight (`C=1`), 8,192
-synthetic input tokens, and 1,024 output tokens. I reproduced that row with
-AIPerf 0.10.0 before increasing concurrency:
+synthetic input tokens, and 1,024 output tokens. I reproduced that benchmark
+with AIPerf 0.10.0 before increasing concurrency:
 
 ```bash
 aiperf profile \
@@ -196,7 +203,7 @@ TTFT measures the delay from sending a request to receiving its first streamed
 token. A p50 value is the median across the measured requests. Inter-token
 latency (ITL) measures the delay between later streamed tokens.
 
-| C=1 metric | published image row | this rerun |
+| C=1 metric | Docker Hub benchmark | this rerun |
 |:---|---:|---:|
 | TTFT p50 | 2.310 s | 2.133 s |
 | TTFT-derived prefill | 3,546 tok/s | 3,840 tok/s |
@@ -205,21 +212,22 @@ latency (ITL) measures the delay between later streamed tokens.
 | aggregate output throughput | 87.4 tok/s | 90.2 tok/s |
 
 The rerun was close enough to show that the expected image, checkpoint,
-attention backend, and MTP path were active. It still said nothing about the
-queue that forms when several prompts arrive together.
+attention backend, and MTP path were active. Nice result. Still not a capacity
+number: it says nothing about the queue that forms when several prompts arrive
+together.
 
 A capacity number needs a complete workload definition. Input length decides
 how much prompt-reading work arrives. Output length decides how long existing
 requests keep generating. Cache state changes how much of a prompt the server
 can reuse. The arrival pattern decides how many requests overlap.
 
-### Fix the row before searching the boundary
+### Define the workload before searching for maximum concurrency
 
 My reference workload represents a substantial agent turn: 8K input, 1K
 output, a fixed number of requests kept in flight, and a 95th-percentile
 first-token limit below ten seconds. AIPerf calls that arrival pattern
-closed-loop concurrency. Each time one request finishes, it starts another so
-the selected concurrency remains in flight.
+closed-loop concurrency. Each time one request finishes, AIPerf starts another
+so the selected concurrency remains in flight.
 
 The radix cache can reuse a matching prompt prefix from an earlier request. I
 left that production feature enabled, but flushed it before every independent
@@ -232,7 +240,7 @@ trial so one trial could not inherit useful prompt state from another.
 | configured input / output | 8,192 / 1,024 tokens, zero variance |
 | server-visible prompt | 8,244 to 8,246 tokens after the chat template |
 | sampling | temperature 0; ignore the end-of-sequence token so every request generates the full requested output |
-| arrival | AIPerf closed-loop concurrency burst |
+| arrival | AIPerf closed loop at fixed concurrency |
 | cache | radix enabled, flushed before each independent trial |
 | warm-up | eight C=1 requests, excluded from metrics |
 | measured sample | at least `max(64, 4 × C)` requests per trial |
@@ -240,7 +248,7 @@ trial so one trial could not inherit useful prompt state from another.
 | boundary rule | all three trials at C must pass; test C+1 beside it |
 | correctness | HTTP 200, exact output length, non-empty streamed text |
 
-For workload row `w`, the measured limit is:
+For workload `w`, the measured limit is:
 
 $$
 C_{\max}(w) = \max \left\{C :
@@ -248,24 +256,25 @@ C_{\max}(w) = \max \left\{C :
 \text{ in every confirmation trial}\right\}.
 $$
 
-That definition gives the server's concurrency limit a precise job. Changing
-the percentile creates a new result. The maximum-passing rows at the model's
-native 256K context all exceeded ten seconds at p99, so none also passes a p99
-version of the same limit.
+Now the number has one job: say how many requests this workload can keep in
+flight under this latency promise. Changing the percentile creates a new
+result. Every maximum-passing workload at the model's native 262,144-token
+context exceeded ten seconds at p99, so none also passes a p99 version of the
+same limit.
 
 ## Part III: Watch the tail break before throughput does
 
-### At the native 262,144-token maximum, seven reference turns pass
+### At the native 262,144-token maximum, seven reference requests pass
 
-I first measured the release server at the model's native maximum context of
-262,144 tokens. It also had room for 262,144 active or cached tokens across the
-server, 48 entries in SGLang's recurrent-state pool, and fast decode paths
-captured for batches 1, 2, 4, and 8. Parts IV and V unpack why those are four
-different limits. I raised concurrency in large steps, then tested the integers
-between the last pass and first failure. The reference boundary landed at seven
-and eight.
+I first measured the native-context Docker Hub configuration: 262,144 tokens
+of maximum context, the same 262,144-token server-wide pool, 48 entries in
+SGLang's recurrent-state cache, and fast decode paths captured for batches 1,
+2, 4, and 8. These are four separate limits. They cannot be substituted for
+one another.
+I raised concurrency in large steps, then tested the integers between the last
+pass and first failure. The 8K/1K limit landed at seven and eight.
 
-| locator C | TTFT p50 | TTFT p95 | TTFT p99 | output tok/s |
+| exploratory concurrency | TTFT p50 | TTFT p95 | TTFT p99 | output tok/s |
 |---:|---:|---:|---:|---:|
 | 4 | 2.161 s | 4.101 s | 7.862 s | 178.5 |
 | 6 | 2.126 s | 6.737 s | 11.409 s | 197.5 |
@@ -278,29 +287,29 @@ and fail the same ten-second limit at p99, the 99th percentile. Picking the
 percentile after seeing the table would be picking the answer after the
 experiment.
 
-I then ran three fresh processes on each side of the adjacent boundary. Each
-process received a cache flush, its own prompt corpus and seed, eight excluded
-warm-ups, and 64 measured requests.
+I launched a fresh AIPerf process for every trial. Before each one, I flushed
+the server cache and generated a new prompt corpus and seed. Eight warm-up
+requests were excluded, leaving 64 measured requests.
 
 | C | TTFT p95, trial 1 | trial 2 | trial 3 | output tok/s range | verdict |
 |---:|---:|---:|---:|---:|:---|
 | **7** | **8.709 s** | **8.705 s** | **8.724 s** | 206.1 to 216.7 | pass |
 | 8 | 10.674 s | 10.667 s | 10.669 s | 215.6 to 221.2 | fail |
 
-The failing row produced at least as much aggregate output as the passing row.
+The C=8 trials produced at least as much aggregate output as the C=7 trials.
 The decoder remained productive while new prompts waited outside the SLO.
 
 ![](qwen38-capacity-planning/throughput-vs-slo.svg){fig-alt="Six 8K-input and 1K-output trials with server maximum context set to the native 262,144 tokens compare aggregate output throughput with p95 TTFT. Throughput overlaps at concurrency seven and eight, while every concurrency-seven trial stays below the 10-second SLO and every concurrency-eight trial crosses it."}
 
-*Figure 1. Aggregate output throughput overlaps across the boundary; p95 TTFT separates every pass from every failure.*
+*Figure 1. Aggregate output throughput overlaps at C=7 and C=8; p95 TTFT separates every passing trial from every failure.*
 
 Reading the points from left to right does not reveal a throughput cliff. The
 vertical position carries the service failure. Peak tokens per second cannot
-be divided by an input/output token pair to produce a session count.
+be divided by an input/output token pair to produce a concurrency limit.
 
-### Three request sizes produce three native-context boundaries
+### Three request sizes produce three native-context limits
 
-The 8K/1K row is the reference request size. Two more rows show how quickly a
+The 8K/1K workload is my reference case. Two more workloads show how quickly a
 single host-level answer falls apart.
 
 | AIPerf input / output | server prompt range | maximum passing C | passing p95 TTFT, three trials | next C | adjacent p95 TTFT, three trials |
@@ -313,10 +322,10 @@ single host-level answer falls apart.
 
 *Figure 2. Each request size has an adjacent passing and failing concurrency, repeated three times on both sides.*
 
-The short row has the noisiest passing side, spanning 1.656 seconds across
-seeds. The verdict still holds in all three runs. The reference row happens to
-cluster within 19 ms, but that tidy repeatability is a property of these trials,
-not permission to run one trial elsewhere.
+The 2K/512 workload has the noisiest passing side, spanning 1.656 seconds
+across seeds. The verdict still holds in all three runs. The 8K/1K trials
+happen to cluster within 19 ms, but that tidy repeatability is a property of
+these trials, not permission to run one trial elsewhere.
 
 ![](qwen38-capacity-planning/capacity-envelope.svg){fig-alt="With server maximum context set to Qwen3.8's native 262,144 tokens, maximum closed-loop concurrency under the same 10-second p95 TTFT SLO is eleven for 2K input and 512 output, seven for 8K input and 1K output, and five for 16K input and 2K output."}
 
@@ -327,11 +336,16 @@ older requests in decode, so the next prompt arrives behind more resident
 work. That second effect is easy to miss at C=1, where output length comes
 after the only request has already received its first token.
 
-The 2K/512 row exposed another puzzle. Even eleven requests near their full
+The 2K/512 workload exposed another puzzle. Even eleven requests near their full
 2,560-token input-plus-output length would fit well below the server's shared
-262K token pool, yet capacity stopped at eleven client sessions. The allocator
-had already printed the clue during startup: the requested 64 active slots had
-been reduced to nine.
+262,144-token pool, yet capacity stopped at eleven concurrent requests. The
+allocator had already printed the clue during startup: the requested 64 active
+slots had been reduced to nine.
+
+I tried the obvious explanation first. Perhaps a server configured to accept a
+262,144-token request paid for that range even when every prompt contained only
+2K tokens. Lowering maximum context alone changed nothing. That failed
+experiment sent me back to the model and the allocator's nine-request warning.
 
 ## Part IV: Follow one request through Qwen3.8
 
@@ -389,7 +403,7 @@ That arithmetic reproduces every limit I observed:
 | 128 | floor(128 / 5) | 25 |
 
 Client concurrency and active concurrency are different counters. AIPerf can
-hold eleven sessions in flight while the runtime executes nine and briefly
+hold eleven requests in flight while the runtime executes nine and briefly
 queues two. That arrangement passes if the waiting requests still receive their
 first token before ten seconds. At C=12 with maximum context set to the native
 262,144 tokens, enough requests wait long enough to break p95.
@@ -411,7 +425,7 @@ objects.
 | decode `bs=[...]` | captured execution shapes | listed decode batches use graph replay; the list sets neither token storage nor the active-request limit |
 
 `context-length` is the input-and-output length check for one request. It does
-not reserve 12,288 token slots for every request. A 2K turn still uses roughly
+not reserve 12,288 token slots for every request. A 2K request still uses roughly
 2K prompt tokens plus its generated tokens. Lowering this value helps only when
 the allocator can use the released range or memory for a resource that was
 already limiting the server.
@@ -423,8 +437,8 @@ the matrix work in a prompt that is already being processed.
 
 `max-running-requests` asks the scheduler for an upper bound. The number printed
 after allocation is the one the runtime can physically keep active. The native
-launch asked for 64 and resolved to nine because Mamba 48 held only nine sets
-of recurrent state.
+launch asked for 64 and resolved to nine because the 48-entry recurrent-state
+pool held only nine sets of recurrent state.
 
 `max-mamba-cache-size` sizes that recurrent-state pool. It scales with active
 sequences rather than tokens in each sequence. Expanding this pool gave the
@@ -432,8 +446,9 @@ short workload room to move.
 
 The graph list solves another problem. Capturing decode at batches 1, 2, 4,
 and 8 gives those shapes a replay path without rebuilding the command stream
-on every token. Extending the list through 25 keeps larger decode batches on
-the same path. A missing graph tier can fall back to a slower execution path;
+on every token. Extending the list to include 12, 16, 20, 24, and 25 keeps those
+larger decode batches on the same path. A missing graph tier can fall back to a
+slower execution path;
 having a graph tier does not guarantee that its batch meets the latency SLO.
 Prefill graphs remained disabled in every server setting here.
 
@@ -465,59 +480,60 @@ The final server setting uses 12,288 tokens:
 ```
 
 The 12,288-token maximum holds both benchmark request sizes without allowing a
-single request to grow to the model's native 262,144-token maximum. The shared
-token-page storage stays at 262,144. One number limits an individual request;
-the other sets storage shared across the host.
+single request to grow to the model's native 262,144-token maximum. The
+server-wide token-page storage stays at 262,144. Maximum context checks one
+request. `max-total-tokens` supplies storage across all requests.
 
-## Part VI: Change one resource at a time
+## Part VI: Follow the short-request tuning ladder
 
 ### Lowering maximum context alone leaves C=11 exactly where it was
 
-I took the allocator's "KV cache capacity" warning literally and started with
-maximum context. Perhaps a 256K server paid for its maximum even when every prompt
-contained only 2K tokens. I lowered only `context-length` to 8,192. The token
-pool stayed at 262K, Mamba stayed at 48, and graph coverage still ended at
-batch eight.
+The first A/B changed only `context-length`, lowering it from 262,144 to 8,192.
+The token pool stayed at 262,144, the recurrent-state pool stayed at 48 entries,
+and graph coverage still ended at batch eight.
 
 C=11 passed three times. C=12 failed three times. Changing only maximum context
 left the boundary in the same place because the nine-request recurrent-state
 limit had not moved.
 
-I then raised Mamba to 80 and extended graph capture through batch 16. C=16
-passed at 7.197 to 7.220 seconds p95. Repeating C=16 with a smaller 65,536-token
-pool produced 7.182, 7.190, and 8.231 seconds. The smaller token pool saved
-space but did not buy capacity for that C=16 workload, so I restored 262K.
+I then raised the recurrent-state pool to 80 entries and added a captured graph
+for batch 16. C=16 passed at 7.197 to 7.220 seconds p95. Repeating C=16 with a
+smaller 65,536-token pool produced 7.182, 7.190, and 8.231 seconds. The smaller
+token pool saved space but did not buy capacity for that C=16 workload, so I
+restored 262,144.
 
-Mamba 120 with graph coverage through 24 passed C=20. Mamba 128 resolved to 25
-active requests and graph coverage through 25. With maximum context set to
-8,192 tokens for this diagnostic run, 2K/512 passed C=23 three times and became
-mixed at C=24.
+A 120-entry recurrent-state pool with batch 24 captured passed C=20. At 128
+entries, the allocator resolved to 25 active requests; I captured batch 25 to
+match it. With maximum context set to 8,192 tokens for this diagnostic run,
+2K/512 passed C=23 three times and became mixed at C=24.
 
 | server change | maximum context | token pool | recurrent entries | largest captured decode batch | measured result |
 |:---|---:|---:|---:|---:|:---|
-| native-context baseline | 262K | 262K | 48 | 8 | C=11 pass, C=12 fail |
-| lower maximum context only | 8K | 262K | 48 | 8 | C=11 pass, C=12 fail |
-| more recurrent state and graphs | 8K | 262K | 80 | 16 | C=16 passes |
-| smaller-pool A/B | 8K | 64K | 80 | 16 | C=16 passes, no gain |
-| more recurrent state and graphs | 8K | 262K | 120 | 24 | C=20 passes |
-| measure the 8K limit | 8K | 262K | 128 | 25 | C=23 pass, C=24 mixed |
-| fit both final request sizes | 12K | 262K | 128 | 25 | C=22 pass, C=23 mixed |
+| native configuration | 262,144 | 262,144 | 48 | 8 | C=11 pass, C=12 fail |
+| lower maximum context only | 8,192 | 262,144 | 48 | 8 | C=11 pass, C=12 fail |
+| add recurrent state and graphs | 8,192 | 262,144 | 80 | 16 | C=16 passes |
+| smaller token-pool A/B | 8,192 | 65,536 | 80 | 16 | C=16 passes, no gain |
+| add recurrent state and graphs | 8,192 | 262,144 | 120 | 24 | C=20 passes |
+| measure the 8,192-token limit | 8,192 | 262,144 | 128 | 25 | C=23 pass, C=24 mixed |
+| fit both final request sizes | 12,288 | 262,144 | 128 | 25 | C=22 pass, C=23 mixed |
 
 ![](qwen38-capacity-planning/profile-shaping.svg){fig-alt="For the same 2K-input and 512-output workload, lowering only the server's maximum context leaves maximum concurrency at eleven. Larger recurrent-state pools with matching graph tiers produce passing steps at sixteen and twenty. With maximum context at 8,192 tokens, C=23 passes and C=24 is mixed. With maximum context at 12,288 tokens, all three C=22 trials pass while C=23 has two passes and one failure."}
 
-*Figure 5. Maximum context alone changes nothing. Recurrent-state capacity and graph reach move the short row; the 12,288-token server setting settles at C=22.*
+*Figure 5. Maximum context alone changes nothing. Recurrent-state capacity and captured batch reach move the short workload; the tuned 12K configuration settles at C=22.*
 
-Setting maximum context to 8,192 tokens isolated the resource and reached C=23
-for short requests. That server could not serve the reference workload because
-8K input plus template tokens and 1K output do not fit inside an 8K sequence.
+With the larger recurrent-state pool and graph coverage in place, the
+8,192-token diagnostic configuration reached C=23 for short requests. It could
+not serve the reference workload because 8K input plus template tokens and 1K
+output do not fit inside an 8K sequence.
 
-The final run sets maximum context to 12,288 tokens, keeps the larger recurrent
-pool and graph coverage, and fits the full reference request. Both workloads
-can now use the same continuously running server.
+The tuned run sets maximum context to 12,288 tokens, keeps the 128-entry
+recurrent pool and largest captured decode batch of 25, and fits the full
+reference request. Both workloads can now use the same continuously running
+server.
 
-## Part VII: Build one server setting for both workloads
+## Part VII: Build one server configuration for both workloads
 
-### At 12,288 maximum context, four B70s carry 22 short turns
+### The tuned 12K configuration carries 22 short requests
 
 The final server used the exact command from Part I. For 2K/512, each C=22
 trial contained 88 measured requests. Each C=23 trial contained 92.
@@ -531,11 +547,10 @@ The C=23 median remained below one second in every trial. The slowest requests
 still pushed p95 over the line. A median or a single lucky seed would have
 produced the wrong concurrency limit.
 
-The accepted capacity is C=22. Compared with C=11 when maximum context was at
-the native 262,144 tokens, the same hardware now handles twice as many short
-sessions under the same SLO.
+The accepted capacity is C=22. Compared with C=11 on the native configuration,
+the same hardware now handles twice as many short requests under the same SLO.
 
-### The same server still carries seven 8K turns
+### The same server still carries seven 8K requests
 
 I kept the server running and changed only the AIPerf workload to 8K/1K. Every
 trial used 64 measured requests.
@@ -545,35 +560,33 @@ trial used 64 measured requests.
 | **7** | **8.702 s** | **8.695 s** | **8.697 s** | 29.820 to 30.707 ms | 210.1 to 212.3 | pass |
 | 8 | 10.656 s | 10.671 s | 10.665 s | 32.218 to 33.787 ms | 216.5 to 223.6 | fail |
 
-With maximum context set to 12,288 tokens, the two workload boundaries sit side
-by side:
+On the tuned 12K configuration, the two workload limits sit side by side:
 
-![](qwen38-capacity-planning/shared-profile.svg){fig-alt="Grouped bars compare server maximum context set to the native 262,144 tokens and to 12,288 tokens. For 2K input and 512 output, maximum concurrency rises from 11 to 22. For 8K input and 1K output, both settings remain at seven."}
+![](qwen38-capacity-planning/shared-profile.svg){fig-alt="Grouped bars compare the native configuration, with 262,144-token maximum context, 48 recurrent-state entries, and a largest captured decode batch of eight, against the tuned configuration, with 12,288-token maximum context, 128 recurrent-state entries, and a largest captured batch of 25. For 2K input and 512 output, maximum concurrency rises from 11 to 22. For 8K input and 1K output, both configurations remain at seven."}
 
-*Figure 6. Setting maximum context to 12,288 doubles short-turn capacity and preserves the seven-session reference boundary.*
+*Figure 6. The complete tuned 12K configuration doubles short-request capacity and preserves the seven-request 8K/1K limit.*
 
-The two request sizes answer the maximum-context question directly. A smaller
-maximum context can produce much higher concurrency when it is paired with a
-larger recurrent-state pool and matching graph capture, and when those
-resources were already limiting the workload. The same server changes nothing
-for a request that spends the first-token budget reading its prompt.
+The short-request result moved only after recurrent-state capacity and graph
+coverage moved with it. Lowering maximum context alone had already failed. The
+same tuned configuration changes nothing for a request that spends the
+first-token budget reading its prompt.
 
 ### The 8K prompt spends ten seconds before memory fills
 
-With maximum context at the native 262,144 tokens, the server exposes nine
-active recurrent-state slots. The failing reference test is C=8, so all eight
-requests can already be active. Its decode graphs also reach batch eight.
-Raising the recurrent pool to 128 entries and adding graphs through batch 25
-provides capacity this request size never reaches.
+The native configuration exposes nine active recurrent-state slots. The failing
+8K/1K test is C=8, so all eight requests can already be active. Its decode
+graphs also reach batch eight. Raising the recurrent pool to 128 entries and
+capturing batches as large as 25 provides capacity this request size never
+reaches.
 
-The matched trials make that visible. At the native maximum, C=7 measured
-8.705 to 8.724 seconds at p95; at the 12,288-token maximum it measured 8.695
-to 8.702. Native C=8 measured 10.667 to 10.674; the 12,288-token setting
-measured 10.656 to 10.671.
+The matched trials make that visible. On the native configuration, C=7 measured
+8.705 to 8.724 seconds at p95; on the tuned 12K configuration it measured
+8.695 to 8.702. Native C=8 measured 10.667 to 10.674; tuned C=8 measured
+10.656 to 10.671.
 
-![](qwen38-capacity-planning/matched-reference.svg){fig-alt="Four groups compare server maximum context set to 262,144 and 12,288 tokens for 8K input and 1K output. Both settings pass all three concurrency-seven trials near 8.7 seconds p95 TTFT and fail all three concurrency-eight trials near 10.67 seconds."}
+![](qwen38-capacity-planning/matched-reference.svg){fig-alt="Four groups compare the native and tuned 12K server configurations for 8K input and 1K output. Both configurations pass all three concurrency-seven trials near 8.7 seconds p95 TTFT and fail all three concurrency-eight trials near 10.67 seconds."}
 
-*Figure 7. Server maximum context at 262,144 and 12,288 tokens lands on the same 8K/1K boundary, with nearly identical latency in every trial.*
+*Figure 7. The native and tuned 12K configurations land on the same 8K/1K limit, with nearly identical latency in every trial.*
 
 Reading the eighth 8K prompt crosses the ten-second budget. Increasing
 recurrent slots cannot reduce the matrix multiplications required to read that
@@ -582,8 +595,9 @@ setup. Compute and scheduling run out of time before recurrent-state storage
 fills.
 
 The short request reaches the fixed state ceiling first, so increasing that
-pool doubles C. The long request spends the TTFT budget reading the prompt
-first, so the same change leaves C at seven.
+pool and capturing the larger decode batches lets C move. The long request
+spends the TTFT budget reading the prompt first, so the complete tuned
+configuration leaves C at seven.
 
 ## Part VIII: Make every counted token prove itself
 
@@ -608,7 +622,9 @@ Server-Sent Events (SSE) record and required:
 7. Every request ends with `finish_reason="length"`.
 8. Aggregate errors and output-length mismatches are zero.
 
-The twelve retained trials with maximum context set to 12,288 tokens contain:
+The retained tuned-configuration results contain twelve trials: two request
+sizes, the passing and adjacent concurrency for each size, and three trials at
+each concurrency. Together they contain:
 
 | generation check | total |
 |:---|---:|
@@ -629,15 +645,14 @@ made it appear fast.
 
 ## Part IX: Repeat the boundary search with AIPerf
 
-### Use the automatic search as a locator
+### Let AIPerf locate the concurrency edge
 
-AIPerf 0.10.0 calls this a search recipe rather than a `tune` subcommand. The
-monotonic `max-concurrency-under-sla` recipe finds the range between the last
-passing concurrency and the first failure:
+In AIPerf 0.10.0, automatic concurrency tuning is exposed through the
+`max-concurrency-under-sla` profile search recipe. It finds the range between
+the last passing concurrency and the first failure:
 
 Set `SEARCH_OUT` to the directory where AIPerf should write this exploratory
-run. The `--ttft-sla-ms 10000` option carries the ten-second first-token limit
-defined above; AIPerf uses `sla` in the option name.
+search. The server command is the tuned 12K configuration defined in Part I.
 
 ```bash
 aiperf profile \
@@ -693,63 +708,66 @@ and scheduler timing three chances to move those slow requests.
 
 Every trial at the claimed maximum concurrency must stay below the line. I
 measure the next integer beside it. If that next value is mixed, as it was for
-the short workload at 12,288 maximum context, I reject it rather than averaging
-it into a pass.
+the short workload on the tuned 12K configuration, I reject it rather than
+averaging it into a pass.
 
 ![](qwen38-capacity-planning/capacity-protocol.svg){fig-alt="A four-stage capacity protocol resolves the serving identity and workload, locates the range between passing and failing concurrency, confirms the adjacent integers with three independent cold-cache trials, then validates raw generated text and server token usage."}
 
 *Figure 8. Search locates the edge; independent adjacent trials and raw generation checks establish the capacity result.*
 
-The machine-readable metrics for the three request sizes at native maximum
-context are in
+The machine-readable metrics for the three request sizes on the native
+configuration are in
 [capacity-data.json](qwen38-capacity-planning/capacity-data.json). The
 server-setting experiments are in
-[short-profile-data.json](qwen38-capacity-planning/short-profile-data.json),
-and the final confirmation trials at 12,288 maximum context are in
-[shared12k-short-data.json](qwen38-capacity-planning/shared12k-short-data.json)
+[short-workload tuning data](qwen38-capacity-planning/short-profile-data.json).
+The final confirmations are in the
+[tuned 12K short-workload trials](qwen38-capacity-planning/shared12k-short-data.json)
 and
-[shared12k-reference-data.json](qwen38-capacity-planning/shared12k-reference-data.json).
+[tuned 12K reference-workload trials](qwen38-capacity-planning/shared12k-reference-data.json).
 
-## Part X: Turn the boundary into a request limit
+## Part X: Turn the measurements into a request limit
 
 ### The answer depends on request size
 
-For four B70s running this pinned Qwen3.8 server with MTP, the table below gives
-the largest concurrency where p95 first-token latency remained below ten
-seconds. Each row was measured with one request size at a time.
+For four B70s running these pinned Qwen3.8 configurations with MTP, the table
+below gives the largest concurrency where p95 first-token latency remained
+below ten seconds in all three trials. Each request size was measured
+separately.
 
-| server maximum context | 2K/512 | 8K/1K | 16K/2K |
-|:---|---:|---:|---:|
-| 262,144 tokens (model native) | C=11 | **C=7** | C=5 |
-| 12,288 tokens | **C=22** | **C=7** | request does not fit |
+| server configuration | maximum context | recurrent entries | largest captured decode batch | 2K/512 | 8K/1K | 16K/2K |
+|:---|---:|---:|---:|---:|---:|---:|
+| native | 262,144 | 48 | 8 | C=11 | **C=7** | C=5 |
+| tuned 12K | 12,288 | 128 | 25 | **C=22** | **C=7** | request does not fit |
 
-If users send the reference 8K/1K agent turn, the capacity answer is seven
-simultaneous sessions on either server setting. If users send 2K/512 turns and
-the service does not need requests longer than 12,288 tokens, the answer is 22.
-That is the number to enforce as the in-flight request limit.
+For a queue containing only 8K/1K requests, the measured ceiling is seven on
+either server configuration. For a short-only 2K/512 queue
+that does not need requests longer than 12,288 tokens, the measured ceiling is
+22 on the tuned configuration. Neither number is yet a production limit for a
+queue that mixes the two request sizes.
 
-The three values at native maximum context are alternatives, not quantities to
-add. I measured each request size in its own queue. A real queue mixing short
-and long turns may behave differently because long prompts can delay short
+The three values on the native configuration are alternatives, not quantities
+to add. I measured each request size in its own queue. A real queue mixing short
+and long requests may behave differently because long prompts can delay short
 ones. The next production experiment should replay input and output lengths
 from real traffic, preserve whether a request reused a cached prefix and
 whether it called tools, then measure one total concurrency limit for the mix.
 
 Until that replay exists, these fixed request sizes are useful repeatable tests
-and per-size upper bounds. The server can keep short turns at or below 22 and
-reference turns at or below seven, then replace those separate limits after a
-mixed traffic test supplies one measured number.
+and ceilings for separate homogeneous queues. A mixed queue needs one limit
+measured from the joint traffic distribution.
 
-The production limit may sit below the measured maximum. Rolling deploys,
+An operating limit should sit below the measured maximum. Rolling deploys,
 traffic drift, telemetry, driver variance, and a week of requests cover more
-conditions than three benchmark trials. I would begin one session below the
-measured edge, watch live p95 first-token latency and queue depth, and raise it
-only after production traffic shows the same margin. That safety margin should
-remain separate from the measured result.
+conditions than three benchmark trials. For either homogeneous workload, I
+would begin one request below its measured edge, watch live p95 first-token
+latency and queue depth, and raise it only after production traffic shows the
+same margin. That safety margin is an operating decision, not another benchmark
+result.
 
 The roughly 4,000 tok/s prompt-reading number near the top is still useful. It
 says one request is fast. It does not say how many overlapping requests remain
 fast enough. On this host, the 8K/1K workload spends the first-token budget at
-seven sessions, before recurrent-state storage fills. The 2K/512 workload
-reaches that storage limit later, at 22. Those two numbers, tied to their
-request sizes and the same ten-second limit, are the capacity answer.
+seven concurrent requests, before recurrent-state storage fills. The 2K/512
+workload reaches that storage limit later, at 22 on the tuned configuration.
+Those numbers, each tied to its request size, exact server configuration, and
+the same ten-second limit, are the capacity answer.
